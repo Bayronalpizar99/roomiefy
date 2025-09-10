@@ -1,0 +1,27 @@
+.homepage-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.main-content h1 {
+    color: var(--color-text);
+}
+
+.main-content p {
+    color: var(--color-text-secondary);
+}
+
+.card-placeholder {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    height: 200px;
+    margin-top: 1.5rem;
+}

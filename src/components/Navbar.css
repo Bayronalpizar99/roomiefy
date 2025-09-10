@@ -1,0 +1,105 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 2rem;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.navbar-left, .navbar-center, .navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.navbar-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--color-text);
+}
+
+.navbar-links {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-links a {
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+  padding: 0.5rem 0;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease-in-out;
+}
+
+.navbar-links a:hover {
+  color: var(--color-primary);
+}
+
+.navbar-links a.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  background-color: var(--color-input-bg);
+  border-radius: var(--border-radius);
+  padding: 0.5rem 0.8rem;
+  width: 300px;
+}
+
+.search-bar svg {
+  color: var(--color-text-secondary);
+}
+
+.search-bar input {
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--color-text);
+  font-size: 1rem;
+  margin-left: 0.5rem;
+  width: 100%;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  color: var(--color-icon);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.icon-button:hover {
+  background-color: var(--color-input-bg);
+}
+
+.notification-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background-color: var(--color-primary);
+    color: white;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}

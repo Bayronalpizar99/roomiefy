@@ -1,0 +1,39 @@
+:root {
+  /* Tipografía y Familia de Fuentes */
+  --font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --line-height: 1.5;
+
+  /* Tamaños */
+  --font-size-h1: 3.2em;
+  --font-size-button: 1em;
+
+  /* Bordes y Sombras */
+  --border-radius: 8px;
+
+  /* Tema Oscuro (Por defecto) */
+  --color-text: rgba(255, 255, 255, 0.87);
+  --color-background: #242424;
+  --color-primary: #646cff;
+  --color-primary-hover: #535bf2;
+  --color-button-bg: #1a1a1a;
+  --color-button-border-hover: var(--color-primary);
+
+  /* Configuraciones globales */
+  color-scheme: light dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tema Claro (Cuando el sistema lo prefiere) */
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-text: #213547;
+    --color-background: #ffffff;
+    --color-primary-hover: #747bff;
+    --color-button-bg: #f9f9f9;
+  }
+}
