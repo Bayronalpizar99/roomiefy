@@ -1,19 +1,20 @@
 import React from 'react';
 import { Navbar } from '../components/Navbar';
-import './HomePage.css';
+import './PageStyles.css';
 
 // 1. Recibe 'toggleTheme' como prop
-const HomePage = ({ toggleTheme }) => {
+const RoomiesPage = ({ toggleTheme }) => {
   return (
-    <div className="homepage-layout">
+    <div className="page-layout">
       {/* 2. Pásalo a la Navbar */}
       <Navbar toggleTheme={toggleTheme} />
       <main className="main-content">
-        <h1>Bienvenido a Tu Aplicación</h1>
-        <p>Este es el contenido principal de tu página. ¡Puedes empezar a construir desde aquí!</p>
+        <h1>Página de Roomies</h1>
+        <p>Aquí podrás encontrar roomies</p>
+        <div className="card-placeholder"></div>
       </main>
     </div>
   );
 };
 
-export default HomePage;
+export default RoomiesPage;
