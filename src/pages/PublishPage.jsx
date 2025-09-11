@@ -1,19 +1,19 @@
 import React from 'react';
-import { Navbar } from '../components/Navbar';
 import './PageStyles.css';
 
-// 1. Recibe 'toggleTheme' como prop
-const PublishPage = ({ toggleTheme }) => {
+// NO necesitas importar Navbar ni recibir 'toggleTheme'
+const PublishPage = () => {
   return (
-    <div className="page-layout">
-      {/* 2. Pásalo a la Navbar */}
-      <Navbar toggleTheme={toggleTheme} />
-      <main className="main-content">
-        <h1>Publicar una Propiedad</h1>
-        <p>Completa el formulario para añadir tu propiedad a la lista.</p>
-        <div className="card-placeholder"></div>
-      </main>
-    </div>
+    // Renderiza solo el contenido específico de la página
+    <>
+      <h1>Publicar una Propiedad</h1>
+      <p>Completa el formulario para añadir tu propiedad a la lista.</p>
+      
+      {/* Aquí es donde eventualmente irá tu formulario */}
+      <div className="card-placeholder">
+        <p>(Formulario próximamente)</p>
+      </div>
+    </>
   );
 };
 

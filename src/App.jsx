@@ -1,10 +1,25 @@
-// 1. Importa useState y useEffect
 import { useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Outlet } from 'react-router-dom';
+
+// Importa tus componentes
+import { Navbar } from './components/Navbar';
 import HomePage from './pages/HomePage.jsx';
 import RoomiesPage from './pages/RoomiesPage.jsx';
 import PublishPage from './pages/PublishPage.jsx';
 import './App.css';
+
+// Componente de Layout que incluye el Navbar
+const AppLayout = ({ toggleTheme }) => (
+  <div className="page-layout">
+    {/* El Navbar ahora es persistente y recibe la función para cambiar el tema */}
+    <Navbar toggleTheme={toggleTheme} />
+    
+    {/* Outlet renderizará el componente de la ruta actual (HomePage, RoomiesPage, etc.) */}
+    <main className="main-content">
+      <Outlet />
+    </main>
+  </div>
+);
 
 function App() {
   const [theme, setTheme] = useState('light');
@@ -13,19 +28,21 @@ function App() {
     setTheme((prevTheme) => (prevTheme === 'dark' ? 'light' : 'dark'));
   };
 
-  // 2. Añade este efecto para cambiar la clase en el <body>
   useEffect(() => {
-    document.body.className = ''; // Limpia clases anteriores
-    document.body.classList.add(theme); // Añade la clase actual
-  }, [theme]); // Se ejecuta cada vez que 'theme' cambia
+    document.body.className = '';
+    document.body.classList.add(theme);
+  }, [theme]);
 
   return (
-    // 3. Ya no necesitas la clase aquí
     <div className="app-container">
       <Routes>
-        <Route path="/" element={<HomePage toggleTheme={toggleTheme} />} />
-        <Route path="/roomies" element={<RoomiesPage toggleTheme={toggleTheme} />} />
-        <Route path="/publicar" element={<PublishPage toggleTheme={toggleTheme} />} />
+        {/* Todas las rutas ahora usan AppLayout como elemento principal */}
+        <Route path="/" element={<AppLayout toggleTheme={toggleTheme} />}>
+          {/* Estas son las rutas anidadas que se renderizarán en el Outlet */}
+          <Route index element={<HomePage />} />
+          <Route path="roomies" element={<RoomiesPage />} />
+          <Route path="publicar" element={<PublishPage />} />
+        </Route>
       </Routes>
     </div>
   );
