@@ -8,17 +8,19 @@ export const fetchProperties = async () => {
   const apiKey = import.meta.env.VITE_API_KEY;
 
   // Verificación para asegurar que las variables de entorno están cargadas
-  if (!apiUrl || !apiKey) {
-    console.error("Error: Las variables de entorno VITE_API_URL o VITE_API_KEY no están definidas.");
+  if (!apiUrl) {
+    console.error("Error: La variable de entorno VITE_API_URL no está definida.");
+    return [];
+  }
+  if (!apiKey) {
+    console.error("Error: La variable de entorno VITE_API_KEY no está definida.");
     return [];
   }
 
   try {
     const response = await fetch(apiUrl, {
-      // El método GET es el predeterminado, pero lo mantenemos por claridad si lo prefieres.
       method: "GET",
       headers: {
-        // Estos encabezados son específicos de tu API, así que los mantenemos.
         "Content-Type": "application/json",
         "Ocp-Apim-Subscription-Key": apiKey,
         "Accept": "application/json"
@@ -26,7 +28,14 @@ export const fetchProperties = async () => {
     });
 
     if (!response.ok) {
-      // Si la respuesta del servidor no es exitosa (ej. 401, 404, 500)
+      // Mensaje de error más detallado según el código de estado
+      if (response.status === 401 || response.status === 403) {
+        console.error("Error de autenticación: La API KEY es incorrecta o no tiene permisos.");
+      } else if (response.status === 404) {
+        console.error("Error: La URL de la API no es válida o el recurso no existe.");
+      } else {
+        console.error(`Error al obtener las propiedades: ${response.status} ${response.statusText}`);
+      }
       throw new Error(`Error al obtener las propiedades: ${response.status} ${response.statusText}`);
     }
 
@@ -34,7 +43,7 @@ export const fetchProperties = async () => {
     return data;
   } catch (error) {
     // Captura errores de red (ej. sin conexión) o el error lanzado arriba.
-    console.error(error);
+    console.error("Error de red o excepción:", error);
     return []; // Devuelve un array vacío para que la UI no se rompa.
   }
 };
