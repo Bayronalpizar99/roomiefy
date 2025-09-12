@@ -4,7 +4,7 @@
 export const fetchProperties = async () => {
   // En Vite, las variables de entorno se acceden con import.meta.env
   // y deben empezar con el prefijo VITE_ en tu archivo .env
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = import.meta.env.VITE_API_URL ;
   const apiKey = import.meta.env.VITE_API_KEY;
 
   // Verificación para asegurar que las variables de entorno están cargadas
@@ -18,7 +18,7 @@ export const fetchProperties = async () => {
   }
 
   try {
-    const response = await fetch(apiUrl, {
+    const response = await fetch(apiUrl + '/properties', {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
