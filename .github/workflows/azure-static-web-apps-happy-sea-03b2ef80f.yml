@@ -30,7 +30,7 @@ jobs:
           api_location: ""       # si no usas Functions, déjalo vacío
           output_location: "dist" # <-- Vite genera 'dist'
         env:
-            VITE_API_URL: ${{ secrets.VITE_API_URL }}
+            VITE_API_URL: ${{ vars.VITE_API_URL }}
             VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
