@@ -14,6 +14,9 @@
   flex: 1; 
   /* Crucial: ESTE es el contenedor que ahora tiene el scroll */
   overflow-y: auto; 
-  /* Añadimos el padding general para todas las páginas aquí */
-  padding: 2rem;
+  
+  /* --- INICIO DEL CAMBIO --- */
+  /* Reducimos el padding superior a 1rem para acercar el contenido al navbar */
+  padding: 1rem 2rem 2rem;
+  /* --- FIN DEL CAMBIO --- */
 }

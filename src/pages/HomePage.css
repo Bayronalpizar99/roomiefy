@@ -1,22 +1,28 @@
 /* Layout principal de la página con dos columnas */
 .homepage-layout {
   display: flex;
-  /* Espacio entre la barra de filtros y el contenido de las propiedades */
   gap: 2rem; 
   align-items: flex-start;
 }
 
 /* Contenedor derecho que crecerá para ocupar el espacio disponible */
-.main-content-area {
+.properties-section { /* Renamed for clarity from main-content-area */
   flex-grow: 1;
+  min-width: 0; /* Prevents flexbox overflow issues */
 }
 
-/* El contenedor de las tarjetas se mantiene como una cuadrícula */
-.properties-container {
+/* El contenedor de las tarjetas en VISTA DE GRID */
+.properties-container.grid-view {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
-  padding-top: 1rem;
+}
+
+/* El contenedor de las tarjetas en VISTA DE LISTA */
+.properties-container.list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .loading-message {

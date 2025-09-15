@@ -11,7 +11,7 @@
 }
 
 .property-card:hover {
-  transform: translateY(--5px); /* Efecto de elevación al pasar el mouse */
+  transform: translateY(-5px); /* Efecto de elevación al pasar el mouse */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -51,8 +51,6 @@
   padding-top: 0.5rem;
 }
 
-/* --- INICIO: Cambios integrados --- */
-
 /* Estilos para la información del propietario */
 .owner-info {
   display: flex;
@@ -70,8 +68,6 @@
   align-items: center;
   gap: 0.5rem;
 }
-
-/* --- FIN: Cambios integrados --- */
 
 .owner-pic {
   width: 30px;
@@ -115,3 +111,20 @@
   font-size: 0.75rem;
   font-weight: 500;
 }
+
+/* --- INICIO: Estilos integrados para la vista de lista --- */
+.list-view .property-card {
+  flex-direction: row;
+  align-items: center;
+}
+
+.list-view .property-image {
+  width: 250px; /* Ancho fijo para la imagen en vista de lista */
+  height: 180px;
+  flex-shrink: 0;
+}
+
+.list-view .property-info {
+  padding: 1.5rem;
+}
+/* --- FIN: Estilos integrados --- */
