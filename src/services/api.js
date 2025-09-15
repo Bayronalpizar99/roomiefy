@@ -14,12 +14,9 @@ export const fetchProperties = async () => {
   }
 
   try {
-<<<<<<< Updated upstream
-    const response = await fetch(apiUrl, {
-      // El método GET es el predeterminado, pero lo mantenemos por claridad si lo prefieres.
-=======
-    const response = await fetch(apiUrl + 'properties', {
->>>>>>> Stashed changes
+
+      const response = await fetch(apiUrl + 'properties', {
+
       method: "GET",
       headers: {
         // Estos encabezados son específicos de tu API, así que los mantenemos.
