@@ -19,6 +19,10 @@ body {
   font-weight: var(--font-weight-regular);
   color: var(--color-text);
   background-color: var(--color-background);
+
+  /* Mantiene la barra de scroll siempre visible para evitar saltos en el layout */
+  overflow-y: scroll !important;
+
 }
 
 #root {
