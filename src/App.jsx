@@ -1,25 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Outlet } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 
-// Importa tus componentes
+// Importa tus componentes y páginas
 import { Navbar } from './components/Navbar';
 import HomePage from './pages/HomePage.jsx';
 import RoomiesPage from './pages/RoomiesPage.jsx';
 import PublishPage from './pages/PublishPage.jsx';
 import './App.css';
-
-// Componente de Layout que incluye el Navbar
-const AppLayout = ({ toggleTheme }) => (
-  <div className="page-layout">
-    {/* El Navbar ahora es persistente y recibe la función para cambiar el tema */}
-    <Navbar toggleTheme={toggleTheme} />
-    
-    {/* Outlet renderizará el componente de la ruta actual (HomePage, RoomiesPage, etc.) */}
-    <main className="main-content">
-      <Outlet />
-    </main>
-  </div>
-);
 
 function App() {
   const [theme, setTheme] = useState('light');
@@ -34,16 +21,18 @@ function App() {
   }, [theme]);
 
   return (
-    <div className="app-container">
-      <Routes>
-        {/* Todas las rutas ahora usan AppLayout como elemento principal */}
-        <Route path="/" element={<AppLayout toggleTheme={toggleTheme} />}>
-          {/* Estas son las rutas anidadas que se renderizarán en el Outlet */}
-          <Route index element={<HomePage />} />
+    // Contenedor principal que ocupa toda la pantalla y no tiene scroll
+    <div className="app-layout">
+      <Navbar toggleTheme={toggleTheme} />
+      
+      {/* Esta es el área de contenido que SÍ tendrá scroll */}
+      <main className="main-content-area">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
           <Route path="roomies" element={<RoomiesPage />} />
           <Route path="publicar" element={<PublishPage />} />
-        </Route>
-      </Routes>
+        </Routes>
+      </main>
     </div>
   );
 }

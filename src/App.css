@@ -1,7 +1,19 @@
-/* Este archivo puede contener estilos globales para el contenedor de la app si son necesarios */
-.app-container {
-  width: 100%;
-  min-height: 100vh; /* <-- AÑADE ESTO */
+/* Layout principal que organiza la Navbar y el contenido */
+.app-layout {
   display: flex;
   flex-direction: column;
+  /* Ocupa el 100% de la altura de la ventana */
+  height: 100vh; 
+  /* Crucial: Evita que este contenedor tenga su propio scroll */
+  overflow: hidden; 
+}
+
+/* El área de contenido principal */
+.main-content-area {
+  /* Ocupa todo el espacio vertical sobrante después de la Navbar */
+  flex: 1; 
+  /* Crucial: ESTE es el contenedor que ahora tiene el scroll */
+  overflow-y: auto; 
+  /* Añadimos el padding general para todas las páginas aquí */
+  padding: 2rem;
 }

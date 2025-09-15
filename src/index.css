@@ -6,27 +6,22 @@
   box-sizing: border-box;
 }
 
+/* El body ya no necesita controlar el scroll */
 body {
   margin: 0;
   padding: 0;
   min-width: 320px;
-  min-height: 100vh;
   width: 100%;
-
-  /* Aplicando variables del tema */
   font-family: var(--font-family);
   line-height: var(--line-height);
   font-weight: var(--font-weight-regular);
   color: var(--color-text);
   background-color: var(--color-background);
-
-  /* Mantiene la barra de scroll siempre visible para evitar saltos en el layout */
-  overflow-y: scroll !important;
-
 }
 
 #root {
   width: 100%;
+  height: 100vh; /* Ocupa toda la altura de la ventana */
   margin: 0;
   padding: 0;
 }

@@ -2,9 +2,13 @@
 .filters-container {
   width: 280px;
   flex-shrink: 0;
+  
+  /* Clave: Hacemos que el contenedor se "pegue" a la parte superior */
   position: sticky;
-  top: 2rem;
-  height: calc(100vh - 70px - 4rem);
+  top: 0; /* Se pegará al inicio del contenedor de scroll */
+  
+  /* Ajustamos la altura para que ocupe el espacio visible y permita scroll interno */
+  max-height: calc(100vh - 110px); /* (Altura de la ventana - Altura del Navbar - Padding) */
   overflow-y: auto;
 }
 
@@ -113,19 +117,15 @@
   padding: 0.25rem;
   z-index: 10;
 }
-/* INICIO DEL CAMBIO */
 .radix-select-item {
   padding: 0.5rem;
   border-radius: 4px;
   cursor: pointer;
   outline: none;
-  /* Añadimos flexbox para alinear el texto y el checkmark */
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-/* FIN DEL CAMBIO */
-
 .radix-select-item[data-highlighted] {
   background-color: var(--color-primary);
   color: white;

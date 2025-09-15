@@ -7,10 +7,11 @@
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   display: flex;
   flex-direction: column;
+  will-change: transform;
 }
 
 .property-card:hover {
-  transform: translateY(-5px); /* Efecto de elevación al pasar el mouse */
+  transform: translateY(--5px); /* Efecto de elevación al pasar el mouse */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -50,15 +51,27 @@
   padding-top: 0.5rem;
 }
 
+/* --- INICIO: Cambios integrados --- */
+
 /* Estilos para la información del propietario */
 .owner-info {
   display: flex;
   align-items: center;
+  justify-content: space-between; /* Alinea los elementos a los extremos */
   gap: 0.5rem;
   margin-top: 0.75rem;
   border-top: 1px solid var(--color-border);
   padding-top: 0.75rem;
 }
+
+/* Nuevo contenedor para agrupar foto y nombre */
+.owner-details {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* --- FIN: Cambios integrados --- */
 
 .owner-pic {
   width: 30px;
@@ -75,7 +88,7 @@
 /* Estilos para el componente de estrellas (StarRating) */
 .star-rating {
   color: #f59e0b; /* Un color dorado para las estrellas */
-  margin-bottom: 0.5rem;
+  margin-bottom: 0; /* Se quita el margen para alinear correctamente */
 }
 
 .star {
@@ -84,4 +97,21 @@
 
 .star:not(.filled) {
   color: var(--color-border); /* Estrellas vacías de un color neutro */
+}
+
+/* --- Estilos integrados para las comodidades --- */
+.amenities-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0; /* Espacio arriba y abajo */
+}
+
+.amenity-tag {
+  background-color: var(--color-input-bg);
+  color: var(--color-text-secondary);
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
