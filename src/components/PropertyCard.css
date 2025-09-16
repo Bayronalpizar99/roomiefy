@@ -8,6 +8,7 @@
   display: flex;
   flex-direction: column;
   will-change: transform;
+  height: 100%; /* <-- LÍNEA INTEGRADA */
 }
 
 .property-card:hover {
@@ -111,6 +112,23 @@
   font-size: 0.75rem;
   font-weight: 500;
 }
+
+/* --- INICIO: Estilos integrados para las estadísticas --- */
+.property-stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* Espacio entre cada estadística */
+  margin: 0.75rem 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem; /* Espacio entre el ícono y el texto */
+}
+/* --- FIN: Estilos integrados --- */
 
 /* --- INICIO: Estilos integrados para la vista de lista --- */
 .list-view .property-card {

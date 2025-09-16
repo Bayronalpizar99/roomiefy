@@ -1,22 +1,19 @@
+/* src/App.css */
+
 /* Layout principal que organiza la Navbar y el contenido */
 .app-layout {
   display: flex;
   flex-direction: column;
-  /* Ocupa el 100% de la altura de la ventana */
-  height: 100vh; 
-  /* Crucial: Evita que este contenedor tenga su propio scroll */
-  overflow: hidden; 
+  height: 100vh;
+  /* Ya no es necesario ocultar el overflow aquí */
 }
 
-/* El área de contenido principal */
+/* El área de contenido principal ahora permite el scroll */
 .main-content-area {
-  /* Ocupa todo el espacio vertical sobrante después de la Navbar */
   flex: 1; 
-  /* Crucial: ESTE es el contenedor que ahora tiene el scroll */
-  overflow-y: auto; 
-  
-  /* --- INICIO DEL CAMBIO --- */
-  /* Reducimos el padding superior a 1rem para acercar el contenido al navbar */
-  padding: 1rem 2rem 2rem;
-  /* --- FIN DEL CAMBIO --- */
+  overflow-y: auto; /* Permite el scroll vertical */
+  padding: 1rem 2rem 2rem; /* Mueve el padding aquí */
 }
+
+/* --- ELIMINA TODOS LOS ESTILOS DE SCROLL-AREA --- */
+/* (Borra .scroll-area-viewport, .scroll-area-scrollbar, y .scroll-area-thumb) */

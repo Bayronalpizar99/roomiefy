@@ -1,35 +1,63 @@
 import React from 'react';
 import { Filter, ChevronDownIcon, CheckIcon } from 'lucide-react';
-
-// Importa los componentes de Radix que vamos a usar
 import * as Label from '@radix-ui/react-label';
 import * as Slider from '@radix-ui/react-slider';
 import * as Select from '@radix-ui/react-select';
 import * as Checkbox from '@radix-ui/react-checkbox';
-
 import './Filters.css'; 
 
-const Filters = () => {
-  const amenities = [
-    { id: 'wifi', label: 'Wifi' },
-    { id: 'cocina', label: 'Cocina equipada' },
-    { id: 'lavadora', label: 'Lavadora' },
-    { id: 'aire', label: 'Aire acondicionado' },
-    { id: 'calefaccion', label: 'Calefacción' },
-    { id: 'tv', label: 'Tv' },
-    { id: 'gym', label: 'Gimnasio' },
-    { id: 'pool', label: 'Piscina' },
+// 1. Aceptamos los filtros y sus funciones como props
+const Filters = ({
+  filters,
+  setFilters,
+}) => {
+  
+  const amenitiesList = [
+    'Wi-Fi', 'Aire acondicionado', 'Cocina equipada', 'TV', 'Piscina', 'Gimnasio', 'Pet-Friendly'
   ];
 
-  // Opciones para el selector de recámaras
   const bedroomOptions = [
     { value: 'any', label: 'Cualquiera' },
     { value: 'studio', label: 'Estudio' },
     { value: '1', label: '1 recámara' },
-    { value: '2', label: '2 recámaras' },
-    { value: '3', label: '3 recámaras' },
+    { value: '2', label: '2 recámara' },
+    { value: '3', label: '3 recámara' },
     { value: '4+', label: '4+ recámaras' },
   ];
+
+  // 2. Funciones para manejar cambios en cada filtro
+  const handleLocationChange = (e) => {
+    setFilters(prev => ({ ...prev, location: e.target.value }));
+  };
+
+  const handlePriceChange = (value) => {
+    setFilters(prev => ({ ...prev, price: value[0] }));
+  };
+
+  const handleBedroomsChange = (value) => {
+    setFilters(prev => ({ ...prev, bedrooms: value }));
+  };
+
+  const handleAmenityChange = (amenity) => {
+    setFilters(prev => {
+      const newAmenities = new Set(prev.amenities);
+      if (newAmenities.has(amenity)) {
+        newAmenities.delete(amenity);
+      } else {
+        newAmenities.add(amenity);
+      }
+      return { ...prev, amenities: newAmenities };
+    });
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      location: '',
+      price: 500, // Valor máximo
+      bedrooms: 'any',
+      amenities: new Set(),
+    });
+  };
 
   return (
     <aside className="filters-container">
@@ -38,46 +66,46 @@ const Filters = () => {
         <span>Filtros</span>
       </h2>
 
-      {/* --- UBICACIÓN --- */}
+      {/* UBICACIÓN */}
       <div className="filter-group">
         <Label.Root htmlFor="location">Ubicación</Label.Root>
-        <input className="radix-input" type="text" id="location" placeholder="Ingresa una ubicación" />
+        <input 
+          className="radix-input" 
+          type="text" 
+          id="location" 
+          placeholder="Buscar en Costa Rica..." 
+          value={filters.location}
+          onChange={handleLocationChange}
+        />
       </div>
 
-      {/* --- RANGO DE PRECIO (CON RADIX SLIDER) --- */}
+      {/* RANGO DE PRECIO */}
       <div className="filter-group">
-        <Label.Root>Rango de precio (mes)</Label.Root>
-        <div className="price-range-labels">
-          <span>$0</span>
-          <span>$100</span>
-        </div>
-        <Slider.Root className="radix-slider-root" defaultValue={[50]} max={100} step={1}>
-          <Slider.Track className="radix-slider-track">
-            <Slider.Range className="radix-slider-range" />
-          </Slider.Track>
-          <Slider.Thumb className="radix-slider-thumb" />
-        </Slider.Root>
+        <Label.Root>Precio (hasta ${filters.price})</Label.Root>
+        <Slider.Root 
+          className="radix-slider-root" 
+          value={[filters.price]} 
+          onValueChange={handlePriceChange}
+          max={500} 
+          step={10}
+        />
       </div>
       
-      {/* --- INICIO DE CAMBIOS: RECÁMARAS (CON RADIX SELECT) --- */}
+      {/* RECÁMARAS */}
       <div className="filter-group">
         <Label.Root>Recámaras</Label.Root>
-        <Select.Root defaultValue="any">
+        <Select.Root value={filters.bedrooms} onValueChange={handleBedroomsChange}>
           <Select.Trigger className="radix-select-trigger">
-            <Select.Value placeholder="Selecciona..." />
-            <Select.Icon>
-              <ChevronDownIcon size={16} />
-            </Select.Icon>
+            <Select.Value />
+            <Select.Icon><ChevronDownIcon size={16} /></Select.Icon>
           </Select.Trigger>
           <Select.Portal>
             <Select.Content className="radix-select-content">
               <Select.Viewport>
-                {bedroomOptions.map(option => (
-                  <Select.Item key={option.value} value={option.value} className="radix-select-item">
-                    <Select.ItemText>{option.label}</Select.ItemText>
-                    <Select.ItemIndicator className="radix-select-item-indicator">
-                      <CheckIcon size={16} />
-                    </Select.ItemIndicator>
+                {bedroomOptions.map(opt => (
+                  <Select.Item key={opt.value} value={opt.value} className="radix-select-item">
+                    <Select.ItemText>{opt.label}</Select.ItemText>
+                    <Select.ItemIndicator><CheckIcon /></Select.ItemIndicator>
                   </Select.Item>
                 ))}
               </Select.Viewport>
@@ -85,30 +113,32 @@ const Filters = () => {
           </Select.Portal>
         </Select.Root>
       </div>
-      {/* --- FIN DE CAMBIOS --- */}
 
-      {/* --- COMODIDADES (CON RADIX CHECKBOX) --- */}
+      {/* COMODIDADES */}
       <div className="filter-group">
         <Label.Root>Comodidades</Label.Root>
         <div className="scrollable-amenities">
           <div className="checkbox-group">
-            {amenities.map(item => (
-              <div key={item.id} className="checkbox-item">
-                <Checkbox.Root className="radix-checkbox-root" id={item.id}>
+            {amenitiesList.map(item => (
+              <div key={item} className="checkbox-item">
+                <Checkbox.Root 
+                  className="radix-checkbox-root" 
+                  id={item}
+                  checked={filters.amenities.has(item)}
+                  onCheckedChange={() => handleAmenityChange(item)}
+                >
                   <Checkbox.Indicator className="radix-checkbox-indicator">
                     <CheckIcon size={16} strokeWidth={3} />
                   </Checkbox.Indicator>
                 </Checkbox.Root>
-                <Label.Root htmlFor={item.id} className="radix-checkbox-label">
-                  {item.label}
-                </Label.Root>
+                <Label.Root htmlFor={item} className="radix-checkbox-label">{item}</Label.Root>
               </div>
             ))}
           </div>
         </div>
       </div>
       
-      <button className="clear-button">Limpiar</button>
+      <button className="clear-button" onClick={clearFilters}>Limpiar</button>
     </aside>
   );
 };
