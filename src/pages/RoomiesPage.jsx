@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import './PageStyles.css';
+import './HomePage.css';
 import RoommateCard from '../components/RoomieCard';
 import { fetchRoommates } from '../services/api';
 import { Flex, Box, Text, Button, Badge } from '@radix-ui/themes';
@@ -127,7 +128,7 @@ const RoomiesPage = () => {
         <div className="homepage-layout">
             <RoomieFilters filters={filters} setFilters={setFilters} maxBudget={maxBudget} />
             <div className="properties-section">
-                <h1>Encuentra tu roomie ideal 🧑‍🤝‍🧑</h1>
+                <h1>Encuentra tu roomie ideal</h1>
                 <ViewOptions
                     view={view}
                     setView={setView}

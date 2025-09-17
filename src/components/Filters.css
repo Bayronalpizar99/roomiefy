@@ -81,6 +81,7 @@
 }
 .radix-slider-thumb:focus {
   outline: none;
+  /* Focus ring morado basado en --color-primary (#7c3aed) */
   box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.4);
 }
 
@@ -156,7 +157,7 @@
 .radix-checkbox-root {
   width: 20px;
   height: 20px;
-  border: 1.5px solid #E9D5FF;
+  border: 1.5px solid var(--color-primary);
   border-radius: 4px;
   cursor: pointer;
   background-color: transparent;
@@ -190,7 +191,7 @@
   background: transparent;
 }
 .scrollable-amenities::-webkit-scrollbar-thumb {
-  background-color: #D1D5DB;
+  background-color: var(--color-border);
   border-radius: 10px;
   border: 3px solid var(--color-surface);
 }

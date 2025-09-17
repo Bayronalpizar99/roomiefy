@@ -6,7 +6,7 @@ import * as Select from '@radix-ui/react-select';
 import * as Checkbox from '@radix-ui/react-checkbox';
 import './Filters.css';
 
-const RoomieFilters = ({ filters, setFilters }) => {
+const RoomieFilters = ({ filters, setFilters, maxBudget = 500 }) => {
   const interestsList = [
     'Deportes',
     'Música',
@@ -51,7 +51,7 @@ const RoomieFilters = ({ filters, setFilters }) => {
   const clearFilters = () => {
     setFilters({
       location: '',
-      price: 500,
+      price: maxBudget,
       hasApartment: 'any',
       interests: new Set(),
       verifiedOnly: false,
@@ -85,7 +85,7 @@ const RoomieFilters = ({ filters, setFilters }) => {
           className="radix-slider-root"
           value={[filters.price]}
           onValueChange={handlePriceChange}
-          max={500}
+          max={maxBudget}
           step={10}
         />
       </div>

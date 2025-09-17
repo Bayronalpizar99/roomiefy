@@ -20,10 +20,11 @@ export default function RoommateCard({ roommate = {}, onClick = () => {} }) {
       <Card
         asChild
         size="2"
-        className="cursor-pointer"
+        className="property-card cursor-pointer"
         onClick={() => onClick(roommate)}
       >
         <Flex direction="column" gap="4">
+
           {/* Avatar con verificación */}
           <Box position="relative">
             <Avatar.Root className="avatar">
@@ -50,7 +51,7 @@ export default function RoommateCard({ roommate = {}, onClick = () => {} }) {
           </Box>
 
           {/* Contenido principal */}
-          <Flex direction="column" gap="2">
+          <Flex direction="column" gap="2" className="property-info">
             {/* Nombre y edad */}
             <Flex align="center" gap="2">
               <Heading as="h3" size="3">
@@ -82,19 +83,19 @@ export default function RoommateCard({ roommate = {}, onClick = () => {} }) {
 
             {/* Estado apartamento */}
             <Badge
-              color={roommate?.hasApartment ? "blue" : "gray"}
+              variant="soft"
               radius="full"
-              className="apartment-badge"
+              className={`apartment-badge ${roommate?.hasApartment ? 'apartment-badge--has' : 'apartment-badge--no'}`}
             >
               <Flex gap="1" align="center">
                 <Home className="h-3 w-3" />
-                <Text size="1">Tiene casa</Text>
+                <Text size="1">{roommate?.hasApartment ? 'Tiene casa' : 'No tiene casa'}</Text>
               </Flex>
             </Badge>
 
             {/* Presupuesto */}
             <Flex align="center" gap="1">
-              <DollarSign className="h-4 w-4" color="var(--gray-10)" />
+              <DollarSign className="h-4 w-4" color="var(--color-text-primary)" />
               <Text size="2">
                 ${roommate?.budget?.min || 0} - ${roommate?.budget?.max || 0}
               </Text>
@@ -108,7 +109,7 @@ export default function RoommateCard({ roommate = {}, onClick = () => {} }) {
             {/* Intereses */}
             <Flex gap="1" wrap="wrap">
               {roommate?.interests?.slice(0, 3)?.map((interest) => (
-                <Badge key={interest} variant="soft" radius="full">
+                <Badge key={interest} variant="soft" radius="full" color="purple">
                   <Text size="1">{interest}</Text>
                 </Badge>
               ))}
