@@ -2,16 +2,30 @@ import React from "react";
 import * as Avatar from "@radix-ui/react-avatar";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { Star, MapPin, Home, Users, DollarSign, Verified } from "lucide-react";
-import "./RoomieCard.css";
+import './RoomieCard.css';
+
+// Importa los componentes de Radix Themes
+import {
+  Card,
+  Flex,
+  Text,
+  Badge,
+  Box,
+  Heading,
+} from "@radix-ui/themes";
 
 export default function RoommateCard({ roommate = {}, onClick = () => {} }) {
   return (
     <Tooltip.Provider>
-        
-      <div className="card cursor-pointer" onClick={() => onClick(roommate)}>
-        <div className="card-content">
+      <Card
+        asChild
+        size="2"
+        className="cursor-pointer"
+        onClick={() => onClick(roommate)}
+      >
+        <Flex direction="column" gap="4">
           {/* Avatar con verificación */}
-          <div className="relative">
+          <Box position="relative">
             <Avatar.Root className="avatar">
               <Avatar.Image
                 src={roommate?.avatar || ""}
@@ -29,90 +43,100 @@ export default function RoommateCard({ roommate = {}, onClick = () => {} }) {
                   <Verified className="verified-icon" />
                 </Tooltip.Trigger>
                 <Tooltip.Content className="tooltip">
-                  <p>Perfil verificado</p>
+                  <Text>Perfil verificado</Text>
                 </Tooltip.Content>
               </Tooltip.Root>
             )}
-          </div>
+          </Box>
 
           {/* Contenido principal */}
-          <div className="flex-1 min-w-0">
+          <Flex direction="column" gap="2">
             {/* Nombre y edad */}
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-lg">{roommate?.name || "Desconocido"}</h3>
-              <span className="text-sm text-gray-500">{roommate?.age || "--"} años</span>
-            </div>
+            <Flex align="center" gap="2">
+              <Heading as="h3" size="3">
+                {roommate?.name || "Desconocido"}
+              </Heading>
+              <Text size="2" color="gray">
+                {roommate?.age || "--"} años
+              </Text>
+            </Flex>
 
             {/* Rating */}
-            <div className="flex items-center gap-1 mb-2">
+            <Flex align="center" gap="1">
               <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-              <span className="text-sm font-medium">{roommate?.rating || "0"}</span>
-              <span className="text-xs text-gray-500">({roommate?.reviews || "0"})</span>
-            </div>
+              <Text size="2" weight="medium">
+                {roommate?.rating || "0"}
+              </Text>
+              <Text size="1" color="gray">
+                ({roommate?.reviews || "0"})
+              </Text>
+            </Flex>
 
             {/* Ubicación */}
-            <div className="flex items-center gap-1 mb-2 text-sm text-gray-500">
+            <Flex align="center" gap="1">
               <MapPin className="h-4 w-4" />
-              <span>{roommate?.location || "Sin ubicación"}</span>
-            </div>
+              <Text size="2" color="gray">
+                {roommate?.location || "Sin ubicación"}
+              </Text>
+            </Flex>
 
             {/* Estado apartamento */}
-            <div className="mb-3">
-              <span
-                className={`badge ${
-                  roommate?.hasApartment ? "badge-default" : "badge-secondary"
-                }`}
-              >
-                {roommate?.hasApartment ? (
-                  <Home className="h-3 w-3" />
-                ) : (
-                  <Users className="h-3 w-3" />
-                )}
-                {roommate?.hasApartment ? "Tiene apartamento" : "Busca apartamento"}
-              </span>
-            </div>
+            <Badge
+              color={roommate?.hasApartment ? "blue" : "gray"}
+              radius="full"
+              className="apartment-badge"
+            >
+              <Flex gap="1" align="center">
+                <Home className="h-3 w-3" />
+                <Text size="1">Tiene casa</Text>
+              </Flex>
+            </Badge>
 
             {/* Presupuesto */}
-            <div className="flex items-center gap-1 mb-3 text-sm">
-              <DollarSign className="h-4 w-4 text-gray-500" />
-              <span>
+            <Flex align="center" gap="1">
+              <DollarSign className="h-4 w-4" color="var(--gray-10)" />
+              <Text size="2">
                 ${roommate?.budget?.min || 0} - ${roommate?.budget?.max || 0}
-              </span>
-            </div>
+              </Text>
+            </Flex>
 
             {/* Bio */}
-            <p className="text-sm text-gray-500 mb-3">{roommate?.bio || "Sin descripción"}</p>
+            <Text size="2" color="gray">
+              {roommate?.bio || "Sin descripción"}
+            </Text>
 
             {/* Intereses */}
-            <div className="flex flex-wrap gap-1">
+            <Flex gap="1" wrap="wrap">
               {roommate?.interests?.slice(0, 3)?.map((interest) => (
-                <span key={interest} className="badge badge-outline">
-                  {interest}
-                </span>
+                <Badge key={interest} variant="soft" radius="full">
+                  <Text size="1">{interest}</Text>
+                </Badge>
               ))}
               {roommate?.interests?.length > 3 && (
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
-                    <span className="badge badge-outline cursor-help">
-                      +{roommate.interests.length - 3}
-                    </span>
+                    <Badge variant="soft" radius="full" color="gray">
+                      <Text size="1">+{roommate.interests.length - 3}</Text>
+                    </Badge>
                   </Tooltip.Trigger>
-                  <Tooltip.Content className="tooltip max-w-60">
-                    <p className="text-xs mb-1">Otros intereses:</p>
-                    <div className="flex flex-wrap gap-1">
+                  <Tooltip.Content>
+                    <Text size="2" mb="1" weight="bold">
+                      Otros intereses:
+                    </Text>
+                    <Flex gap="1" wrap="wrap">
                       {roommate.interests.slice(3).map((interest) => (
-                        <span key={interest} className="badge badge-secondary">
-                          {interest}
-                        </span>
+                        <Badge key={interest} variant="surface" color="gray">
+                          <Text size="1">{interest}</Text>
+                        </Badge>
                       ))}
-                    </div>
+                    </Flex>
                   </Tooltip.Content>
                 </Tooltip.Root>
               )}
-            </div>
-          </div>
-        </div>
-      </div>
+            </Flex>
+          </Flex>
+        </Flex>
+      </Card>
     </Tooltip.Provider>
   );
 }
