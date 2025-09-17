@@ -51,6 +51,8 @@
 
 /* Estilos para Radix Slider */
 .radix-slider-root {
+  /* Contenedor del slider */
+  background: transparent; /* sin bloque de fondo visible */
   position: relative;
   display: flex;
   align-items: center;
@@ -67,7 +69,7 @@
 }
 .radix-slider-range {
   position: absolute;
-  background-color: var(--color-primary);
+  background: linear-gradient(90deg, #8b5cf6, #7c3aed);
   border-radius: 9999px;
   height: 100%;
 }

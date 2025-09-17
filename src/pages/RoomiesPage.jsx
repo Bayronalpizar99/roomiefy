@@ -3,6 +3,7 @@ import './PageStyles.css';
 import './HomePage.css';
 import RoommateCard from '../components/RoomieCard';
 import { fetchRoommates } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 import { Flex, Box, Text, Button, Badge } from '@radix-ui/themes';
 import * as Dialog from '@radix-ui/react-dialog';
 import { MixerHorizontalIcon, Cross2Icon } from '@radix-ui/react-icons';
@@ -16,20 +17,28 @@ import RoomieFilters from '../components/RoomieFilters';
 const RoomiesPage = () => {
     const [allRoommates, setAllRoommates] = useState([]);  
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
     
     const [view, setView] = useState('grid');
     const [sortOrder, setSortOrder] = useState('recent');
     const [currentPage, setCurrentPage] = useState(1);
     const roommatesPerPage = 12;
 
-    const [maxBudget, setMaxBudget] = useState(500);
+    // Límites fijos solicitados
+    const [minBudget, setMinBudget] = useState(100);
+    const [maxBudget, setMaxBudget] = useState(2000);
+    const [minAge, setMinAge] = useState(18);
+    const [maxAge, setMaxAge] = useState(99);
 
     const [filters, setFilters] = useState({
         location: '',
-        price: maxBudget,
+        priceRange: [100, 2000],
+        ageRange: [18, 99],
         hasApartment: 'any',
         interests: new Set(),
         verifiedOnly: false,
+        minCleanliness: 3,
+        minSocial: 3,
     });
 
     useEffect(() => {
@@ -38,11 +47,10 @@ const RoomiesPage = () => {
             try {
                 const data = await fetchRoommates();
                 if (data && data.length > 0) {
-                    const max = Math.max(...data.map(r => r?.budget?.max ?? 0));
-                    setMaxBudget(max);
-                    setFilters(prev => ({ ...prev, price: max }));
+                    // Mantenemos los rangos fijos solicitados
+                    setFilters(prev => ({ ...prev, priceRange: [minBudget, maxBudget], ageRange: [minAge, maxAge] }));
                     setAllRoommates(data);
-                } 
+                }
             } catch (error) {
                 console.error('Error al cargar roommates:', error);
                 setAllRoommates([]);
@@ -62,10 +70,20 @@ const RoomiesPage = () => {
             list = list.filter(r => (r.location || '').toLowerCase().includes(q));
         }
 
-        // Presupuesto máximo (usamos budget.max cuando exista, si no budget o price equivalente)
+        // Presupuesto: rango que se solape con el seleccionado
         list = list.filter(r => {
-            const maxBudget = r?.budget?.max ?? r?.budget ?? 0;
-            return maxBudget <= filters.price;
+            const rbMin = r?.budget?.min ?? r?.budget ?? 0;
+            const rbMax = r?.budget?.max ?? r?.budget ?? rbMin;
+            const [fMin, fMax] = filters.priceRange;
+            return !(rbMax < fMin || rbMin > fMax);
+        });
+
+        // Edad dentro del rango seleccionado (si se conoce)
+        list = list.filter(r => {
+            const age = r?.age;
+            if (!Number.isFinite(age)) return true;
+            const [aMin, aMax] = filters.ageRange;
+            return age >= aMin && age <= aMax;
         });
 
         // Tiene casa
@@ -78,6 +96,26 @@ const RoomiesPage = () => {
         if (filters.verifiedOnly) {
             list = list.filter(r => Boolean(r?.verified));
         }
+
+        // Filtros de niveles mínimos (si existen)
+        list = list.filter(r => {
+            const cleanScore = r?.cleanlinessScore ?? ({
+                'Muy limpio': 5,
+                'Limpio': 4,
+                'Promedio': 3,
+                'Relajado': 2,
+                'Desordenado': 1,
+            }[r?.cleanlinessLevel] ?? null);
+            if (cleanScore !== null && cleanScore < (filters.minCleanliness ?? 1)) return false;
+
+            const socialScore = r?.socialScore ?? ({
+                'Introvertido': 2,
+                'Equilibrado': 3,
+                'Extrovertido': 5,
+            }[r?.socialLevel] ?? null);
+            if (socialScore !== null && socialScore < (filters.minSocial ?? 1)) return false;
+            return true;
+        });
 
         // Intereses: todos los seleccionados deben estar presentes
         if (filters.interests.size > 0) {
@@ -121,12 +159,19 @@ const RoomiesPage = () => {
     }, [filters, sortOrder]);
 
     if (loading) {
-        return <p className="text-center mt-4">Cargando roommates...</p>;
+        return <p className="loading-message">Cargando roommates...</p>;
     }
 
     return (
         <div className="homepage-layout">
-            <RoomieFilters filters={filters} setFilters={setFilters} maxBudget={maxBudget} />
+            <RoomieFilters 
+                filters={filters} 
+                setFilters={setFilters} 
+                minBudget={minBudget} 
+                maxBudget={maxBudget}
+                minAge={minAge}
+                maxAge={maxAge}
+            />
             <div className="properties-section">
                 <h1>Encuentra tu roomie ideal</h1>
                 <ViewOptions
@@ -140,7 +185,12 @@ const RoomiesPage = () => {
                     <main className={`properties-container ${view}-view`}>
                         {currentRoommates.length > 0 ? (
                             currentRoommates.map((roommate, idx) => (
-                                <RoommateCard key={roommate.id ?? idx} roommate={roommate} />
+                                <RoommateCard 
+                                    key={roommate.id ?? idx} 
+                                    roommate={roommate}
+                                    view={view}
+                                    onClick={(rm) => navigate(`/roomie/${rm.id}`, { state: { roommate: rm } })}
+                                />
                             ))
                         ) : (
                             <p className="no-properties-found">No se encontraron roomies con estos filtros.</p>

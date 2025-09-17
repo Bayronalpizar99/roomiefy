@@ -14,7 +14,7 @@ import {
   Heading,
 } from "@radix-ui/themes";
 
-export default function RoommateCard({ roommate = {}, onClick = () => {} }) {
+export default function RoommateCard({ roommate = {}, onClick = () => {}, view = 'grid' }) {
   return (
     <Tooltip.Provider>
       <Card
@@ -24,34 +24,32 @@ export default function RoommateCard({ roommate = {}, onClick = () => {} }) {
         onClick={() => onClick(roommate)}
       >
         <Flex direction="column" gap="4">
-
-          {/* Avatar con verificación */}
-          <Box position="relative">
-            <Avatar.Root className="avatar">
-              <Avatar.Image
-                src={roommate?.avatar || ""}
-                alt={roommate?.name || "Usuario"}
-                className="avatar-img"
-              />
-              <Avatar.Fallback className="avatar-fallback">
-                {roommate?.name?.charAt(0) || "?"}
-              </Avatar.Fallback>
-            </Avatar.Root>
-
-            {roommate?.verified && (
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <Verified className="verified-icon" />
-                </Tooltip.Trigger>
-                <Tooltip.Content className="tooltip">
-                  <Text>Perfil verificado</Text>
-                </Tooltip.Content>
-              </Tooltip.Root>
-            )}
-          </Box>
-
-          {/* Contenido principal */}
-          <Flex direction="column" gap="2" className="property-info">
+          <Flex direction={view === 'list' ? 'column' : 'row'} gap="2" m="1rem" minWidth="15rem" className="roomie-card-header">
+            {/* Avatar con verificación */}
+            <Box position="relative" className="avatar-wrap">
+              <Avatar.Root className="avatar">
+                <Avatar.Image
+                  src={roommate?.avatar || ""}
+                  alt={roommate?.name || "Usuario"}
+                  className="avatar-img"
+                />
+                <Avatar.Fallback className="avatar-fallback">
+                  {roommate?.name?.charAt(0) || "?"}
+                </Avatar.Fallback>
+              </Avatar.Root>
+              {roommate?.verified && (
+                <div className="verified-badge">
+                  <Tooltip.Root>
+                    <Tooltip.Trigger asChild>
+                      <Verified className="verified-icon" />
+                    </Tooltip.Trigger>
+                    <Tooltip.Content className="tooltip">
+                      <Text>Perfil verificado</Text>
+                    </Tooltip.Content>
+                  </Tooltip.Root>
+                </div>
+              )}
+            </Box>
             {/* Nombre y edad */}
             <Flex align="center" gap="2">
               <Heading as="h3" size="3">
@@ -64,7 +62,7 @@ export default function RoommateCard({ roommate = {}, onClick = () => {} }) {
 
             {/* Rating */}
             <Flex align="center" gap="1">
-              <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+              <Star className="h-4 w-4 rating-star" color="var(--color-primary)" fill="var(--color-primary)" />
               <Text size="2" weight="medium">
                 {roommate?.rating || "0"}
               </Text>
@@ -72,6 +70,12 @@ export default function RoommateCard({ roommate = {}, onClick = () => {} }) {
                 ({roommate?.reviews || "0"})
               </Text>
             </Flex>
+            
+          </Flex>
+
+          {/* Contenido principal */}
+          <Flex direction="column" gap="2" className="property-info">
+
 
             {/* Ubicación */}
             <Flex align="center" gap="1">
@@ -84,7 +88,7 @@ export default function RoommateCard({ roommate = {}, onClick = () => {} }) {
             {/* Estado apartamento */}
             <Badge
               variant="soft"
-              radius="full"
+              radius="large"
               className={`apartment-badge ${roommate?.hasApartment ? 'apartment-badge--has' : 'apartment-badge--no'}`}
             >
               <Flex gap="1" align="center">

@@ -6,7 +6,8 @@ import * as Select from '@radix-ui/react-select';
 import * as Checkbox from '@radix-ui/react-checkbox';
 import './Filters.css';
 
-const RoomieFilters = ({ filters, setFilters, maxBudget = 500 }) => {
+const RoomieFilters = ({ filters, setFilters, minBudget = 100, maxBudget = 2000, minAge = 18, maxAge = 99 }) => {
+  const formatAmount = (n) => `$${new Intl.NumberFormat('es-MX').format(Number(n ?? 0))}`;
   const interestsList = [
     'Deportes',
     'Música',
@@ -27,8 +28,13 @@ const RoomieFilters = ({ filters, setFilters, maxBudget = 500 }) => {
     setFilters((prev) => ({ ...prev, location: e.target.value }));
   };
 
-  const handlePriceChange = (value) => {
-    setFilters((prev) => ({ ...prev, price: value[0] }));
+  const handleBudgetRangeChange = (value) => {
+    // value = [min, max]
+    setFilters((prev) => ({ ...prev, priceRange: value }));
+  };
+
+  const handleAgeRangeChange = (value) => {
+    setFilters((prev) => ({ ...prev, ageRange: value }));
   };
 
   const handleHasApartmentChange = (value) => {
@@ -48,13 +54,24 @@ const RoomieFilters = ({ filters, setFilters, maxBudget = 500 }) => {
     setFilters((prev) => ({ ...prev, verifiedOnly: !prev.verifiedOnly }));
   };
 
+  const handleMinCleanlinessChange = (value) => {
+    setFilters((prev) => ({ ...prev, minCleanliness: value[0] }));
+  };
+
+  const handleMinSocialChange = (value) => {
+    setFilters((prev) => ({ ...prev, minSocial: value[0] }));
+  };
+
   const clearFilters = () => {
     setFilters({
       location: '',
-      price: maxBudget,
+      priceRange: [minBudget, maxBudget],
+      ageRange: [minAge, maxAge],
       hasApartment: 'any',
       interests: new Set(),
       verifiedOnly: false,
+      minCleanliness: 3,
+      minSocial: 3,
     });
   };
 
@@ -78,16 +95,86 @@ const RoomieFilters = ({ filters, setFilters, maxBudget = 500 }) => {
         />
       </div>
 
-      {/* PRESUPUESTO */}
+      {/* EDAD */}
       <div className="filter-group">
-        <Label.Root>Presupuesto (hasta ${filters.price})</Label.Root>
+        <Label.Root>
+          Edad: {filters.ageRange?.[0] ?? minAge} - {filters.ageRange?.[1] ?? maxAge} años
+        </Label.Root>
         <Slider.Root
           className="radix-slider-root"
-          value={[filters.price]}
-          onValueChange={handlePriceChange}
+          radius="full"
+          value={filters.ageRange ?? [minAge, maxAge]}
+          onValueChange={handleAgeRangeChange}
+          min={minAge}
+          max={maxAge}
+          step={1}
+        >
+          <Slider.Track className="radix-slider-track">
+            <Slider.Range className="radix-slider-range" />
+          </Slider.Track>
+          <Slider.Thumb className="radix-slider-thumb" aria-label="Edad mínima" />
+          <Slider.Thumb className="radix-slider-thumb" aria-label="Edad máxima" />
+        </Slider.Root>
+      </div>
+
+      {/* PRESUPUESTO */}
+      <div className="filter-group">
+        <Label.Root>
+          Presupuesto: {formatAmount(filters.priceRange?.[0] ?? minBudget)} - {formatAmount(filters.priceRange?.[1] ?? maxBudget)}
+        </Label.Root>
+        <Slider.Root
+          className="radix-slider-root"
+          radius="full"
+          value={filters.priceRange ?? [minBudget, maxBudget]}
+          onValueChange={handleBudgetRangeChange}
+          min={minBudget}
           max={maxBudget}
           step={10}
-        />
+        >
+          <Slider.Track className="radix-slider-track">
+            <Slider.Range className="radix-slider-range" />
+          </Slider.Track>
+          <Slider.Thumb className="radix-slider-thumb" aria-label="Presupuesto mínimo" />
+          <Slider.Thumb className="radix-slider-thumb" aria-label="Presupuesto máximo" />
+        </Slider.Root>
+      </div>
+
+      {/* LIMPIEZA MÍNIMA */}
+      <div className="filter-group">
+        <Label.Root>Nivel de limpieza mínimo: {filters.minCleanliness}/5</Label.Root>
+        <Slider.Root
+          className="radix-slider-root"
+          radius="full"
+          value={[filters.minCleanliness]}
+          onValueChange={handleMinCleanlinessChange}
+          min={1}
+          max={5}
+          step={1}
+        >
+          <Slider.Track className="radix-slider-track">
+            <Slider.Range className="radix-slider-range" />
+          </Slider.Track>
+          <Slider.Thumb className="radix-slider-thumb" aria-label="Nivel de limpieza mínimo" />
+        </Slider.Root>
+      </div>
+
+      {/* SOCIAL MÍNIMO */}
+      <div className="filter-group">
+        <Label.Root>Nivel social mínimo: {filters.minSocial}/5</Label.Root>
+        <Slider.Root
+          className="radix-slider-root"
+          radius="full"
+          value={[filters.minSocial]}
+          onValueChange={handleMinSocialChange}
+          min={1}
+          max={5}
+          step={1}
+        >
+          <Slider.Track className="radix-slider-track">
+            <Slider.Range className="radix-slider-range" />
+          </Slider.Track>
+          <Slider.Thumb className="radix-slider-thumb" aria-label="Nivel social mínimo" />
+        </Slider.Root>
       </div>
 
       {/* TIENE CASA */}

@@ -6,15 +6,15 @@
 }
 
 /* Contenedor derecho que crecerá para ocupar el espacio disponible */
-.properties-section { /* Renamed for clarity from main-content-area */
+.properties-section { 
   flex-grow: 1;
-  min-width: 0; /* Prevents flexbox overflow issues */
+  min-width: 0; 
 }
 
 /* El contenedor de las tarjetas en VISTA DE GRID */
-.properties-container.grid-view {
+.properties-container.grid-view{
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
   gap: 1.5rem;
 }
 
