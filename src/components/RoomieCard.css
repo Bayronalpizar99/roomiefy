@@ -7,6 +7,7 @@
   border-radius: 9999px;
   overflow: hidden;
   display: inline-flex;
+}
 /* Estilos base para la tarjeta de propiedad */
 .property-card {
   background-color: var(--color-surface);
@@ -78,7 +79,6 @@
   align-items: center;
   justify-content: center;
   background: #f3f4f6; /* gray-100 */
-  ring: 2px solid #f9fafb;
 }
 .avatar-img {
   width: 100%;
