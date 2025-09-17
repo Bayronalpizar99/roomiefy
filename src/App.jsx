@@ -6,6 +6,7 @@ import { Navbar } from './components/Navbar';
 import HomePage from './pages/HomePage.jsx';
 import RoomiesPage from './pages/RoomiesPage.jsx';
 import PublishPage from './pages/PublishPage.jsx';
+import ChatPage from './pages/ChatPage.jsx';
 import './App.css';
 
 // Componente de Layout que incluye el Navbar
@@ -42,6 +43,7 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="roomies" element={<RoomiesPage />} />
           <Route path="publicar" element={<PublishPage />} />
+          <Route path="chat" element={<ChatPage />} />
         </Route>
       </Routes>
     </div>

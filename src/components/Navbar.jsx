@@ -1,7 +1,7 @@
 import React from 'react';
 import './Navbar.css';
 import * as NavigationMenu from '@radix-ui/react-navigation-menu';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   MagnifyingGlassIcon, SunIcon, ChatBubbleIcon, BellIcon, PersonIcon,
   HomeIcon,
@@ -14,6 +14,7 @@ import appLogo from '../assets/roomify2.png';
 // 1. Recibe 'toggleTheme' como prop
 export const Navbar = ({ toggleTheme }) => { 
   const location = useLocation();
+  const navigate = useNavigate();
 
   return (
     <NavigationMenu.Root className="navbar">
@@ -56,7 +57,7 @@ export const Navbar = ({ toggleTheme }) => {
         <button className="icon-button" onClick={toggleTheme}>
           <SunIcon />
         </button>
-        <button className="icon-button"><ChatBubbleIcon /></button>
+        <button className="icon-button" onClick={() => navigate('/chat')}><ChatBubbleIcon /></button>
         <button className="icon-button">
             <BellIcon />
             <span className="notification-badge">3</span>
