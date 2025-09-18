@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import * as ScrollArea from '@radix-ui/react-scroll-area';
 
 // 1. Importa el AuthProvider
@@ -16,15 +16,28 @@ import './App.css';
 
 function App() {
   const [theme, setTheme] = useState('light');
+  const [searchQuery, setSearchQuery] = useState('');
+  const location = useLocation();
   
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === 'dark' ? 'light' : 'dark'));
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
   };
 
   useEffect(() => {
     document.body.className = '';
     document.body.classList.add(theme);
   }, [theme]);
+
+  // Clear search when navigating away from roomies page
+  useEffect(() => {
+    if (!location.pathname.includes('roomies')) {
+      setSearchQuery('');
+    }
+  }, [location.pathname]);
 
   return (
     // 2. Envuelve toda la aplicación con AuthProvider
@@ -48,7 +61,7 @@ function App() {
         </ScrollArea.Root>
       </div>
     </AuthProvider>
-  );
+   );
 }
 
 export default App;

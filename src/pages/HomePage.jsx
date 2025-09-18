@@ -6,7 +6,7 @@ import ViewOptions from '../components/ViewOptions';
 import Pagination from '../components/Pagination';
 import './HomePage.css';
 
-const HomePage = () => {
+const HomePage = ({ searchQuery = '', onSearchQueryChange }) => {
   const [allProperties, setAllProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -16,11 +16,21 @@ const HomePage = () => {
   const propertiesPerPage = 12;
   
   const [filters, setFilters] = useState({
-    location: '',
+    location: searchQuery, // Initialize with searchQuery
     price: 500,
     bedrooms: 'any',
     amenities: new Set(),
   });
+  
+  // Update filters when searchQuery changes
+  useEffect(() => {
+    setFilters(prev => ({
+      ...prev,
+      location: searchQuery
+    }));
+    // Reset to first page when search changes
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -35,17 +45,27 @@ const HomePage = () => {
   const filteredProperties = useMemo(() => {
     let properties = [...allProperties];
 
-    // 1. Filtrar por ubicación
+    // 1. Filtrar por búsqueda (ubicación, título, descripción, comodidades)
     if (filters.location) {
-      properties = properties.filter(p => 
-        p.location.toLowerCase().includes(filters.location.toLowerCase())
-      );
+      const searchTerm = filters.location.toLowerCase().trim();
+      if (searchTerm) {
+        properties = properties.filter(property => {
+          const searchIn = [
+            property.title || '',
+            property.location || '',
+            property.description || '',
+            ...(property.amenities || [])
+          ].join(' ').toLowerCase();
+          
+          return searchIn.includes(searchTerm);
+        });
+      }
     }
 
     // 2. Filtrar por precio
     properties = properties.filter(p => p.price <= filters.price);
 
-    // --- INICIO DE CAMBIOS: Lógica para filtrar por recámaras ---
+    // 3. Filtrar por recámaras
     if (filters.bedrooms !== 'any') {
       properties = properties.filter(p => {
         const bedroomCount = p.bedrooms;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './Navbar.css';
 import * as NavigationMenu from '@radix-ui/react-navigation-menu';
 import { Link, useLocation } from 'react-router-dom';
@@ -13,9 +13,28 @@ import appLogo from '../assets/roomify2.png';
 import { useAuth } from '../context/AuthContext';
 import LoginButton from './LoginButton';
 
-export const Navbar = ({ toggleTheme }) => { 
+export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => { 
   const location = useLocation();
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const { user, logout } = useAuth();
+  // Update local state when searchQuery prop changes
+  useEffect(() => {
+    setLocalSearchQuery(searchQuery);
+  }, [searchQuery]);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setLocalSearchQuery(value);
+    // Only trigger search when user stops typing (debounce could be added here)
+    if (location.pathname.includes('roomies')) {
+      onSearch?.(value);
+    }
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    onSearch?.(localSearchQuery);
+  };
 
   return (
     <NavigationMenu.Root className="navbar">
@@ -49,10 +68,17 @@ export const Navbar = ({ toggleTheme }) => {
       </div>
 
       <div className="navbar-center">
-        <div className="search-bar">
-          <MagnifyingGlassIcon />
-          <input type="text" placeholder="Buscar por ubicación ..." />
-        </div>
+        <form className="search-bar" onSubmit={handleSearchSubmit}>
+          <button type="submit" className="search-button">
+            <MagnifyingGlassIcon />
+          </button>
+          <input 
+            type="text" 
+            placeholder={location.pathname.includes('roomies') ? "Buscar roomies..." : "Buscar..."}
+            value={localSearchQuery}
+            onChange={handleSearchChange}
+          />
+        </form>
       </div>
 
       <div className="navbar-right">

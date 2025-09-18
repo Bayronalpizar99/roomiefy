@@ -23,8 +23,8 @@ export default function RoommateCard({ roommate = {}, onClick = () => {}, view =
         className="property-card cursor-pointer"
         onClick={() => onClick(roommate)}
       >
-        <Flex direction="column" gap="4">
-          <Flex direction={view === 'list' ? 'column' : 'row'} gap="2" m="1rem" minWidth="15rem" className="roomie-card-header">
+        <Flex direction={view === 'list' ? 'row' : 'column'} gap="4" className={`roomie-card-body ${view}-mode`}>
+          <Flex direction={view === 'list' ? 'column' : 'row'} gap="2" className="roomie-card-header">
             {/* Avatar con verificación */}
             <Box position="relative" className="avatar-wrap">
               <Avatar.Root className="avatar">
@@ -50,30 +50,32 @@ export default function RoommateCard({ roommate = {}, onClick = () => {}, view =
                 </div>
               )}
             </Box>
-            {/* Nombre y edad */}
-            <Flex align="center" gap="2">
-              <Heading as="h3" size="3">
-                {roommate?.name || "Desconocido"}
-              </Heading>
-              <Text size="2" color="gray">
-                {roommate?.age || "--"} años
-              </Text>
-            </Flex>
 
-            {/* Rating */}
-            <Flex align="center" gap="1">
-              <Star className="h-4 w-4 rating-star" color="var(--color-primary)" fill="var(--color-primary)" />
-              <Text size="2" weight="medium">
-                {roommate?.rating || "0"}
-              </Text>
-              <Text size="1" color="gray">
-                ({roommate?.reviews || "0"})
-              </Text>
-            </Flex>
-            
+            <Box className="roomie-card-info">  
+              {/* Nombre y edad */}
+              <Flex align="center" gap="2" className="name-age">
+                <Heading as="h3" size="3">
+                  {roommate?.name || "Desconocido"}
+                </Heading>
+                <Text size="2" color="gray">
+                  {roommate?.age || "--"} años
+                </Text>
+              </Flex>
+
+              {/* Rating */}
+              <Flex align="center" gap="1" className="rating-row">
+                <Star className="h-4 w-4 rating-star" color="var(--color-primary)" fill="var(--color-primary)" />
+                <Text size="2" weight="medium">
+                  {roommate?.rating || "0"}
+                </Text>
+                <Text size="1" color="gray">
+                  ({roommate?.reviews || "0"})
+                </Text>
+              </Flex>
+            </Box>
           </Flex>
 
-          {/* Contenido principal */}
+          {/* Contenido principal (derecha en vista lista) */}
           <Flex direction="column" gap="2" className="property-info">
 
 
@@ -112,25 +114,57 @@ export default function RoommateCard({ roommate = {}, onClick = () => {}, view =
 
             {/* Intereses */}
             <Flex gap="1" wrap="wrap">
-              {roommate?.interests?.slice(0, 3)?.map((interest) => (
+              {(view === 'list' ? roommate?.interests : roommate?.interests?.slice(0, 3))?.map((interest) => (
                 <Badge key={interest} variant="soft" radius="full" color="purple">
                   <Text size="1">{interest}</Text>
                 </Badge>
               ))}
-              {roommate?.interests?.length > 3 && (
+              {view !== 'list' && roommate?.interests?.length > 3 && (
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
-                    <Badge variant="soft" radius="full" color="gray">
-                      <Text size="1">+{roommate.interests.length - 3}</Text>
+                    <Badge 
+                      variant="soft" 
+                      radius="full" 
+                      color="purple"
+                      style={{ 
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        ':hover': { opacity: 0.9 }
+                      }}
+                    >
+                      <Text size="1" weight="medium">+{roommate.interests.length - 3} más</Text>
                     </Badge>
                   </Tooltip.Trigger>
-                  <Tooltip.Content>
-                    <Text size="2" mb="1" weight="bold">
-                      Otros intereses:
+                  <Tooltip.Content 
+                    side="top" 
+                    sideOffset={5}
+                    avoidCollisions={true}
+                    collisionPadding={16}
+                    style={{
+                      backgroundColor: 'white',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                      border: '1px solid var(--gray-5)',
+                      maxWidth: '250px',
+                      zIndex: 1000,
+                      // Asegurar que el tooltip no se salga de la pantalla
+                      position: 'relative',
+                      '--tooltip-arrow-size': '8px',
+                      '--tooltip-arrow-offset': 'calc(var(--tooltip-arrow-size) / 2)'
+                    }}
+                  >
+                    <Text size="2" mb="2" weight="semibold" style={{ color: 'var(--purple-11)' }}>
+                      Otros intereses
                     </Text>
                     <Flex gap="1" wrap="wrap">
                       {roommate.interests.slice(3).map((interest) => (
-                        <Badge key={interest} variant="surface" color="gray">
+                        <Badge 
+                          key={interest} 
+                          variant="soft" 
+                          color="purple"
+                          style={{ marginBottom: '4px' }}
+                        >
                           <Text size="1">{interest}</Text>
                         </Badge>
                       ))}

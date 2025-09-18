@@ -2,14 +2,12 @@
 .filters-container {
   width: 280px;
   flex-shrink: 0;
-  
-  /* Clave: Hacemos que el contenedor se "pegue" a la parte superior */
+  margin: 1rem;
   position: sticky;
-  top: 0; /* Se pegará al inicio del contenedor de scroll */
-  
-  /* Ajustamos la altura para que ocupe el espacio visible y permita scroll interno */
-  max-height: calc(100vh - 110px); /* (Altura de la ventana - Altura del Navbar - Padding) */
-  overflow-y: auto;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: visible;
+  padding-right: 0.5rem;
 }
 
 .filters-title {
@@ -51,28 +49,33 @@
 
 /* Estilos para Radix Slider */
 .radix-slider-root {
-  /* Contenedor del slider */
-  background: transparent; /* sin bloque de fondo visible */
   position: relative;
   display: flex;
   align-items: center;
   width: 100%;
+  min-width: 0;
   height: 20px;
   cursor: pointer;
+  padding: 0 8px;
+  box-sizing: border-box;
 }
+
 .radix-slider-track {
   background-color: var(--color-input-bg);
   position: relative;
   flex-grow: 1;
   border-radius: 9999px;
   height: 4px;
+  width: 100%;
 }
+
 .radix-slider-range {
   position: absolute;
   background: linear-gradient(90deg, #8b5cf6, #7c3aed);
   border-radius: 9999px;
   height: 100%;
 }
+
 .radix-slider-thumb {
   display: block;
   width: 16px;
@@ -80,19 +83,34 @@
   background-color: white;
   border: 2px solid var(--color-primary);
   border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
+
+.radix-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.2);
+}
+
 .radix-slider-thumb:focus {
   outline: none;
-  /* Focus ring morado basado en --color-primary (#7c3aed) */
   box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.4);
 }
 
-.price-range-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-  margin-bottom: 0.5rem;
+/* Contenedor del grupo de filtros */
+.filter-group {
+  width: 100%;
+  padding: 12px 8px;
+  box-sizing: border-box;
+}
+
+/* Etiquetas de los rangos */
+.filter-group > .rt-Text {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  font-weight: 500;
 }
 
 /* Estilos para Radix Select */

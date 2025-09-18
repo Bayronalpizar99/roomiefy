@@ -14,7 +14,7 @@ import RoomieFilters from '../components/RoomieFilters';
 
 
 
-const RoomiesPage = () => {
+const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
     const [allRoommates, setAllRoommates] = useState([]);  
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
@@ -31,7 +31,7 @@ const RoomiesPage = () => {
     const [maxAge, setMaxAge] = useState(99);
 
     const [filters, setFilters] = useState({
-        location: '',
+        location: searchQuery, // Initialize with searchQuery
         priceRange: [100, 2000],
         ageRange: [18, 99],
         hasApartment: 'any',
@@ -40,6 +40,16 @@ const RoomiesPage = () => {
         minCleanliness: 3,
         minSocial: 3,
     });
+    
+    // Update filters when searchQuery changes
+    useEffect(() => {
+        setFilters(prev => ({
+            ...prev,
+            location: searchQuery
+        }));
+        // Reset to first page when search changes
+        setCurrentPage(1);
+    }, [searchQuery]);
 
     useEffect(() => {
         const loadRoommates = async () => {
@@ -64,10 +74,21 @@ const RoomiesPage = () => {
     const filteredRoommates = useMemo(() => {
         let list = [...allRoommates];
 
-        // Ubicación
+        // Search functionality - search in name, location, bio, and interests
         if (filters.location) {
-            const q = filters.location.toLowerCase();
-            list = list.filter(r => (r.location || '').toLowerCase().includes(q));
+            const searchTerm = filters.location.toLowerCase().trim();
+            if (searchTerm) {
+                list = list.filter(roommate => {
+                    const searchIn = [
+                        roommate.name || '',
+                        roommate.location || '',
+                        roommate.bio || '',
+                        ...(roommate.interests || []).join(' ')
+                    ].join(' ').toLowerCase();
+                    
+                    return searchIn.includes(searchTerm);
+                });
+            }
         }
 
         // Presupuesto: rango que se solape con el seleccionado
