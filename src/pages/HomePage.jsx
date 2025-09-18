@@ -1,10 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { fetchProperties } from '../services/api';
 import PropertyCard from '../components/PropertyCard';
+<<<<<<< Updated upstream
 import Filters from '../components/Filters';
 import ViewOptions from '../components/ViewOptions';
 import Pagination from '../components/Pagination';
 import './HomePage.css';
+=======
+import './PublishStyles.css'; // Asegúrate de tener estilos para la página
+>>>>>>> Stashed changes
 
 const HomePage = () => {
   const [allProperties, setAllProperties] = useState([]);

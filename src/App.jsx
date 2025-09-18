@@ -8,6 +8,7 @@ import HomePage from './pages/HomePage.jsx';
 import RoomiesPage from './pages/RoomiesPage.jsx';
 import PublishPage from './pages/PublishPage.jsx';
 import PropertyDetailPage from './pages/PropertyDetailPage.jsx'; // 1. Importa la nueva página
+import RoomieDetailPage from './pages/RoomieDetailPage.jsx';
 import './App.css';
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
             <Route path="publicar" element={<PublishPage />} />
             {/* 2. Añade la nueva ruta dinámica */}
             <Route path="/propiedad/:propertyId" element={<PropertyDetailPage />} />
+            <Route path="/roomie/:roomieId" element={<RoomieDetailPage />} />
           </Routes>
         </ScrollArea.Viewport>
         <ScrollArea.Scrollbar className="scroll-area-scrollbar" orientation="vertical">
