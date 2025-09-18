@@ -50,15 +50,10 @@
   padding: 0;
 }
 
-/* --- INICIO DE CAMBIOS --- */
-
 .navbar-links a {
-  /* 1. Convertimos el enlace en un contenedor flex para alinear su contenido */
   display: flex;
   align-items: center;
-  /* 2. Creamos un espacio entre el icono y el texto */
   gap: 8px;
-
   text-decoration: none;
   color: var(--color-text-secondary);
   font-weight: var(--font-weight-medium);
@@ -67,8 +62,6 @@
   transition: all 0.2s ease-in-out;
   border-bottom: 2px solid transparent;
 }
-
-/* --- FIN DE CAMBIOS --- */
 
 .navbar-links a:hover {
   color: var(--color-primary);
@@ -152,25 +145,101 @@
   .navbar {
     padding: 0.8rem 1rem;
   }
-
   .navbar-left {
     gap: 1rem;
   }
-
   .navbar-center {
     margin: 0 1rem;
   }
-
   .search-bar {
     max-width: 250px;
   }
-
   .navbar-right {
     gap: 0.3rem;
   }
-
   .icon-button {
     width: 36px;
     height: 36px;
   }
+}
+
+/* --- INICIO DE ESTILOS PARA EL MENÚ DE USUARIO --- */
+
+/* Contenedor principal para anclar el menú desplegable */
+.user-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Estilo para el avatar del usuario */
+.user-avatar {
+  width: 40px;      /* Mismo tamaño que los icon-button */
+  height: 40px;     /* Mismo tamaño que los icon-button */
+  border-radius: 50%; /* Esto hace que la imagen sea redonda */
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.user-menu:hover .user-avatar {
+  border-color: var(--color-primary);
+}
+
+/* Contenedor del menú desplegable */
+.dropdown-menu {
+    display: none;
+  position: absolute;
+  top: 100%; /* Inicia justo al borde del contenedor principal */
+  right: 0;
+  margin-top: 0.8rem; /* Añade un espacio visual SIN crear un hueco para el mouse */
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 220px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+/* Muestra el menú cuando se pasa el mouse sobre .user-menu */
+.user-menu:hover .dropdown-menu {
+  display: block;
+}
+
+/* Cabecera del menú con nombre y correo */
+.dropdown-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-header strong {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.dropdown-header span {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Estilo para el botón de "Salir" */
+.dropdown-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background-color: transparent;
+  border: none;
+  padding: 0.75rem 1rem;
+  color: var(--color-text);
+}
+
+.dropdown-item:hover {
+  background-color: var(--color-input-bg);
+  color: var(--color-primary);
 }
