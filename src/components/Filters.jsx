@@ -82,13 +82,20 @@ const Filters = ({
       {/* RANGO DE PRECIO */}
       <div className="filter-group">
         <Label.Root>Precio (hasta ${filters.price})</Label.Root>
+        {/* --- INICIO DE LA MODIFICACIÓN --- */}
         <Slider.Root 
           className="radix-slider-root" 
           value={[filters.price]} 
           onValueChange={handlePriceChange}
           max={500} 
           step={10}
-        />
+        >
+          <Slider.Track className="radix-slider-track">
+            <Slider.Range className="radix-slider-range" />
+          </Slider.Track>
+          <Slider.Thumb className="radix-slider-thumb" aria-label="Precio" />
+        </Slider.Root>
+        {/* --- FIN DE LA MODIFICACIÓN --- */}
       </div>
       
       {/* RECÁMARAS */}

@@ -14,6 +14,7 @@
 
   /* Tema Oscuro (Por defecto) */
   --color-text: rgba(255, 255, 255, 0.87);
+   --color-heading: #e0e0e0; /* <-- AÑADE ESTA LÍNEA */
   --color-text-secondary: rgba(255, 255, 255, 0.6);
   --color-background: #0e1316;
   --color-surface: #0e1316;
@@ -36,6 +37,7 @@
 /* Tema Claro (se activa cuando el contenedor tiene la clase 'light') */
 body.light { /* <-- CAMBIA ESTE SELECTOR */
   --color-text: #213547;
+  --color-heading: #e0e0e0; 
   --color-text-secondary: rgba(33, 53, 71, 0.6);
   --color-background: #ffffff;
   --color-surface: #ffffff;

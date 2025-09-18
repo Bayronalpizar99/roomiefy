@@ -173,7 +173,7 @@ const RoomiesPage = () => {
                 maxAge={maxAge}
             />
             <div className="properties-section">
-                <h1>Encuentra tu roomie ideal</h1>
+                <h1>Encuentra tu roomie ideal 🧑‍🤝‍🧑</h1>
                 <ViewOptions
                     view={view}
                     setView={setView}

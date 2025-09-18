@@ -20,9 +20,15 @@ export const Navbar = ({ toggleTheme }) => {
   return (
     <NavigationMenu.Root className="navbar">
       <div className="navbar-left">
-        <div className="navbar-logo">
-          <img src={appLogo} alt="Logo de la aplicación" className="logo-image" />
-        </div>
+        
+        {/* --- INICIO DE LA MODIFICACIÓN --- */}
+        <Link to="/" className="navbar-logo-link">
+          <div className="navbar-logo">
+            <img src={appLogo} alt="Logo de la aplicación" className="logo-image" />
+          </div>
+        </Link>
+        {/* --- FIN DE LA MODIFICACIÓN --- */}
+
         <NavigationMenu.List className="navbar-links">
           <NavigationMenu.Item>
             <Link to="/" className={location.pathname === '/' ? 'active' : ''}>
@@ -57,12 +63,10 @@ export const Navbar = ({ toggleTheme }) => {
             <span className="notification-badge">3</span>
         </button>
         
-        {/* --- INICIO DE LA MODIFICACIÓN --- */}
         {user ? (
-          <div className="user-menu"> {/* Contenedor para el menú */}
+          <div className="user-menu">
             <img src={user.picture} alt="Avatar de usuario" className="user-avatar" />
-            
-            <div className="dropdown-menu"> {/* Menú desplegable */}
+            <div className="dropdown-menu">
               <div className="dropdown-header">
                 <strong>{user.name}</strong>
                 <span>{user.email}</span>
@@ -75,8 +79,6 @@ export const Navbar = ({ toggleTheme }) => {
         ) : (
           <LoginButton />
         )}
-        {/* --- FIN DE LA MODIFICACIÓN --- */}
-
       </div>
     </NavigationMenu.Root>
   );

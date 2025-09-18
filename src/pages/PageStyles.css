@@ -9,7 +9,7 @@
 }
 
 .main-content h1 {
-    color: var(--color-text);
+    color: var(--color-heading); 
     margin-bottom: 1rem;
 }
 

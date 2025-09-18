@@ -42,6 +42,18 @@
   width: auto;
 }
 
+/* --- ESTILOS PARA EL LOGO INTERACTIVO (VERSIÓN HOVER) --- */
+.navbar-logo-link {
+  text-decoration: none;
+  display: inline-block;
+  transition: transform 0.2s ease-in-out; 
+}
+
+.navbar-logo-link:hover {
+  transform: scale(1.08); /* Efecto de zoom al pasar el mouse */
+}
+/* --- FIN DE ESTILOS PARA EL LOGO --- */
+
 .navbar-links {
   list-style: none;
   display: flex;
@@ -170,9 +182,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  /* Añade un padding abajo para extender el área de hover */
   padding-bottom: 0.8rem;
-  /* Añade un margen negativo para que el padding no afecte el layout */
   margin-bottom: -0.8rem;
 }
 
@@ -194,7 +204,6 @@
 .dropdown-menu {
   display: none;
   position: absolute;
-  /* El top ahora se alinea perfectamente con el final del padding */
   top: 100%;
   right: 0;
   background-color: var(--color-surface);
@@ -206,7 +215,6 @@
   overflow: hidden;
 }
 
-/* Muestra el menú cuando se pasa el mouse sobre .user-menu */
 .user-menu:hover .dropdown-menu {
   display: block;
 }
