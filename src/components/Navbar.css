@@ -163,20 +163,24 @@
   }
 }
 
-/* --- INICIO DE ESTILOS PARA EL MENÚ DE USUARIO --- */
+/* --- INICIO DE ESTILOS PARA EL MENÚ DE USUARIO (VERSIÓN CORREGIDA) --- */
 
 /* Contenedor principal para anclar el menú desplegable */
 .user-menu {
   position: relative;
   display: flex;
   align-items: center;
+  /* Añade un padding abajo para extender el área de hover */
+  padding-bottom: 0.8rem;
+  /* Añade un margen negativo para que el padding no afecte el layout */
+  margin-bottom: -0.8rem;
 }
 
 /* Estilo para el avatar del usuario */
 .user-avatar {
-  width: 40px;      /* Mismo tamaño que los icon-button */
-  height: 40px;     /* Mismo tamaño que los icon-button */
-  border-radius: 50%; /* Esto hace que la imagen sea redonda */
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   cursor: pointer;
   border: 2px solid transparent;
   transition: border-color 0.2s;
@@ -188,11 +192,11 @@
 
 /* Contenedor del menú desplegable */
 .dropdown-menu {
-    display: none;
+  display: none;
   position: absolute;
-  top: 100%; /* Inicia justo al borde del contenedor principal */
+  /* El top ahora se alinea perfectamente con el final del padding */
+  top: 100%;
   right: 0;
-  margin-top: 0.8rem; /* Añade un espacio visual SIN crear un hueco para el mouse */
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
