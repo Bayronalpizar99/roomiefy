@@ -1,19 +1,22 @@
-import React from 'react';
-import './Navbar.css';
-import * as NavigationMenu from '@radix-ui/react-navigation-menu';
-import { Link, useLocation } from 'react-router-dom';
+import React from "react";
+import "./Navbar.css";
+import * as NavigationMenu from "@radix-ui/react-navigation-menu";
+import { Link, useLocation } from "react-router-dom";
 import {
-  MagnifyingGlassIcon, SunIcon, ChatBubbleIcon, BellIcon,
+  MagnifyingGlassIcon,
+  SunIcon,
+  ChatBubbleIcon,
+  BellIcon,
   HomeIcon,
   AvatarIcon,
-  PlusCircledIcon
-} from '@radix-ui/react-icons';
+  PlusCircledIcon,
+} from "@radix-ui/react-icons";
 
-import appLogo from '../assets/roomify2.png';
-import { useAuth } from '../context/AuthContext';
-import LoginButton from './LoginButton';
+import appLogo from "../assets/roomify2.png";
+import { useAuth } from "../context/AuthContext";
+import LoginButton from "./LoginButton";
 
-export const Navbar = ({ toggleTheme }) => { 
+export const Navbar = ({ toggleTheme }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
 
@@ -21,21 +24,31 @@ export const Navbar = ({ toggleTheme }) => {
     <NavigationMenu.Root className="navbar">
       <div className="navbar-left">
         <div className="navbar-logo">
-          <img src={appLogo} alt="Logo de la aplicación" className="logo-image" />
+          <img
+            src={appLogo}
+            alt="Logo de la aplicación"
+            className="logo-image"
+          />
         </div>
         <NavigationMenu.List className="navbar-links">
           <NavigationMenu.Item>
-            <Link to="/" className={location.pathname === '/' ? 'active' : ''}>
+            <Link to="/" className={location.pathname === "/" ? "active" : ""}>
               <HomeIcon /> Propiedades
             </Link>
           </NavigationMenu.Item>
           <NavigationMenu.Item>
-            <Link to="/roomies" className={location.pathname === '/roomies' ? 'active' : ''}>
+            <Link
+              to="/roomies"
+              className={location.pathname === "/roomies" ? "active" : ""}
+            >
               <AvatarIcon /> Roomies
             </Link>
           </NavigationMenu.Item>
           <NavigationMenu.Item>
-            <Link to="/publicar" className={location.pathname === '/publicar' ? 'active' : ''}>
+            <Link
+              to="/publicar"
+              className={location.pathname === "/publicar" ? "active" : ""}
+            >
               <PlusCircledIcon /> Publicar
             </Link>
           </NavigationMenu.Item>
@@ -50,23 +63,37 @@ export const Navbar = ({ toggleTheme }) => {
       </div>
 
       <div className="navbar-right">
-        <button className="icon-button" onClick={toggleTheme}><SunIcon /></button>
-        <button className="icon-button"><ChatBubbleIcon /></button>
-        <button className="icon-button">
-            <BellIcon />
-            <span className="notification-badge">3</span>
+        <button className="icon-button" onClick={toggleTheme}>
+          <SunIcon />
         </button>
-        
+        <button className="icon-button">
+          <ChatBubbleIcon />
+        </button>
+        <button className="icon-button">
+          <BellIcon />
+          <span className="notification-badge">3</span>
+        </button>
+
         {/* --- INICIO DE LA MODIFICACIÓN --- */}
         {user ? (
-          <div className="user-menu"> {/* Contenedor para el menú */}
-            <img src={user.picture} alt="Avatar de usuario" className="user-avatar" />
-            
-            <div className="dropdown-menu"> {/* Menú desplegable */}
+          <div className="user-menu">
+            {" "}
+            {/* Contenedor para el menú */}
+            <img
+              src={user.picture}
+              alt="Avatar de usuario"
+              className="user-avatar"
+            />
+            <div className="dropdown-menu">
+              {" "}
+              {/* Menú desplegable */}
               <div className="dropdown-header">
                 <strong>{user.name}</strong>
                 <span>{user.email}</span>
               </div>
+              <Link to="/perfil" className="dropdown-item">
+                <AvatarIcon /> Mi Perfil
+              </Link>
               <button onClick={logout} className="dropdown-item">
                 Salir
               </button>
@@ -76,7 +103,6 @@ export const Navbar = ({ toggleTheme }) => {
           <LoginButton />
         )}
         {/* --- FIN DE LA MODIFICACIÓN --- */}
-
       </div>
     </NavigationMenu.Root>
   );
