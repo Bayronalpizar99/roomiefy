@@ -6,14 +6,12 @@
   box-sizing: border-box;
 }
 
+/* El body ya no necesita controlar el scroll */
 body {
   margin: 0;
   padding: 0;
   min-width: 320px;
-  min-height: 100vh;
   width: 100%;
-
-  /* Aplicando variables del tema */
   font-family: var(--font-family);
   line-height: var(--line-height);
   font-weight: var(--font-weight-regular);
@@ -23,6 +21,7 @@ body {
 
 #root {
   width: 100%;
+  height: 100vh; /* Ocupa toda la altura de la ventana */
   margin: 0;
   padding: 0;
 }

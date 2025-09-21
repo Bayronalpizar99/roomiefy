@@ -1,11 +1,12 @@
 /**
  * Obtiene los datos de las propiedades desde la API de Azure.
  */
+
+const apiUrl = import.meta.env.VITE_API_URL;
+const apiKey = import.meta.env.VITE_API_KEY;
+
 export const fetchProperties = async () => {
-  // En Vite, las variables de entorno se acceden con import.meta.env
-  // y deben empezar con el prefijo VITE_ en tu archivo .env
-  const apiUrl = import.meta.env.VITE_API_URL ;
-  const apiKey = import.meta.env.VITE_API_KEY;
+
 
   // Verificación para asegurar que las variables de entorno están cargadas
   if (!apiUrl) {
@@ -18,7 +19,10 @@ export const fetchProperties = async () => {
   }
 
   try {
-    const response = await fetch(apiUrl + '/properties', {
+
+
+      const response = await fetch(apiUrl + 'properties', {
+
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -134,5 +138,36 @@ export const fetchConversations = async () => {
     }
     
     return []; // Devuelve un array vacío para que la UI no se rompa.
+  }
+};
+
+export const fetchRoommates = async () => {
+  // Verificación para asegurar que las variables de entorno están cargadas
+  if (!apiUrl || !apiKey) {
+    console.error("Error: Las variables de entorno VITE_API_URL o VITE_API_KEY no están definidas.");
+    return [];
+  }
+
+  try {
+    const response = await fetch(apiUrl + 'roomies', {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": apiKey,
+        "Accept": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener los roommates: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    // Retornar data directamente, asumimos que la API devuelve un array
+    return data;
+  } catch (error) {
+    console.error(error);
+    return []; // Devuelve un array vacío si falla
   }
 };

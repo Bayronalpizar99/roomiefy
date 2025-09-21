@@ -1,0 +1,235 @@
+/* Contenedor principal de filtros */
+.filters-container {
+  width: 280px;
+  flex-shrink: 0;
+  margin: 1rem;
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: visible;
+  padding-right: 0.5rem;
+}
+
+.filters-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  color: var(--color-text);
+}
+
+/* Grupo de filtros y Label principal */
+.filter-group {
+  margin-bottom: 1.75rem;
+}
+.filter-group > label,
+.filter-group .radix-label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+  color: var(--color-text);
+}
+
+/* Input de texto genérico */
+.radix-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid transparent;
+  background-color: var(--color-input-bg);
+  border-radius: var(--border-radius);
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+.radix-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Estilos para Radix Slider */
+.radix-slider-root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  height: 20px;
+  cursor: pointer;
+  padding: 0 8px;
+  box-sizing: border-box;
+}
+
+.radix-slider-track {
+  background-color: var(--color-input-bg);
+  position: relative;
+  flex-grow: 1;
+  border-radius: 9999px;
+  height: 4px;
+  width: 100%;
+}
+
+.radix-slider-range {
+  position: absolute;
+  background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+  border-radius: 9999px;
+  height: 100%;
+}
+
+.radix-slider-thumb {
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  border: 2px solid var(--color-primary);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.radix-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.2);
+}
+
+.radix-slider-thumb:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.4);
+}
+
+/* Contenedor del grupo de filtros */
+.filter-group {
+  width: 100%;
+  padding: 12px 8px;
+  box-sizing: border-box;
+}
+
+/* Etiquetas de los rangos */
+.filter-group > .rt-Text {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+/* Estilos para Radix Select */
+.radix-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  border: 1px solid transparent;
+  background-color: var(--color-input-bg);
+  border-radius: var(--border-radius);
+  color: var(--color-text);
+  cursor: pointer;
+}
+.radix-select-trigger:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+.radix-select-content {
+  background-color: var(--color-button-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: 0.25rem;
+  z-index: 10;
+}
+.radix-select-item {
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.radix-select-item[data-highlighted] {
+  background-color: var(--color-primary);
+  color: white;
+}
+.radix-select-item-indicator {
+    color: var(--color-primary);
+}
+.radix-select-item[data-highlighted] .radix-select-item-indicator {
+    color: white;
+}
+
+/* Estilos para Radix Checkbox y Comodidades */
+.scrollable-amenities {
+  max-height: 210px;
+  overflow-y: auto;
+  padding-right: 12px;
+}
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.radix-checkbox-root {
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--color-primary);
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s;
+}
+.radix-checkbox-root:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+.radix-checkbox-root[data-state='checked'] {
+  border-color: var(--color-primary);
+}
+.radix-checkbox-indicator {
+  color: var(--color-primary);
+}
+.radix-checkbox-label {
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  margin: 0;
+}
+
+/* Estilos para la barra de scroll */
+.scrollable-amenities::-webkit-scrollbar {
+  width: 8px;
+}
+.scrollable-amenities::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollable-amenities::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 10px;
+  border: 3px solid var(--color-surface);
+}
+
+/* Botón de limpiar */
+.clear-button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-weight: 500;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+.clear-button:hover {
+  background-color: var(--color-input-bg);
+  border-color: var(--color-text);
+}
