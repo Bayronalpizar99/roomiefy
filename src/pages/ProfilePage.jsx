@@ -1,0 +1,556 @@
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import * as Slider from "@radix-ui/react-slider";
+import "./ProfileStyles.css";
+
+const steps = ["Personal", "Vivienda", "Preferencias", "Intereses"];
+
+const RoomieProfileForm = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const [step, setStep] = useState(0);
+  const [errors, setErrors] = useState({});
+  const [allIntereses, setAllIntereses] = useState([]);
+  const [allIdiomas, setAllIdiomas] = useState([]);
+  const [nuevoInteres, setNuevoInteres] = useState(""); // Para input "Otro"
+
+  const [formData, setFormData] = useState({
+    //Datos Personales
+    nombre: "",
+    edad: "",
+    email: "",
+    ubicacion: "",
+    ocupacion: "",
+    descripcion: "",
+    foto: null,
+    fotoPreview: null,
+    //Datos de Vivienda
+    tieneApartamento: "",
+    presupuesto: 100, // valor por defecto
+    //Datos de Preferencias
+    nivelSocial: 5,
+    nivelLimpieza: 5,
+    aceptaFumadores: "",
+    aceptaMascotas: "",
+    aceptaInvitados: "",
+  });
+
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        nombre: prev.nombre || user.name || "",
+        email: prev.email || user.email || "",
+        fotoPreview: prev.fotoPreview || user.picture || null,
+      }));
+    }
+  }, [user]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleRadioChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData((prev) => ({
+        ...prev,
+        foto: file,
+        fotoPreview: URL.createObjectURL(file),
+      }));
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Datos enviados:", formData);
+  };
+
+  const validateStep = () => {
+    const newErrors = {};
+
+    if (step === 0) {
+      if (!formData.nombre.trim()) {
+        newErrors.nombre = "El nombre es obligatorio";
+      } else if (/\d/.test(formData.nombre)) {
+        newErrors.nombre = "El nombre no puede contener números";
+      }
+
+      if (!formData.edad.trim()) {
+        newErrors.edad = "La edad es obligatoria";
+      } else if (isNaN(formData.edad)) {
+        newErrors.edad = "La edad debe ser un número";
+      } else if (parseInt(formData.edad, 10) < 18) {
+        newErrors.edad = "Debes ser mayor de 18 años";
+      } else if (parseInt(formData.edad, 10) > 100) {
+        newErrors.edad = "Debes ser menor de 100 años";
+      }
+
+      if (!formData.ubicacion.trim())
+        newErrors.ubicacion = "La ubicación es obligatoria";
+
+      if (!formData.ocupacion.trim())
+        newErrors.ocupacion = "La ocupación es obligatoria";
+
+      if (!formData.descripcion.trim())
+        newErrors.descripcion = "La descripción es obligatoria";
+    }
+
+    if (step === 1) {
+      if (!formData.tieneApartamento)
+        newErrors.tieneApartamento = "Selecciona una opción";
+      if (!formData.presupuesto)
+        newErrors.presupuesto = "Define tu presupuesto";
+    }
+    if (step === 2) {
+      if (!formData.aceptaFumadores)
+        newErrors.aceptaFumadores = "Selecciona una opción";
+      if (!formData.aceptaMascotas)
+        newErrors.aceptaMascotas = "Selecciona una opción";
+      if (!formData.aceptaInvitados)
+        newErrors.aceptaInvitados = "Selecciona una opción";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNext = (e) => {
+    e.preventDefault();
+    if (!validateStep()) return;
+
+    if (step < steps.length - 1) {
+      setStep(step + 1);
+    } else {
+      handleSubmit(e);
+    }
+  };
+
+  const handleStepClick = (index) => {
+    if (index === step) return; // Si ya está en el mismo paso, no hacer nada
+
+    if (index > step) {
+      // Si quiere avanzar, validar primero
+      if (!validateStep()) return;
+    }
+
+    // Si quiere retroceder o ya validó, permitir
+    setStep(index);
+  };
+
+  const handleBack = (e) => {
+    e.preventDefault();
+    if (step > 0) {
+      setStep(step - 1);
+    }
+  };
+
+  return (
+    <div className="perfil-form-container">
+      <button className="back-button" onClick={() => navigate(-1)}>
+        ← Volver
+      </button>
+      <h2>Crear perfil de roomie</h2>
+      <p className="progress-text">Progreso de perfil</p>
+
+      {/* Barra de progreso */}
+      <div className="progress-bar">
+        <div
+          className="progress-fill"
+          style={{ width: `${((step + 1) / steps.length) * 100}%` }}
+        ></div>
+      </div>
+
+      {/* Tabs */}
+      <div className="steps-tabs">
+        {steps.map((s, i) => (
+          <button
+            key={s}
+            type="button"
+            className={`step-tab ${i === step ? "active" : ""}`}
+            onClick={() => handleStepClick(i)}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+
+      <form className="perfil-form" onSubmit={handleSubmit}>
+        {step === 0 && (
+          <>
+            {/* --- PASO 1: PERSONAL --- */}
+            <div className="form-row">
+              <div className="form-group">
+                <label>Nombre Completo *</label>
+                <input
+                  type="text"
+                  name="nombre"
+                  value={formData.nombre}
+                  onChange={handleChange}
+                  className={errors.nombre ? "input-error" : ""}
+                />
+                {errors.nombre && <p className="error-text">{errors.nombre}</p>}
+              </div>
+
+              <div className="form-group">
+                <label>Edad *</label>
+                <input
+                  type="text"
+                  name="edad"
+                  value={formData.edad}
+                  onChange={handleChange}
+                  className={errors.edad ? "input-error" : ""}
+                />
+                {errors.edad && <p className="error-text">{errors.edad}</p>}
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                readOnly
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Foto de perfil</label>
+              <input type="file" accept="image/*" onChange={handleFileChange} />
+              {formData.fotoPreview && (
+                <img
+                  src={formData.fotoPreview}
+                  alt="Preview"
+                  className="foto-preview"
+                />
+              )}
+            </div>
+
+            <div className="form-group">
+              <label>Ubicación *</label>
+              <input
+                type="text"
+                name="ubicacion"
+                value={formData.ubicacion}
+                onChange={handleChange}
+                placeholder="Ej. Ciudad Quesada, Alajuela"
+                className={errors.ubicacion ? "input-error" : ""}
+              />
+              {errors.ubicacion && (
+                <p className="error-text">{errors.ubicacion}</p>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label>Ocupación *</label>
+              <input
+                type="text"
+                name="ocupacion"
+                value={formData.ocupacion}
+                onChange={handleChange}
+                placeholder="Ej. Estudiante, Ingeniero, Diseñador..."
+                className={errors.ocupacion ? "input-error" : ""}
+              />
+              {errors.ocupacion && (
+                <p className="error-text">{errors.ocupacion}</p>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label>Descripción personal *</label>
+              <textarea
+                name="descripcion"
+                value={formData.descripcion}
+                onChange={handleChange}
+                placeholder="Cuéntanos sobre ti, tus pasatiempos, qué buscas en un roomie..."
+                className={errors.descripcion ? "input-error" : ""}
+              />
+              {errors.descripcion && (
+                <p className="error-text">{errors.descripcion}</p>
+              )}
+            </div>
+          </>
+        )}
+
+        {step === 1 && (
+          <>
+            {/* --- PASO 2: VIVIENDA --- */}
+            <div className="form-group">
+              <label>¿Tienes apartamento?</label>
+              <div className="radio-group">
+                <label
+                  className={`radio-option ${
+                    formData.tieneApartamento === "si" ? "active" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="tieneApartamento"
+                    value="si"
+                    checked={formData.tieneApartamento === "si"}
+                    onChange={handleRadioChange}
+                  />
+                  Sí, busco roomie
+                </label>
+
+                <label
+                  className={`radio-option ${
+                    formData.tieneApartamento === "no" ? "active" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="tieneApartamento"
+                    value="no"
+                    checked={formData.tieneApartamento === "no"}
+                    onChange={handleRadioChange}
+                  />
+                  No, busco apartamento
+                </label>
+              </div>
+              {errors.tieneApartamento && (
+                <p className="error-text">{errors.tieneApartamento}</p>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label>Presupuesto (USD)</label>
+              <div className="range-wrapper">
+                <Slider.Root
+                  className="slider-root"
+                  value={[formData.presupuesto]}
+                  min={100}
+                  max={2000}
+                  step={10}
+                  onValueChange={([value]) =>
+                    setFormData((prev) => ({ ...prev, presupuesto: value }))
+                  }
+                >
+                  <Slider.Track className="slider-track">
+                    <Slider.Range className="slider-range" />
+                  </Slider.Track>
+                  <Slider.Thumb className="slider-thumb" />
+                </Slider.Root>
+                <div className="range-value">${formData.presupuesto}</div>
+              </div>
+              {errors.presupuesto && (
+                <p className="error-text">{errors.presupuesto}</p>
+              )}
+            </div>
+          </>
+        )}
+        {step === 2 && (
+          <>
+            {/* --- PASO 3: PREFERENCIAS --- */}
+            <div className="form-group">
+              <label>Nivel social</label>
+              <div className="range-wrapper">
+                <Slider.Root
+                  className="slider-root"
+                  value={[formData.nivelSocial]}
+                  min={1}
+                  max={10}
+                  step={1}
+                  onValueChange={([value]) =>
+                    setFormData((prev) => ({ ...prev, nivelSocial: value }))
+                  }
+                >
+                  <Slider.Track className="slider-track">
+                    <Slider.Range className="slider-range" />
+                  </Slider.Track>
+                  <Slider.Thumb className="slider-thumb" />
+                </Slider.Root>
+                <div className="range-value">{formData.nivelSocial}/10</div>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Nivel de limpieza</label>
+              <div className="range-wrapper">
+                <Slider.Root
+                  className="slider-root"
+                  value={[formData.nivelLimpieza]}
+                  min={1}
+                  max={10}
+                  step={1}
+                  onValueChange={([value]) =>
+                    setFormData((prev) => ({ ...prev, nivelLimpieza: value }))
+                  }
+                >
+                  <Slider.Track className="slider-track">
+                    <Slider.Range className="slider-range" />
+                  </Slider.Track>
+                  <Slider.Thumb className="slider-thumb" />
+                </Slider.Root>
+                <div className="range-value">{formData.nivelLimpieza}/10</div>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>¿Aceptas fumadores?</label>
+              <div className="radio-group">
+                <label
+                  className={`radio-option ${
+                    formData.aceptaFumadores === "si" ? "active" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="aceptaFumadores"
+                    value="si"
+                    checked={formData.aceptaFumadores === "si"}
+                    onChange={handleRadioChange}
+                  />
+                  Sí
+                </label>
+                <label
+                  className={`radio-option ${
+                    formData.aceptaFumadores === "no" ? "active" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="aceptaFumadores"
+                    value="no"
+                    checked={formData.aceptaFumadores === "no"}
+                    onChange={handleRadioChange}
+                  />
+                  No
+                </label>
+              </div>
+              {errors.aceptaFumadores && (
+                <p className="error-text">{errors.aceptaFumadores}</p>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label>¿Aceptas mascotas?</label>
+              <div className="radio-group">
+                <label
+                  className={`radio-option ${
+                    formData.aceptaMascotas === "si" ? "active" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="aceptaMascotas"
+                    value="si"
+                    checked={formData.aceptaMascotas === "si"}
+                    onChange={handleRadioChange}
+                  />
+                  Sí
+                </label>
+                <label
+                  className={`radio-option ${
+                    formData.aceptaMascotas === "no" ? "active" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="aceptaMascotas"
+                    value="no"
+                    checked={formData.aceptaMascotas === "no"}
+                    onChange={handleRadioChange}
+                  />
+                  No
+                </label>
+              </div>
+              {errors.aceptaMascotas && (
+                <p className="error-text">{errors.aceptaMascotas}</p>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label>¿Aceptas invitados?</label>
+              <div className="radio-group">
+                <label
+                  className={`radio-option ${
+                    formData.aceptaInvitados === "si" ? "active" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="aceptaInvitados"
+                    value="si"
+                    checked={formData.aceptaInvitados === "si"}
+                    onChange={handleRadioChange}
+                  />
+                  Sí
+                </label>
+                <label
+                  className={`radio-option ${
+                    formData.aceptaInvitados === "no" ? "active" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="aceptaInvitados"
+                    value="no"
+                    checked={formData.aceptaInvitados === "no"}
+                    onChange={handleRadioChange}
+                  />
+                  No
+                </label>
+              </div>
+              {errors.aceptaInvitados && (
+                <p className="error-text">{errors.aceptaInvitados}</p>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Botones */}
+        <div className="form-buttons">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="btn cancel"
+          >
+            Cancelar
+          </button>
+          <div className="btn-group">
+            {step > 0 && (
+              <button
+                type="button"
+                onClick={handleBack}
+                className="btn secondary"
+              >
+                Atrás
+              </button>
+            )}
+            <button type="button" onClick={handleNext} className="btn primary">
+              {step === steps.length - 1 ? "Finalizar" : "Siguiente"}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default RoomieProfileForm;
