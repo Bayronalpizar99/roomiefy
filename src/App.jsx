@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
-import * as ScrollArea from "@radix-ui/react-scroll-area";
+import { useState, useEffect } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import * as ScrollArea from '@radix-ui/react-scroll-area';
 
 // 1. Importa el AuthProvider
 import { AuthProvider } from "./context/AuthContext";
