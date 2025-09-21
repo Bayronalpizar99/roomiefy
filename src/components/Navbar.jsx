@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Navbar.css';
 import * as NavigationMenu from '@radix-ui/react-navigation-menu';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   MagnifyingGlassIcon,
   SunIcon,
@@ -38,6 +38,9 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
     e.preventDefault();
     onSearch?.(localSearchQuery);
   };
+
+  const navigate = useNavigate();
+
 
   return (
     <NavigationMenu.Root className="navbar">
@@ -94,6 +97,9 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
         <button className="icon-button" onClick={toggleTheme}>
           <SunIcon />
         </button>
+
+        <button className="icon-button" onClick={() => navigate('/chat')}><ChatBubbleIcon /></button>
+
         <button className="icon-button">
           <ChatBubbleIcon />
         </button>
