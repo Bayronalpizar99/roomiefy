@@ -3,15 +3,18 @@ import './Navbar.css';
 import * as NavigationMenu from '@radix-ui/react-navigation-menu';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  MagnifyingGlassIcon, SunIcon, ChatBubbleIcon, BellIcon,
+  MagnifyingGlassIcon,
+  SunIcon,
+  ChatBubbleIcon,
+  BellIcon,
   HomeIcon,
   AvatarIcon,
-  PlusCircledIcon
-} from '@radix-ui/react-icons';
+  PlusCircledIcon,
+} from "@radix-ui/react-icons";
 
-import appLogo from '../assets/roomify2.png';
-import { useAuth } from '../context/AuthContext';
-import LoginButton from './LoginButton';
+import appLogo from "../assets/roomify2.png";
+import { useAuth } from "../context/AuthContext";
+import LoginButton from "./LoginButton";
 
 export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => { 
   const location = useLocation();
@@ -50,17 +53,23 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
 
         <NavigationMenu.List className="navbar-links">
           <NavigationMenu.Item>
-            <Link to="/" className={location.pathname === '/' ? 'active' : ''}>
+            <Link to="/" className={location.pathname === "/" ? "active" : ""}>
               <HomeIcon /> Propiedades
             </Link>
           </NavigationMenu.Item>
           <NavigationMenu.Item>
-            <Link to="/roomies" className={location.pathname === '/roomies' ? 'active' : ''}>
+            <Link
+              to="/roomies"
+              className={location.pathname === "/roomies" ? "active" : ""}
+            >
               <AvatarIcon /> Roomies
             </Link>
           </NavigationMenu.Item>
           <NavigationMenu.Item>
-            <Link to="/publicar" className={location.pathname === '/publicar' ? 'active' : ''}>
+            <Link
+              to="/publicar"
+              className={location.pathname === "/publicar" ? "active" : ""}
+            >
               <PlusCircledIcon /> Publicar
             </Link>
           </NavigationMenu.Item>
@@ -82,21 +91,37 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
       </div>
 
       <div className="navbar-right">
-        <button className="icon-button" onClick={toggleTheme}><SunIcon /></button>
-        <button className="icon-button"><ChatBubbleIcon /></button>
-        <button className="icon-button">
-            <BellIcon />
-            <span className="notification-badge">3</span>
+        <button className="icon-button" onClick={toggleTheme}>
+          <SunIcon />
         </button>
-        
+        <button className="icon-button">
+          <ChatBubbleIcon />
+        </button>
+        <button className="icon-button">
+          <BellIcon />
+          <span className="notification-badge">3</span>
+        </button>
+
+        {/* --- INICIO DE LA MODIFICACIÓN --- */}
         {user ? (
           <div className="user-menu">
-            <img src={user.picture} alt="Avatar de usuario" className="user-avatar" />
+            {" "}
+            {/* Contenedor para el menú */}
+            <img
+              src={user.picture}
+              alt="Avatar de usuario"
+              className="user-avatar"
+            />
             <div className="dropdown-menu">
+              {" "}
+              {/* Menú desplegable */}
               <div className="dropdown-header">
                 <strong>{user.name}</strong>
                 <span>{user.email}</span>
               </div>
+              <Link to="/perfil" className="dropdown-item">
+                <AvatarIcon /> Mi Perfil
+              </Link>
               <button onClick={logout} className="dropdown-item">
                 Salir
               </button>
@@ -105,6 +130,7 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
         ) : (
           <LoginButton />
         )}
+        {/* --- FIN DE LA MODIFICACIÓN --- */}
       </div>
     </NavigationMenu.Root>
   );
