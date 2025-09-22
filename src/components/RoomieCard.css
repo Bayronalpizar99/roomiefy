@@ -11,13 +11,14 @@
 }
 .avatar-wrap {
   display: inline-block; 
-  align-self: center; 
+  align-self: flex-start; 
   width: 4.5rem;
   height: 4.5rem; 
   flex: 0 0 auto;
   position: relative;
 }
-/* Estilos base para la tarjeta de propiedad */
+
+/* CAMBIO: Estilos mejorados para la tarjeta de roomie */
 .property-card {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -27,7 +28,12 @@
   display: flex;
   flex-direction: column;
   will-change: transform;
-  padding: 0.25rem; 
+  padding: 1rem; /* CAMBIO: Padding más consistente */
+  /* NUEVO: Dimensiones controladas para roomie cards */
+  max-width: 350px;
+  width: 100%;
+  min-height: 400px; /* Altura mínima más compacta que property cards */
+  height: auto; /* CAMBIO: altura automática */
 }
 
 .property-card-link {
@@ -47,67 +53,41 @@
 }
 
 .property-info {
-  padding: 1rem;
+  padding: 0.5rem 0; /* CAMBIO: Padding reducido ya que el card ya tiene padding */
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  gap: 0.75rem; /* NUEVO: Espaciado consistente entre elementos */
 }
 
 /* Encabezado del card (avatar, nombre, edad, rating) */
 .roomie-card-header {
-  margin: 0.5rem;
   width: 100%;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem 0.75rem;
-}
-.roomie-card-info {
-  justify-content: center;
-  align-items: center;
-}
-
-/* List view layout adjustments */
-.roomie-card-body.list-mode {
-  align-items: center;
-  justify-content: center;
-  
-}
-.roomie-card-body.list-mode .roomie-card-header {
-  width: 12rem;
-  flex: 0 0 12rem;
-  align-items: center;
-}
-.roomie-card-body.list-mode .name-age,
-.roomie-card-body.list-mode .rating-row {
-  justify-content: center;
-  width: 100%;
-}
-.roomie-card-body.list-mode .name-age { margin-top: 0.5rem; }
-.roomie-card-body.list-mode .rating-row { margin-top: 0.25rem; }
-.roomie-card-body.list-mode .property-info {
-  flex: 1;
-  min-width: 0;
+  gap: 0.5rem 0.75rem; /* CAMBIO: Gap más generoso */
+  margin-bottom: 0.5rem; /* NUEVO: Separación del resto del contenido */
 }
 
 .property-info h3 {
-  font-size: 1.2rem;
+  font-size: 1.1rem; /* CAMBIO: Tamaño más pequeño para roomies */
   font-weight: 600;
-  margin-bottom: 0.25rem;
+  margin: 0; /* CAMBIO: Sin margen, controlado por gap del contenedor */
   color: var(--color-text);
 }
 
 .property-info .location {
   font-size: 0.9rem;
   color: var(--color-text-secondary);
-  margin-bottom: 0.5rem;
+  margin: 0; /* CAMBIO: Sin margen, controlado por gap */
 }
 
 .property-info .price {
-  font-size: 1.1rem;
+  font-size: 1rem; /* CAMBIO: Tamaño más pequeño para presupuesto */
   font-weight: bold;
   color: var(--color-primary);
-  margin-top: auto;
-  padding-top: 0.5rem;
+  margin: 0; /* CAMBIO: Sin margen, controlado por gap */
+  padding: 0; /* CAMBIO: Sin padding extra */
 }
 
 .owner-info {
@@ -115,7 +95,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  margin-top: 0.75rem;
+  margin: 0; /* CAMBIO: Sin margen, controlado por gap del contenedor padre */
   border-top: 1px solid var(--color-border);
   padding-top: 0.75rem;
 }
@@ -195,17 +175,11 @@
   border: 1px solid var(--color-border);
 }
 .apartment-badge.apartment-badge--has {
-  justify-content: center;
-  padding-top: 0.25rem; 
-  max-width: 8rem;
   background: var(--color-primary); 
   border-color: var(--color-primary-hover);
   color: #fff;
 }
 .apartment-badge.apartment-badge--no {
-  justify-content: center;
-  padding-top: 0.25rem; 
-  max-width: 8rem;
   background: var(--color-input-bg);
   border-color: var(--color-border);
   color: var(--color-text);

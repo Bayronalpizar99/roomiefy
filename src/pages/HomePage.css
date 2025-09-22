@@ -9,17 +9,18 @@
 .properties-section { 
   flex-grow: 1;
   min-width: 0; 
-    h1 {
-      color: var(--color-text); 
-      margin-bottom: 1rem;
-    }
 }
 
 /* El contenedor de las tarjetas en VISTA DE GRID */
 .properties-container.grid-view{
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  /* CAMBIO: Usar auto en lugar de 1fr para evitar estiramiento horizontal */
+  grid-template-columns: repeat(auto-fill, minmax(320px, auto));
   gap: 1.5rem;
+  /* NUEVO: Alineación para centrar las tarjetas */
+  justify-content: center;
+  /* NUEVO: Control de altura automática */
+  grid-auto-rows: auto;
 }
 
 /* El contenedor de las tarjetas en VISTA DE LISTA */
@@ -36,10 +37,7 @@
   padding: 2rem;
 }
 
-.properties-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 16px;
-  margin-top: 24px;
+h1 {
+    color: var(--color-text);
+    margin-bottom: 1rem;
 }
