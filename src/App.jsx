@@ -13,6 +13,7 @@ import PublishPage from "./pages/PublishPage.jsx";
 import PropertyDetailPage from "./pages/PropertyDetailPage.jsx";
 import RoomieDetailPage from "./pages/RoomieDetailPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import ChatPage from "./pages/ChatPage.jsx";
 import "./App.css";
 
 
