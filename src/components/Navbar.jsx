@@ -39,6 +39,11 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
     onSearch?.(localSearchQuery);
   };
 
+  // Función para determinar si mostrar la barra de búsqueda
+  const shouldShowSearch = () => {
+    return location.pathname === '/' || location.pathname === '/roomies';
+  };
+
   return (
     <NavigationMenu.Root className="navbar">
       <div className="navbar-left">
@@ -76,19 +81,21 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
         </NavigationMenu.List>
       </div>
 
-      <div className="navbar-center">
-        <form className="search-bar" onSubmit={handleSearchSubmit}>
-          <button type="submit" className="search-button">
-            <MagnifyingGlassIcon />
-          </button>
-          <input 
-            type="text" 
-            placeholder={location.pathname.includes('roomies') ? "Buscar roomies..." : "Buscar..."}
-            value={localSearchQuery}
-            onChange={handleSearchChange}
-          />
-        </form>
-      </div>
+      {shouldShowSearch() && (
+        <div className="navbar-center">
+          <form className="search-bar" onSubmit={handleSearchSubmit}>
+            <button type="submit" className="search-button">
+              <MagnifyingGlassIcon />
+            </button>
+            <input 
+              type="text" 
+              placeholder={location.pathname.includes('roomies') ? "Buscar roomies..." : "Buscar propiedades..."}
+              value={localSearchQuery}
+              onChange={handleSearchChange}
+            />
+          </form>
+        </div>
+      )}
 
       <div className="navbar-right">
         <button className="icon-button" onClick={toggleTheme}>
