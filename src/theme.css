@@ -12,19 +12,18 @@
   /* Bordes y Sombras */
   --border-radius: 8px;
 
-  /* Tema Oscuro (Por defecto) */
-  --color-text: rgba(255, 255, 255, 0.87);
-   --color-heading: #e0e0e0; /* <-- AÑADE ESTA LÍNEA */
-  --color-text-secondary: rgba(255, 255, 255, 0.6);
-  --color-background: #0e1316;
-  --color-surface: #0e1316;
-  --color-border: rgba(255, 255, 255, 0.1);
+  /* Tema Claro (Por defecto) */
+  --color-text: #213547;
+  --color-text-secondary: rgba(33, 53, 71, 0.6);
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-border: rgba(0, 0, 0, 0.1);
   --color-primary: #7c3aed;
   --color-primary-hover: #7c3aed;
-  --color-button-bg: #1a1a1a;
+  --color-button-bg: #f9f9f9;
   --color-button-border-hover: var(--color-primary);
-  --color-input-bg: rgba(255, 255, 255, 0.05);
-  --color-icon: rgba(255, 255, 255, 0.7);
+  --color-input-bg: rgba(0, 0, 0, 0.05);
+  --color-icon: rgba(33, 53, 71, 0.7);
 
   /* Configuraciones globales */
   color-scheme: light dark;
@@ -34,16 +33,15 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Tema Claro (se activa cuando el contenedor tiene la clase 'light') */
-body.light { /* <-- CAMBIA ESTE SELECTOR */
-  --color-text: #213547;
-  --color-heading: #e0e0e0; 
-  --color-text-secondary: rgba(33, 53, 71, 0.6);
-  --color-background: #ffffff;
-  --color-surface: #ffffff;
-  --color-border: rgba(0, 0, 0, 0.1);
+/* Tema Oscuro (se activa cuando el contenedor tiene la clase 'dark') */
+.dark {
+  --color-text: rgba(255, 255, 255, 0.87);
+  --color-text-secondary: rgba(255, 255, 255, 0.6);
+  --color-background: #0e1316;
+  --color-surface: #0e1316;
+  --color-border: rgba(255, 255, 255, 0.1);
   --color-primary-hover: #7c3aed;
-  --color-button-bg: #f9f9f9;
-  --color-input-bg: rgba(0, 0, 0, 0.05);
-  --color-icon: rgba(33, 53, 71, 0.7);
+  --color-button-bg: #1a1a1a;
+  --color-input-bg: rgba(255, 255, 255, 0.05);
+  --color-icon: rgba(255, 255, 255, 0.7);
 }
