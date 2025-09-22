@@ -2,50 +2,58 @@
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
+  
+}
+
+.chat-page-container h1 {
+  color: var(--color-text);
 }
 
 .chat-layout {
   display: flex;
   height: calc(100vh - 200px);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   overflow: hidden;
   margin-top: 20px;
-  background-color: var(--background-color);
+  background-color: var(--color-surface);
 }
 
 .conversations-list {
   width: 30%;
-  border-right: 1px solid var(--border-color);
+  border-right: 1px solid var(--color-border);
   overflow-y: auto;
-  background-color: var(--background-secondary);
+  background-color: var(--color-surface);
 }
 
 .conversations-list h2 {
   padding: 15px;
   margin: 0;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-primary);
 }
 
 .conversation-item {
   display: flex;
-  padding: 15px;
-  border-bottom: 1px solid var(--border-color);
+  padding: 15px 15px 15px 8px;
+  border-bottom: 1px solid var(--color-border);
   cursor: pointer;
   transition: background-color 0.2s;
   width: 100%; /* Hace que ocupe todo el ancho disponible */
+  align-items: flex-start;
 }
 
 .conversation-item:hover {
-  background-color: var(--hover-color);
+  background-color: var(--color-input-bg);
 }
 
 .conversation-item.selected {
-  background-color: var(--selected-color);
+  background-color: var(--color-input-bg);
+  border-left: 3px solid var(--color-primary);
 }
 
 .conversation-avatar {
-  margin-right: 15px;
+  margin-right: 6px;
 }
 
 .conversation-avatar img {
@@ -60,23 +68,25 @@
 }
 
 .conversation-info h3 {
-  margin: 0 0 5px 0;
+  margin: 0 0 0 0;
   font-size: 16px;
 }
 
 .conversation-info p {
   margin: 0;
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 200px;
+  margin-left: 0;
+  text-align: left;
 }
 
 .conversation-time {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
 }
 
 .chat-messages {
@@ -87,9 +97,10 @@
 
 .chat-header {
   padding: 15px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--color-border);
   border: 1px solid var(--color-primary);
   border-radius: var(--border-radius);
+  color: var(--color-text);
   margin: 10px;
   display: flex;
   align-items: center;
@@ -108,8 +119,9 @@
 
 .chat-header h2 {
   margin: 0;
-  color: var(--text-primary);
+  color: var(--color-text);
 }
+
 
 .messages-container {
   flex: 1;
@@ -117,29 +129,39 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Centra los mensajes horizontalmente */
+  align-items: flex-start; /* Alinea por defecto hacia la izquierda */
   width: 100%;
 }
 
 .message {
-  width: 85%; /* Mensajes más anchos */
-  margin-bottom: 15px;
-  padding: 10px 15px;
+  max-width: min(52%, 520px); /* +2% más larga */
+  margin-bottom: 26px; /* Un poco más de espacio */
+  padding: 12px 16px;
   border-radius: 18px;
   position: relative;
+  display: inline-block; /* Hace que la burbuja se ajuste al contenido */
+  width: -moz-fit-content;
+  width: -webkit-fit-content;
+  width: fit-content; /* Respetará el max-width arriba */
+  overflow-wrap: anywhere; /* Evita desbordes por palabras largas */
+  word-break: break-word;
+  white-space: pre-wrap; /* Respeta saltos de línea si los hay */
 }
 
 .message.sent {
-  align-self: center; /* Centra los mensajes enviados */
-  background-color: var(--primary-color);
-  color: white;
+  align-self: flex-end; /* A la derecha como en chats tradicionales */
+  background-color: var(--color-chat-sent-bg);
+  color: var(--color-chat-sent-text);
   border-bottom-right-radius: 5px;
+  margin-right: 12px; /* Separación del borde derecho */
 }
 
 .message.received {
-  align-self: center; /* Centra los mensajes recibidos */
-  background-color: var(--background-secondary);
+  align-self: flex-start; /* A la izquierda */
+  background-color: var(--color-chat-received-bg);
+  color: var(--color-chat-received-text);
   border-bottom-left-radius: 5px;
+  margin-left: 12px; /* Separación del borde izquierdo */
 }
 
 .message-content {
@@ -152,51 +174,114 @@
   text-align: right;
 }
 
-.message-input {
+.message.sent .message-time {
+  color: var(--color-chat-sent-time);
+}
+
+.message.received .message-time {
+  color: var(--color-chat-received-time);
+}
+
+.message-meta {
   display: flex;
-  padding: 1rem;
-  border-top: 1px solid var(--border-color);
-  background-color: var(--background-secondary);
   align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  justify-content: flex-end; /* Siempre a la derecha dentro de la burbuja */
+  width: 100%;
+}
+
+.message.sent .message-meta,
+.message.received .message-meta {
+  justify-content: flex-end; /* Forzamos derecha para ambos casos */
+}
+
+.message-status {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-icon); /* color por defecto */
+}
+
+.message-status.read {
+  color: var(--color-primary); /* color para visto/leído */
+}
+
+.message-status.sent {
+  color: var(--color-chat-sent-text); /* visible sobre la burbuja enviada */
+}
+
+.message-status .check {
+  width: 16px; /* un poco más grande */
+  height: 16px;
+}
+
+.message-status .check.two {
+  margin-left: -7px; /* ligera superposición para el doble check */
+}
+
+.message-input {
+  position: relative;
+  display: flex;
+  padding: 1.5rem 1rem 1rem 1rem;
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  align-items: flex-start;
+  min-height: 80px;
 }
 
 .message-input .search-bar {
   flex: 1;
-  margin-right: 0.5rem;
+  margin-right: 8rem;
   display: flex;
   align-items: center;
-  background-color: var(--background-secondary);
-  border-radius: 20px;
-  padding: 0.5rem 0.8rem;
+  background-color: var(--color-input-bg);
+  border-radius: 24px;
+  padding: 1rem 1.2rem;
+  margin-top: 0;
+  height: 52px;
+  max-width: calc(100% - 9rem);
 }
 
 .message-input .search-bar svg {
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
 }
 
 .message-input .search-bar input {
   background: none;
   border: none;
   outline: none;
-  color: var(--text-primary);
-  font-size: 1rem;
+  color: var(--color-text);
+  font-size: 1.1rem;
   margin-left: 0.5rem;
   width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
 }
 
 .message-input .search-bar input::placeholder {
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   opacity: 0.7;
 }
 
 .message-input .send-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 7.5rem;
   color: var(--color-primary);
-  margin: 0 10px;
   cursor: pointer;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
 }
 
 .message-input button {
-  padding: 0.5rem 1rem;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 1rem;
+  padding: 0.75rem 1.25rem;
   background-color: var(--color-primary);
   color: white;
   border: none;
@@ -204,14 +289,59 @@
   cursor: pointer;
   font-weight: var(--font-weight-medium);
   transition: background-color 0.2s;
-  height: 40px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1;
 }
 
 .message-input button:hover {
-  background-color: var(--color-primary-dark);
+  background-color: var(--color-primary-hover);
+}
+
+/* Responsivo: en pantallas pequeñas permite un ancho mayor */
+@media (max-width: 768px) {
+  .message-input {
+    padding: 1rem 0.5rem 0.5rem 0.5rem;
+    min-height: 70px;
+  }
+  
+  .message-input .search-bar {
+    height: 44px;
+    padding: 0.8rem 1rem;
+    margin-right: 6rem;
+  }
+  
+  .message-input .send-icon {
+    top: 50%;
+    transform: translateY(-50%);
+    right: 6.5rem;
+    width: 20px;
+    height: 20px;
+  }
+  
+  .message-input button {
+    top: 50%;
+    transform: translateY(-50%);
+    right: 0.5rem;
+    height: 44px;
+    padding: 0.6rem 1rem;
+  }
+}
+
+/* En pantallas medianas, aún más estrechas */
+@media (min-width: 1024px) {
+  .message {
+    max-width: min(50%, 520px); /* +2% */
+  }
+}
+
+/* En pantallas grandes, un poco más estrechas para acercarse al mock */
+@media (min-width: 1280px) {
+  .message {
+    max-width: min(46%, 520px); /* +2% */
+  }
 }
 
 .no-conversation-selected {
@@ -219,7 +349,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
 }
 
 .loading-container,
@@ -232,5 +362,5 @@
 }
 
 .error-container {
-  color: var(--error-color);
+  color: #f87171; /* fallback error color consistent with ProfileStyles */
 }

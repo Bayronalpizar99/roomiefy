@@ -116,9 +116,58 @@
   flex-direction: column !important;
   gap: 1.5rem !important;
   width: 100% !important;
-  /* CAMBIO: Unificamos el padding a 1rem */
-  padding: 1rem;
-  box-sizing: border-box;
+  
+  @media (min-width: 768px) {
+    gap: 1.25rem !important;
+  }
+  
+  @media (min-width: 1200px) {
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+  }
+}
+
+/* Asegurar que las tarjetas en vista de lista ocupen todo el ancho */
+.roomies-list .property-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.roomies-list .property-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Asegurar que el contenido de la tarjeta ocupe todo el ancho */
+.roomies-list .property-card .roomie-card-body {
+  width: 100%;
+  padding: 0.5rem 0;
+}
+
+/* Ajustes para dispositivos móviles */
+@media (max-width: 767px) {
+  .roomies-list .property-card {
+    padding: 0.75rem !important;
+  }
+  
+  .roomies-list .roomie-card-body {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+  
+  .roomies-list .roomie-card-header {
+    width: 100% !important;
+    flex-direction: row !important;
+    justify-content: flex-start;
+    gap: 1rem;
+  }
+  
+  .roomies-list .roomie-card-info {
+    align-items: flex-start !important;
+  }
 }
 
 /* Encabezado de la página */
