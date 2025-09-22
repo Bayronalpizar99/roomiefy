@@ -13,7 +13,9 @@ import PublishPage from "./pages/PublishPage.jsx";
 import PropertyDetailPage from "./pages/PropertyDetailPage.jsx";
 import RoomieDetailPage from "./pages/RoomieDetailPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import ChatPage from "./pages/ChatPage.jsx";
 import "./App.css";
+
 
 function App() {
   const [theme, setTheme] = useState('light');
@@ -50,6 +52,7 @@ function App() {
   }, [location.pathname]);
 
   return (
+
     // 2. Envuelve toda la aplicación con AuthProvider
     <AuthProvider>
       <div className="app-layout">
@@ -83,6 +86,7 @@ function App() {
               />
               <Route path="/roomie/:roomieId" element={<RoomieDetailPage />} />
               <Route path="perfil" element={<ProfilePage />} />
+              <Route path="chat" element={<ChatPage />} />
             </Routes>
           </ScrollArea.Viewport>
           <ScrollArea.Scrollbar
@@ -95,6 +99,7 @@ function App() {
       </div>
     </AuthProvider>
    );
+
 }
 
 export default App;

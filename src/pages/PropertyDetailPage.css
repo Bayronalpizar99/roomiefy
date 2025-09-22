@@ -3,12 +3,39 @@
   margin: 0 auto;
 }
 
+.back-btn-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-button-bg);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.back-btn-detail:hover {
+  background-color: var(--color-input-bg);
+}
+
+/* --- INICIO DE LA MODIFICACIÓN --- */
+.property-header {
+  margin-bottom: 2rem; 
+  text-align: justify; /* El texto ahora está justificado */
+}
+/* --- FIN DE LA MODIFICACIÓN --- */
+
 .property-main-image img {
   width: 100%;
   height: 450px;
   object-fit: cover;
   border-radius: var(--border-radius);
-  margin-bottom: 2rem;
+  margin-bottom: 0;
 }
 
 .property-content-layout {
@@ -19,21 +46,24 @@
 }
 
 .property-title {
-  font-size: 2.5rem;
+  font-size: 2.5rem; /* Cambia el tamaño del texto */
   color: var(--color-text);
   margin-bottom: 0.5rem;
+  text-align: left; /* Alineación a la izquierda */
 }
 
 .property-location-detail {
   font-size: 1.1rem;
   color: var(--color-text-secondary);
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
+  text-align: left; /* Alineación a la izquierda */
 }
 
 .property-stats-detail {
   display: flex;
   gap: 1.5rem;
   color: var(--color-text);
+  margin-top: 1.5rem;
 }
 .stat-item {
   display: flex;
@@ -55,6 +85,7 @@
 .property-description-full p, .amenities-grid li {
   line-height: 1.6;
   color: var(--color-text-secondary);
+  text-align: justify; 
 }
 
 .amenities-grid {
@@ -69,6 +100,7 @@
 .property-sidebar {
   position: sticky;
   top: 2rem;
+  margin-top: 2rem;
 }
 
 .actions-box {
@@ -94,7 +126,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  margin-bottom: 1.5rem;
 }
 
 .action-btn {
@@ -116,18 +147,70 @@
   fill: #ef4444;
 }
 
-.owner-card {
+.date-picker-container {
+  margin-bottom: 1rem;
+}
+
+.calendar-wrapper {
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  background-color: var(--color-surface);
+}
+
+.action-btn.primary.reserve-btn {
+  background-color: var(--color-primary);
+  color: #fff;
+  font-weight: bold;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background-color: var(--color-input-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.header-item {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.header-item strong {
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.property-owner-section h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: var(--color-text);
+}
+
+.owner-card-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: var(--color-surface);
+}
+
+.owner-info-left {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--color-border);
 }
 
-.owner-card img {
-  width: 50px;
-  height: 50px;
+.owner-card-main img {
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -136,10 +219,34 @@
   display: flex;
   flex-direction: column;
 }
-.owner-info-detail span {
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-}
+
 .owner-info-detail strong {
   color: var(--color-text);
+  font-size: 1.1rem;
+}
+
+.owner-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.owner-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px; 
+  height: 60px;
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.owner-action-btn:hover {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
 }

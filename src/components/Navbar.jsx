@@ -44,6 +44,7 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
     return location.pathname === '/' || location.pathname === '/roomies';
   };
 
+
   return (
     <NavigationMenu.Root className="navbar">
       <div className="navbar-left">
@@ -101,6 +102,9 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
         <button className="icon-button" onClick={toggleTheme}>
           <SunIcon />
         </button>
+
+        <button className="icon-button" onClick={() => navigate('/chat')}><ChatBubbleIcon /></button>
+
         <button className="icon-button">
           <ChatBubbleIcon />
         </button>
