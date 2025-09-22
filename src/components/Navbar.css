@@ -43,8 +43,10 @@
 }
 
 .logo-image {
-  height: 55px; /* Tamaño del logo */
+  height: 50px; /* Tamaño del logo */
   width: auto;
+  display: block;
+  border-radius: 8px; /* Bordes redondeados */
 }
 
 /* --- ESTILOS PARA EL LOGO INTERACTIVO (VERSIÓN HOVER) --- */

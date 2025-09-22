@@ -1,22 +1,19 @@
+/* src/components/PropertyCard.css */
+
 /* Estilos base para la tarjeta de propiedad */
 .property-card {
+  width: 340px;
+  /* CAMBIO 1: Reducimos la altura total para que sea más compacta */
+  height: 440px; 
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
   overflow: hidden;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   display: flex;
   flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   will-change: transform;
-  
-  /* CAMBIO: Dimensiones más flexibles y mejor proporcionadas */
-  width: 100%;
-  max-width: 400px;
-  min-width: 350px;
-  height: 480px; /* Altura un poco mayor para mejor proporción */
-  
-  /* Centrar si el contenedor es más grande */
-  margin: 0 auto;
+  flex-shrink: 0;
 }
 
 .property-card:hover {
@@ -27,70 +24,44 @@
 /* Estilos para la imagen de la propiedad */
 .property-image {
   width: 100%;
-  height: 180px;
+  /* CAMBIO 2: Reducimos la altura de la imagen para equilibrar el diseño */
+  height: 200px; 
   object-fit: cover;
-  aspect-ratio: 16/9; /* Mantener relación de aspecto */
-  
-  @media (min-width: 640px) {
-    height: 200px;
-  }
-  
-  @media (min-width: 1024px) {
-    height: 220px;
-  }
 }
 
 /* Contenedor para la información de la propiedad */
 .property-info {
-  padding: 0.75rem;
+  padding: 1rem; /* Reducimos un poco el padding vertical para más espacio */
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  
-  @media (min-width: 640px) {
-    padding: 1rem;
-    gap: 0.75rem;
-  }
+  gap: 0.6rem; /* Reducimos el gap para un look más compacto */
+  overflow: hidden; 
 }
 
 .property-info h3 {
-  font-size: 1.1rem;
+  font-size: 1.15rem; /* Ajuste ligero de fuente */
   font-weight: 600;
-  margin: 0;
   color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  
-  @media (min-width: 640px) {
-    font-size: 1.2rem;
-  }
 }
 
 .property-info .location {
   font-size: 0.9rem;
   color: var(--color-text-secondary);
-  margin-bottom: 1rem; /* Más espacio */
-  
-  /* CLAVE: Altura fija para ubicación */
-  height: 1.2em;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-/* --- Estadísticas con altura controlada --- */
 .property-stats {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 0.75rem;
   color: var(--color-text-secondary);
   font-size: 0.9rem;
-  
-  /* CLAVE: Altura fija */
-  height: 1.5em;
   flex-shrink: 0;
 }
 
@@ -100,15 +71,11 @@
   gap: 0.4rem;
 }
 
-/* --- Comodidades con altura controlada --- */
 .amenities-list {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 1rem;
-  
-  /* CLAVE: Más espacio para amenities */
-  height: 3.2em;
+  min-height: 2.2em;
   overflow: hidden;
 }
 
@@ -119,39 +86,25 @@
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 500;
-  
-  /* Altura fija para las etiquetas */
-  height: 1.5em;
-  display: flex;
-  align-items: center;
   flex-shrink: 0;
 }
 
-/* Precio - siempre al fondo */
 .property-info .price {
   font-size: 1.1rem;
   font-weight: bold;
   color: var(--color-primary);
-  margin-top: auto; /* Se empuja hacia abajo */
-  margin-bottom: 0.5rem; /* Reducido */
-  
-  /* CLAVE: Altura fija */
-  height: 1.3em;
+  margin-top: auto;
+  padding-top: 0.5rem;
   flex-shrink: 0;
 }
 
-/* Información del propietario - siempre al fondo */
 .owner-info {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
   border-top: 1px solid var(--color-border);
-  padding-top: 0.5rem; /* Reducido */
-  margin-top: auto; /* Se empuja hacia abajo */
-  
-  /* CLAVE: Altura fija */
-  height: 2.5em; /* Reducido */
+  padding-top: 0.75rem;
   flex-shrink: 0;
 }
 
@@ -178,7 +131,6 @@
   max-width: 120px;
 }
 
-/* Estilos para el componente de estrellas (StarRating) */
 .star-rating {
   color: #f59e0b;
   flex-shrink: 0;
@@ -192,72 +144,27 @@
   color: var(--color-border);
 }
 
-/* --- Estilos integrados para las comodidades --- */
-.amenities-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0;
-  overflow: hidden;
-  max-height: 1.5rem;
-  
-  @media (min-width: 640px) {
-    max-height: none;
-  }
-}
-
-.amenity-tag {
-  background-color: var(--color-input-bg);
-  color: var(--color-text-secondary);
-  padding: 0.25rem 0.6rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-/* --- INICIO: Estilos integrados para las estadísticas --- */
-.property-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0;
-  
-  @media (min-width: 640px) {
-    gap: 1rem;
-  }
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem; /* Espacio entre el ícono y el texto */
-}
-/* --- FIN: Estilos integrados --- */
-
-/* --- INICIO: Estilos integrados para la vista de lista --- */
-.list-view .property-card {
+/* --- Estilos para la VISTA DE LISTA --- */
+.list-view-card .property-card {
   flex-direction: row;
   align-items: stretch;
   width: 100%;
-  height: 220px; /* Altura fija más pequeña para lista */
-  max-width: none;
+  height: auto;
+  min-height: 220px;
 }
 
-.list-view .property-image {
+.list-view-card .property-image {
   width: 280px;
-  height: 100%;
+  height: auto;
   flex-shrink: 0;
 }
 
-.list-view .property-info {
+.list-view-card .property-info {
   padding: 1.5rem;
   flex: 1;
 }
 
-.list-view .property-info h3 {
-  height: 2.6em; /* Menos altura en vista lista */
-}
-
-.list-view .amenities-list {
-  height: 2em; /* Una sola fila en vista lista */
+.list-view-card .amenities-list {
+  min-height: auto;
+  overflow: visible;
 }

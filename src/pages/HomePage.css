@@ -1,90 +1,71 @@
+/* src/pages/HomePage.css */
+
 /* Layout principal de la página con dos columnas */
 .homepage-layout {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding: 1rem;
-  min-height: calc(100vh - 64px); /* Altura total menos el navbar */
+  gap: 1rem;
+  padding: 0.5rem 1rem 1rem 0;
+  min-height: calc(100vh - 64px);
   width: 100%;
-  
-  @media (min-width: 768px) {
+}
+
+@media (min-width: 768px) {
+  .homepage-layout {
     flex-direction: row;
-    gap: 2rem;
-    padding: 1.5rem;
+    gap: 1.5rem;
+    padding: 1rem 1.5rem 1.5rem 0;
   }
-  
-  @media (min-width: 1024px) {
+}
+
+@media (min-width: 1024px) {
+  .homepage-layout {
     max-width: 1800px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 1.5rem 2rem 2rem 0;
+    gap: 1rem;
   }
 }
 
 /* Contenedor derecho que crecerá para ocupar el espacio disponible */
-.properties-section { 
+.properties-section {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  min-height: 0; /* Permite que el contenedor se encoja */
-  
-  h1 {
-    color: var(--color-text); 
-    margin-bottom: 1rem;
-  }
+  min-height: 0;
+  padding-left: 0;
+}
+
+.properties-section h1 {
+  color: var(--color-text);
+  margin-bottom: 1rem;
+  padding-left: 1rem;
 }
 
 /* El contenedor de las tarjetas en VISTA DE GRID */
 .properties-container.grid-view {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, 340px);
+  gap: 1.5rem;
+  padding: 1rem;
   width: 100%;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding-right: 0.5rem;
-  
-  @media (min-width: 480px) {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  }
-  
-  @media (min-width: 768px) {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.25rem;
-  }
-  
-  @media (min-width: 1024px) {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.5rem;
-  }
-  
-  @media (min-width: 1440px) {
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  }
+  align-items: stretch;
+  justify-content: start;
 }
 
 /* El contenedor de las tarjetas en VISTA DE LISTA */
 .properties-container.list-view {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem; /* Aumentamos el gap para más espacio */
   width: 100%;
-  flex: 1; /* Ajustar los estilos para que el área de resultados ocupe el máximo espacio disponible */
-  
-  @media (min-width: 768px) {
-    gap: 1.25rem;
-  }
-  
-  @media (min-width: 1024px) {
-    gap: 1.5rem;
-  }
-  
-  /* Asegurar que las tarjetas en vista de lista no sean demasiado anchas en pantallas grandes */
-  @media (min-width: 1400px) {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
+  flex: 1;
+  /* CAMBIO: Añadimos padding para alinear con el grid view y los controles */
+  padding: 1rem;
 }
 
 .loading-message {
@@ -94,46 +75,16 @@
   padding: 2rem;
 }
 
-.properties-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 1rem;
-  margin-top: 1.5rem;
-  width: 100%;
-  
-  @media (min-width: 768px) {
-    gap: 1.25rem;
-    margin-top: 1.5rem;
-  }
-  
-  @media (min-width: 1024px) {
-    gap: 1.5rem;
-  }
-}
-
-/* Estilos para el contenedor de filtros y opciones de vista */
-.view-options-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  
-  @media (min-width: 640px) {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
-}
-
-/* Estilos para el contenedor de paginación */
+/* Contenedor de paginación */
 .pagination-container {
   margin-top: 2rem;
   width: 100%;
   display: flex;
   justify-content: center;
-  
-  @media (min-width: 768px) {
+}
+
+@media (min-width: 768px) {
+  .pagination-container {
     margin-top: 2.5rem;
   }
 }
