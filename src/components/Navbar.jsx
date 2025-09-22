@@ -16,15 +16,43 @@ import appLogo from "../assets/roomify2.png";
 import { useAuth } from "../context/AuthContext";
 import LoginButton from "./LoginButton";
 
-export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => { 
+export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const { user, logout } = useAuth();
+  const [imageError, setImageError] = useState(false);
+
   // Update local state when searchQuery prop changes
   useEffect(() => {
     setLocalSearchQuery(searchQuery);
   }, [searchQuery]);
+
+  // Reset image state when user changes
+  useEffect(() => {
+    setImageError(false);
+  }, [user]);
+
+  const handleImageLoad = () => {
+    console.log('✅ Profile picture loaded successfully:', user?.picture);
+    setImageError(false);
+  };
+
+  const handleImageError = () => {
+    console.log('❌ Profile picture failed to load:', user?.picture);
+    console.log('User object:', user);
+    setImageError(true);
+  };
+
+  const getAvatarSrc = () => {
+    if (imageError || !user?.picture) {
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=random&size=40`;
+    }
+    return user.picture;
+  };
+
+  // Only show loading state when user exists but we haven't determined if image works
+  const showLoadingState = user && !imageError && user.picture;
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
@@ -106,9 +134,6 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
         <button className="icon-button" onClick={() => navigate('/chat')}><ChatBubbleIcon /></button>
 
         <button className="icon-button">
-          <ChatBubbleIcon />
-        </button>
-        <button className="icon-button">
           <BellIcon />
           <span className="notification-badge">3</span>
         </button>
@@ -116,16 +141,14 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
         {/* --- INICIO DE LA MODIFICACIÓN --- */}
         {user ? (
           <div className="user-menu">
-            {" "}
-            {/* Contenedor para el menú */}
             <img
-              src={user.picture}
+              src={getAvatarSrc()}
               alt="Avatar de usuario"
-              className="user-avatar"
+              className={`user-avatar ${showLoadingState ? 'loading' : ''}`}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
             />
             <div className="dropdown-menu">
-              {" "}
-              {/* Menú desplegable */}
               <div className="dropdown-header">
                 <strong>{user.name}</strong>
                 <span>{user.email}</span>

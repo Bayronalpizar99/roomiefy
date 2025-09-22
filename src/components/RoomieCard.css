@@ -2,23 +2,45 @@
 
 /* Avatar */
 .avatar {
-  width: 4.5rem;
-  height: 4.5rem;
+  width: 3rem;
+  height: 3rem;
   border-radius: 9999px;
   overflow: hidden;
   display: inline-flex;
-  flex: 0 0 4.5rem; 
-}
-.avatar-wrap {
-  display: inline-block; 
-  align-self: flex-start; 
-  width: 4.5rem;
-  height: 4.5rem; 
-  flex: 0 0 auto;
-  position: relative;
+  flex: 0 0 3rem;
+  
+  @media (min-width: 768px) {
+    width: 3.5rem;
+    height: 3.5rem;
+    flex: 0 0 3.5rem;
+  }
+  
+  @media (min-width: 1280px) {
+    width: 3rem;
+    height: 3rem;
+    flex: 0 0 3rem;
+  }
 }
 
-/* CAMBIO: Estilos mejorados para la tarjeta de roomie */
+.avatar-wrap {
+  display: inline-block;
+  align-self: center;
+  width: 3rem;
+  height: 3rem;
+  flex: 0 0 auto;
+  position: relative;
+  
+  @media (min-width: 768px) {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+  
+  @media (min-width: 1280px) {
+    width: 3rem;
+    height: 3rem;
+  }
+}
+/* Estilos base para la tarjeta de roomie */
 .property-card {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -28,12 +50,19 @@
   display: flex;
   flex-direction: column;
   will-change: transform;
-  padding: 1rem; /* CAMBIO: Padding más consistente */
-  /* NUEVO: Dimensiones controladas para roomie cards */
-  max-width: 350px;
+  padding: 0.75rem;
+  height: 100%;
   width: 100%;
-  min-height: 400px; /* Altura mínima más compacta que property cards */
-  height: auto; /* CAMBIO: altura automática */
+  min-width: 0; /* Previene desbordamiento */
+  box-sizing: border-box;
+  
+  @media (min-width: 768px) {
+    padding: 1rem;
+  }
+  
+  @media (min-width: 1280px) {
+    padding: 0.75rem;
+  }
 }
 
 .property-card-link {
@@ -48,36 +77,185 @@
 
 .property-image {
   width: 100%;
-  height: 200px;
+  height: 180px;
   object-fit: cover;
 }
 
 .property-info {
-  padding: 0.5rem 0; /* CAMBIO: Padding reducido ya que el card ya tiene padding */
+  padding: 0.25rem;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem; /* NUEVO: Espaciado consistente entre elementos */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Encabezado del card (avatar, nombre, edad, rating) */
 .roomie-card-header {
+  margin: 0;
   width: 100%;
-  flex-wrap: wrap;
+  display: flex;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.5rem 0.75rem; /* CAMBIO: Gap más generoso */
-  margin-bottom: 0.5rem; /* NUEVO: Separación del resto del contenido */
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.roomie-card-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+}
+
+.roomie-location, .roomie-budget {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0.1rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  
+  @media (min-width: 768px) {
+    font-size: 0.85rem;
+  }
+}
+
+.roomie-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1.2;
+  
+  @media (min-width: 768px) {
+    font-size: 1rem;
+  }
+}
+
+/* List view layout */
+.property-card.list-view {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 1rem !important;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.property-card.list-view:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Estilo para el cuerpo de la tarjeta en vista de lista */
+.roomie-card-body.list-layout {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+  padding: 0;
+}
+
+.property-card.list-view .roomie-card-header {
+  width: 80px;
+  flex: 0 0 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  padding: 0.3rem 0;
+}
+
+.property-card.list-view .roomie-card-info {
+  align-items: flex-start;
+  text-align: left;
+  width: 100%;
+  margin-left: 0;
+}
+
+.property-card.list-view .property-info {
+  flex: 1;
+  padding: 0 !important;
+  gap: 0.5rem;
+  min-width: 0; /* Asegura que el texto no desborde */
+}
+
+.property-card.list-view .name-age,
+.property-card.list-view .rating-row {
+  justify-content: flex-start !important;
+  width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+  .property-card.list-view .roomie-card-body {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+  
+  .property-card.list-view .roomie-card-header {
+    width: 100% !important;
+    flex-direction: row !important;
+    gap: 1rem;
+  }
+  
+  .property-card.list-view .roomie-card-info {
+    align-items: flex-start !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .property-card.list-view .roomie-card-header {
+    width: 120px;
+    flex: 0 0 120px;
+  }
+}
+
+/* Ensure proper spacing in list view */
+.property-card.list-view .property-info {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
 }
 
 .property-info h3 {
-  font-size: 1.1rem; /* CAMBIO: Tamaño más pequeño para roomies */
+  font-size: 1.1rem;
   font-weight: 600;
-  margin: 0; /* CAMBIO: Sin margen, controlado por gap del contenedor */
+  margin: 0 0 0.25rem 0;
   color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
+  @media (min-width: 640px) {
+    font-size: 1.2rem;
+  }
 }
 
 .property-info .location {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
+  @media (min-width: 640px) {
+    font-size: 0.9rem;
+  }
   color: var(--color-text-secondary);
   margin: 0; /* CAMBIO: Sin margen, controlado por gap */
 }

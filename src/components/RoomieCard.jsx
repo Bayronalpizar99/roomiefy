@@ -15,15 +15,25 @@ import {
 } from "@radix-ui/themes";
 
 export default function RoommateCard({ roommate = {}, onClick = () => {}, view = 'grid' }) {
+  const isListView = view === 'list';
+  
   return (
     <Tooltip.Provider>
       <Card
         asChild
         size="2"
-        className="property-card cursor-pointer"
+        className={`property-card ${isListView ? 'list-view' : 'grid-view'}`}
         onClick={() => onClick(roommate)}
       >
-        <Flex direction={view === 'list' ? 'row' : 'column'} gap="4" className={`roomie-card-body ${view}-mode`}>
+        <Flex 
+          direction={isListView ? 'row' : 'column'} 
+          gap={isListView ? '4' : '3'}
+          className={`roomie-card-body ${isListView ? 'list-layout' : 'grid-layout'}`}
+          style={{
+            flexWrap: isListView ? 'nowrap' : 'wrap',
+            alignItems: isListView ? 'flex-start' : 'stretch'
+          }}
+        >
           <Flex direction={view === 'list' ? 'column' : 'row'} gap="2" className="roomie-card-header">
             {/* Avatar con verificación */}
             <Box position="relative" className="avatar-wrap">

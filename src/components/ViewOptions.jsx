@@ -4,27 +4,27 @@ import * as Select from '@radix-ui/react-select';
 import { ChevronDownIcon, CheckIcon } from '@radix-ui/react-icons';
 import './ViewOptions.css';
 
-const ViewOptions = ({ view, setView, sortOrder, setSortOrder }) => {
+const ViewOptions = ({ view, onViewChange, sortOrder, onSortChange }) => {
   return (
     <div className="view-options-container">
       <div className="view-switcher">
         <button 
           className={`view-btn ${view === 'grid' ? 'active' : ''}`} 
-          onClick={() => setView('grid')}
+          onClick={() => onViewChange('grid')}
           aria-label="Grid View"
         >
           <LayoutGrid size={20} />
         </button>
         <button 
           className={`view-btn ${view === 'list' ? 'active' : ''}`} 
-          onClick={() => setView('list')}
+          onClick={() => onViewChange('list')}
           aria-label="List View"
         >
           <List size={20} />
         </button>
       </div>
 
-      <Select.Root value={sortOrder} onValueChange={setSortOrder}>
+      <Select.Root value={sortOrder} onValueChange={onSortChange}>
         <Select.Trigger className="sort-trigger">
           <Select.Value />
           <Select.Icon>
