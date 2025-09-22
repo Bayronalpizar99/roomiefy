@@ -34,13 +34,10 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
   }, [user]);
 
   const handleImageLoad = () => {
-    console.log('✅ Profile picture loaded successfully:', user?.picture);
     setImageError(false);
   };
 
   const handleImageError = () => {
-    console.log('❌ Profile picture failed to load:', user?.picture);
-    console.log('User object:', user);
     setImageError(true);
   };
 
