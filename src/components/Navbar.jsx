@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Navbar.css';
 import * as NavigationMenu from '@radix-ui/react-navigation-menu';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   MagnifyingGlassIcon,
   SunIcon,
@@ -18,6 +18,7 @@ import LoginButton from "./LoginButton";
 
 export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => { 
   const location = useLocation();
+  const navigate = useNavigate();
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const { user, logout } = useAuth();
   // Update local state when searchQuery prop changes
@@ -28,9 +29,8 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setLocalSearchQuery(value);
-    // Only trigger search when user stops typing (debounce could be added here)
-    if (location.pathname.includes('roomies')) {
-      onSearch?.(value);
+    if (onSearch) {
+      onSearch(value);
     }
   };
 

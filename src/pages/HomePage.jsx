@@ -24,12 +24,14 @@ const HomePage = ({ searchQuery = '', onSearchQueryChange }) => {
   
   // Update filters when searchQuery changes
   useEffect(() => {
-    setFilters(prev => ({
-      ...prev,
-      location: searchQuery
-    }));
-    // Reset to first page when search changes
-    setCurrentPage(1);
+    if (searchQuery !== undefined) {
+      setFilters(prev => ({
+        ...prev,
+        location: searchQuery
+      }));
+      // Reset to first page when search changes
+      setCurrentPage(1);
+    }
   }, [searchQuery]);
 
   useEffect(() => {
@@ -46,7 +48,7 @@ const HomePage = ({ searchQuery = '', onSearchQueryChange }) => {
     let properties = [...allProperties];
 
     // 1. Filtrar por búsqueda (ubicación, título, descripción, comodidades)
-    if (filters.location) {
+    if (filters.location && filters.location.trim() !== '') {
       const searchTerm = filters.location.toLowerCase().trim();
       if (searchTerm) {
         properties = properties.filter(property => {
