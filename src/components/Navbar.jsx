@@ -18,6 +18,7 @@ import LoginButton from "./LoginButton";
 
 export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => { 
   const location = useLocation();
+  const navigate = useNavigate();
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const { user, logout } = useAuth();
   // Update local state when searchQuery prop changes
@@ -28,9 +29,8 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setLocalSearchQuery(value);
-    // Only trigger search when user stops typing (debounce could be added here)
-    if (location.pathname.includes('roomies')) {
-      onSearch?.(value);
+    if (onSearch) {
+      onSearch(value);
     }
   };
 
@@ -39,7 +39,10 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
     onSearch?.(localSearchQuery);
   };
 
-  const navigate = useNavigate();
+  // Función para determinar si mostrar la barra de búsqueda
+  const shouldShowSearch = () => {
+    return location.pathname === '/' || location.pathname === '/roomies';
+  };
 
 
   return (
@@ -79,19 +82,21 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
         </NavigationMenu.List>
       </div>
 
-      <div className="navbar-center">
-        <form className="search-bar" onSubmit={handleSearchSubmit}>
-          <button type="submit" className="search-button">
-            <MagnifyingGlassIcon />
-          </button>
-          <input 
-            type="text" 
-            placeholder={location.pathname.includes('roomies') ? "Buscar roomies..." : "Buscar..."}
-            value={localSearchQuery}
-            onChange={handleSearchChange}
-          />
-        </form>
-      </div>
+      {shouldShowSearch() && (
+        <div className="navbar-center">
+          <form className="search-bar" onSubmit={handleSearchSubmit}>
+            <button type="submit" className="search-button">
+              <MagnifyingGlassIcon />
+            </button>
+            <input 
+              type="text" 
+              placeholder={location.pathname.includes('roomies') ? "Buscar roomies..." : "Buscar propiedades..."}
+              value={localSearchQuery}
+              onChange={handleSearchChange}
+            />
+          </form>
+        </div>
+      )}
 
       <div className="navbar-right">
         <button className="icon-button" onClick={toggleTheme}>
