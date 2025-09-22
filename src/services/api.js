@@ -50,7 +50,7 @@ export const fetchProperties = async () => {
     console.error("Error de red o excepción:", error);
     return []; // Devuelve un array vacío para que la UI no se rompa.
   }
-};  
+};
 
 /**
  * Obtiene las conversaciones del usuario desde la API.
@@ -92,7 +92,7 @@ export const fetchConversations = async () => {
     return data;
   } catch (error) {
     console.error("Error de red o excepción:", error);
-    
+
     return []; // Devuelve un array vacío para que la UI no se rompa.
   }
 };
@@ -171,5 +171,47 @@ export const sendMessage = async (conversationId, content) => {
   } catch (error) {
     console.error("Error de red o excepción al enviar el mensaje:", error);
     return null;
+  }
+};
+
+// --- CÓDIGO NUEVO INTEGRADO ---
+
+/**
+ * Crea una nueva propiedad enviando los datos a la API.
+ * @param {object} propertyData - Los datos de la propiedad a crear.
+ * @returns {Promise<object>} La respuesta de la API.
+ */
+export const createProperty = async (propertyData) => {
+  if (!apiUrl || !apiKey) {
+    console.error("Error: VITE_API_URL o VITE_API_KEY no están definidas.");
+    throw new Error("La configuración de la API no está completa.");
+  }
+
+  try {
+    const response = await fetch(`${apiUrl}/properties`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Ocp-Apim-Subscription-Key': apiKey,
+      },
+      body: JSON.stringify(propertyData),
+    });
+
+    // El mock service responde con 201 Created y puede no tener un cuerpo JSON.
+    // Si la respuesta es exitosa (como 201), no intentamos leerla como JSON.
+    if (response.status === 201) {
+      return { success: true, status: 201 };
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Error al crear la propiedad: ${response.status} ${errorText}`);
+    }
+
+    // Para un backend real, probablemente querrías devolver el JSON.
+    return await response.json();
+  } catch (error) {
+    console.error("Excepción al crear la propiedad:", error);
+    throw error; // Re-lanzamos el error para que el componente lo pueda manejar.
   }
 };
