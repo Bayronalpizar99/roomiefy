@@ -2,31 +2,8 @@ import React, { useState, useRef, useCallback } from 'react';
 import './PublishStyles.css';
 import * as Checkbox from '@radix-ui/react-checkbox';
 import { CheckIcon, UploadIcon } from '@radix-ui/react-icons';
+import { createProperty } from '../services/api'; // <--- Usamos esta, la que importamos.
 
-const API_BASE = import.meta.env.VITE_API_URL;   
-const API_KEY  = import.meta.env.VITE_API_KEY;   
-
-function buildUrl(path) {
-  // asegura que no queden dobles barras
-  const base = (API_BASE || '').replace(/\/$/, '');
-  return `${base}${path}`;
-}
-
-async function createProperty(payload) {
-  const url = buildUrl(API_POST_PATH);
-  const headers = { 'Content-Type': 'application/json' };
-  if (API_KEY) headers['Ocp-Apim-Subscription-Key'] = API_KEY;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(payload),
-  });
-
-  const text = await res.text(); // el mock puede venir sin body
-  if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
-  return text ? JSON.parse(text) : {};
-}
 /* ============================================================================= */
 
 /* ====== UI Helpers ====== */
@@ -201,7 +178,7 @@ const PublishPage = () => {
       setSubmitting(true);
       const result = await createProperty(payload);
       console.log('API response:', result);
-      alert('Propiedad enviada ✔️ (mock 200/201)');
+      alert('Propiedad publicada exitosamente (simulado).');
     } catch (err) {
       console.error(err);
       alert(`Fallo al enviar: ${err.message}`);

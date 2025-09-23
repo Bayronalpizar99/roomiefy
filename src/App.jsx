@@ -13,30 +13,34 @@ import PublishPage from "./pages/PublishPage.jsx";
 import PropertyDetailPage from "./pages/PropertyDetailPage.jsx";
 import RoomieDetailPage from "./pages/RoomieDetailPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import ChatPage from "./pages/ChatPage.jsx";
+
+// Import theme hook
+import { useTheme } from "./hooks/useTheme";
 import "./App.css";
 
 
 function App() {
-  const [theme, setTheme] = useState('light');
+  const { theme, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const location = useLocation();
-  
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === "dark" ? "light" : "dark"));
-  };
 
   const handleSearch = (query) => {
     setSearchQuery(query);
   };
 
-  useEffect(() => {
-    document.body.className = "";
-    document.body.classList.add(theme);
-  }, [theme]);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Clear search when navigating away from roomies page
+  // Clear search when navigating between roomies and home pages
   useEffect(() => {
-    if (!location.pathname.includes('roomies')) {
+    if (location.pathname === '/roomies') {
+      // Si estamos en roomies, mantener la búsqueda
+      return;
+    } else if (location.pathname === '/') {
+      // Si estamos en home, mantener la búsqueda pero reiniciar la página
+      setCurrentPage(1);
+    } else {
+      // En otras páginas, limpiar la búsqueda
       setSearchQuery('');
     }
   }, [location.pathname]);
@@ -46,13 +50,29 @@ function App() {
     // 2. Envuelve toda la aplicación con AuthProvider
     <AuthProvider>
       <div className="app-layout">
-        <Navbar toggleTheme={toggleTheme} />
+        <Navbar
+          toggleTheme={toggleTheme}
+          onSearch={handleSearch}
+          searchQuery={searchQuery}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+        />
 
         <ScrollArea.Root className="main-content-area">
           <ScrollArea.Viewport className="scroll-area-viewport">
             <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="roomies" element={<RoomiesPage />} />
+              <Route path="/" element={<HomePage searchQuery={searchQuery} />} />
+              <Route
+                path="roomies"
+                element={
+                  <RoomiesPage
+                    searchQuery={searchQuery}
+                    onSearchQueryChange={handleSearch}
+                    currentPage={currentPage}
+                    setCurrentPage={setCurrentPage}
+                  />
+                }
+              />
               <Route path="publicar" element={<PublishPage />} />
               <Route
                 path="/propiedad/:propertyId"

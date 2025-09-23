@@ -1,23 +1,54 @@
-/* Este CSS debe ser importado en tu componente RoommateCard. */
+/* src/components/RoomieCard.css */
 
 /* Avatar */
 .avatar {
-  width: 4.5rem;
-  height: 4.5rem;
+  width: 3rem;
+  height: 3rem;
   border-radius: 9999px;
   overflow: hidden;
   display: inline-flex;
-  flex: 0 0 4.5rem; 
+  flex: 0 0 3rem;
 }
+  
+@media (min-width: 768px) {
+  .avatar {
+    width: 3.5rem;
+    height: 3.5rem;
+    flex: 0 0 3.5rem;
+  }
+}
+  
+@media (min-width: 1280px) {
+  .avatar {
+    width: 3rem;
+    height: 3rem;
+    flex: 0 0 3rem;
+  }
+}
+
 .avatar-wrap {
-  display: inline-block; 
-  align-self: center; 
-  width: 4.5rem;
-  height: 4.5rem; 
+  display: inline-block;
+  align-self: center;
+  width: 3rem;
+  height: 3rem;
   flex: 0 0 auto;
   position: relative;
 }
-/* Estilos base para la tarjeta de propiedad */
+  
+@media (min-width: 768px) {
+  .avatar-wrap {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+}
+  
+@media (min-width: 1280px) {
+  .avatar-wrap {
+    width: 3rem;
+    height: 3rem;
+  }
+}
+/* Estilos base para la tarjeta de roomie */
 .property-card {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -27,7 +58,23 @@
   display: flex;
   flex-direction: column;
   will-change: transform;
-  padding: 0.25rem; 
+  padding: 0.75rem;
+  height: 100%;
+  width: 100%;
+  min-width: 0; /* Previene desbordamiento */
+  box-sizing: border-box;
+}
+  
+@media (min-width: 768px) {
+  .property-card {
+    padding: 1rem;
+  }
+}
+  
+@media (min-width: 1280px) {
+  .property-card {
+    padding: 0.75rem;
+  }
 }
 
 .property-card-link {
@@ -40,91 +87,90 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.property-image {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-}
-
 .property-info {
-  padding: 1rem;
+  padding: 0.25rem;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Encabezado del card (avatar, nombre, edad, rating) */
 .roomie-card-header {
-  margin: 0.5rem;
+  margin: 0;
   width: 100%;
-  flex-wrap: wrap;
+  display: flex;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.25rem 0.75rem;
-}
-.roomie-card-info {
-  justify-content: center;
-  align-items: center;
-}
-
-/* List view layout adjustments */
-.roomie-card-body.list-mode {
-  align-items: center;
-  justify-content: center;
-  
-}
-.roomie-card-body.list-mode .roomie-card-header {
-  width: 12rem;
-  flex: 0 0 12rem;
-  align-items: center;
-}
-.roomie-card-body.list-mode .name-age,
-.roomie-card-body.list-mode .rating-row {
-  justify-content: center;
-  width: 100%;
-}
-.roomie-card-body.list-mode .name-age { margin-top: 0.5rem; }
-.roomie-card-body.list-mode .rating-row { margin-top: 0.25rem; }
-.roomie-card-body.list-mode .property-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.property-info h3 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-  color: var(--color-text);
-}
-
-.property-info .location {
-  font-size: 0.9rem;
-  color: var(--color-text-secondary);
+  gap: 0.75rem;
   margin-bottom: 0.5rem;
 }
 
-.property-info .price {
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: var(--color-primary);
-  margin-top: auto;
-  padding-top: 0.5rem;
-}
-
-.owner-info {
+.roomie-card-info {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-  border-top: 1px solid var(--color-border);
-  padding-top: 0.75rem;
-}
-
-.owner-details {
-  display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
-  background: var(--color-input-bg);
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+}
+
+/* CAMBIOS PARA LA VISTA DE LISTA */
+.property-card.list-view {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto; /* Altura automática */
+  padding: 1.25rem !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.property-card.list-view:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.roomie-card-body.list-layout {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start;
+  gap: 1.5rem;
+  width: 100%;
+  padding: 0;
+}
+
+.property-card.list-view .roomie-card-header {
+  width: 180px;
+  flex: 0 0 180px;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin: 0;
+  padding: 0.5rem 0;
+}
+
+.property-card.list-view .property-info {
+  flex: 1;
+  padding: 0 !important;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+/* Ajustes responsivos para la vista de lista en móviles */
+@media (max-width: 767px) {
+  .property-card.list-view .roomie-card-body {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+  
+  .property-card.list-view .roomie-card-header {
+    width: 100% !important;
+    flex-direction: row !important;
+    text-align: left;
+    gap: 1rem;
+  }
 }
 
 .avatar-img {
@@ -138,7 +184,6 @@
   font-size: 1rem;
 }
 
-/* Verified */
 .avatar-wrap .verified-icon {
   position: absolute !important;
   top: -6px !important;
@@ -152,61 +197,4 @@
   border-radius: 9999px;
   z-index: 1;
   pointer-events: none;
-}
-
-/* Tooltip */
-.tooltip {
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-size: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
-}
-
-/* Badges */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
-  font-weight: 500;
-}
-
-.badge-default {
-  background: var(--color-primary);
-  color: #fff;
-}
-
-.badge-secondary {
-  background: var(--color-input-bg);
-  color: var(--color-text);
-}
-
-.badge-outline {
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-}
-
-.apartment-badge {
-  border: 1px solid var(--color-border);
-}
-.apartment-badge.apartment-badge--has {
-  justify-content: center;
-  padding-top: 0.25rem; 
-  max-width: 8rem;
-  background: var(--color-primary); 
-  border-color: var(--color-primary-hover);
-  color: #fff;
-}
-.apartment-badge.apartment-badge--no {
-  justify-content: center;
-  padding-top: 0.25rem; 
-  max-width: 8rem;
-  background: var(--color-input-bg);
-  border-color: var(--color-border);
-  color: var(--color-text);
 }

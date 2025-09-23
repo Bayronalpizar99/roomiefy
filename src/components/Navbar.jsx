@@ -16,21 +16,46 @@ import appLogo from "../assets/roomify2.png";
 import { useAuth } from "../context/AuthContext";
 import LoginButton from "./LoginButton";
 
-export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => { 
+export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const { user, logout } = useAuth();
+  const [imageError, setImageError] = useState(false);
+
   // Update local state when searchQuery prop changes
   useEffect(() => {
     setLocalSearchQuery(searchQuery);
   }, [searchQuery]);
 
+  // Reset image state when user changes
+  useEffect(() => {
+    setImageError(false);
+  }, [user]);
+
+  const handleImageLoad = () => {
+    setImageError(false);
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
+  const getAvatarSrc = () => {
+    if (imageError || !user?.picture) {
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=random&size=40`;
+    }
+    return user.picture;
+  };
+
+  // Only show loading state when user exists but we haven't determined if image works
+  const showLoadingState = user && !imageError && user.picture;
+
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setLocalSearchQuery(value);
-    // Only trigger search when user stops typing (debounce could be added here)
-    if (location.pathname.includes('roomies')) {
-      onSearch?.(value);
+    if (onSearch) {
+      onSearch(value);
     }
   };
 
@@ -39,7 +64,10 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
     onSearch?.(localSearchQuery);
   };
 
-  const navigate = useNavigate();
+  // Función para determinar si mostrar la barra de búsqueda
+  const shouldShowSearch = () => {
+    return location.pathname === '/' || location.pathname === '/roomies';
+  };
 
 
   return (
@@ -79,19 +107,21 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
         </NavigationMenu.List>
       </div>
 
-      <div className="navbar-center">
-        <form className="search-bar" onSubmit={handleSearchSubmit}>
-          <button type="submit" className="search-button">
-            <MagnifyingGlassIcon />
-          </button>
-          <input 
-            type="text" 
-            placeholder={location.pathname.includes('roomies') ? "Buscar roomies..." : "Buscar..."}
-            value={localSearchQuery}
-            onChange={handleSearchChange}
-          />
-        </form>
-      </div>
+      {shouldShowSearch() && (
+        <div className="navbar-center">
+          <form className="search-bar" onSubmit={handleSearchSubmit}>
+            <button type="submit" className="search-button">
+              <MagnifyingGlassIcon />
+            </button>
+            <input 
+              type="text" 
+              placeholder={location.pathname.includes('roomies') ? "Buscar roomies..." : "Buscar propiedades..."}
+              value={localSearchQuery}
+              onChange={handleSearchChange}
+            />
+          </form>
+        </div>
+      )}
 
       <div className="navbar-right">
         <button className="icon-button" onClick={toggleTheme}>
@@ -101,9 +131,6 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
         <button className="icon-button" onClick={() => navigate('/chat')}><ChatBubbleIcon /></button>
 
         <button className="icon-button">
-          <ChatBubbleIcon />
-        </button>
-        <button className="icon-button">
           <BellIcon />
           <span className="notification-badge">3</span>
         </button>
@@ -111,16 +138,14 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
         {/* --- INICIO DE LA MODIFICACIÓN --- */}
         {user ? (
           <div className="user-menu">
-            {" "}
-            {/* Contenedor para el menú */}
             <img
-              src={user.picture}
+              src={getAvatarSrc()}
               alt="Avatar de usuario"
-              className="user-avatar"
+              className={`user-avatar ${showLoadingState ? 'loading' : ''}`}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
             />
             <div className="dropdown-menu">
-              {" "}
-              {/* Menú desplegable */}
               <div className="dropdown-header">
                 <strong>{user.name}</strong>
                 <span>{user.email}</span>

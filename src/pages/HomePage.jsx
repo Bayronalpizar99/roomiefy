@@ -1,3 +1,5 @@
+// src/pages/HomePage.jsx
+
 import { useState, useEffect, useMemo } from 'react';
 import { fetchProperties } from '../services/api';
 import PropertyCard from '../components/PropertyCard';
@@ -10,26 +12,26 @@ const HomePage = ({ searchQuery = '', onSearchQueryChange }) => {
   const [allProperties, setAllProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  const [view, setView] = useState('grid');
+  const [view, setView] = useState('grid'); // Este es el estado que pasaremos
   const [sortOrder, setSortOrder] = useState('recent');
   const [currentPage, setCurrentPage] = useState(1);
   const propertiesPerPage = 12;
   
   const [filters, setFilters] = useState({
-    location: searchQuery, // Initialize with searchQuery
+    location: searchQuery,
     price: 500,
     bedrooms: 'any',
     amenities: new Set(),
   });
   
-  // Update filters when searchQuery changes
   useEffect(() => {
-    setFilters(prev => ({
-      ...prev,
-      location: searchQuery
-    }));
-    // Reset to first page when search changes
-    setCurrentPage(1);
+    if (searchQuery !== undefined) {
+      setFilters(prev => ({
+        ...prev,
+        location: searchQuery
+      }));
+      setCurrentPage(1);
+    }
   }, [searchQuery]);
 
   useEffect(() => {
@@ -45,8 +47,7 @@ const HomePage = ({ searchQuery = '', onSearchQueryChange }) => {
   const filteredProperties = useMemo(() => {
     let properties = [...allProperties];
 
-    // 1. Filtrar por búsqueda (ubicación, título, descripción, comodidades)
-    if (filters.location) {
+    if (filters.location && filters.location.trim() !== '') {
       const searchTerm = filters.location.toLowerCase().trim();
       if (searchTerm) {
         properties = properties.filter(property => {
@@ -62,39 +63,32 @@ const HomePage = ({ searchQuery = '', onSearchQueryChange }) => {
       }
     }
 
-    // 2. Filtrar por precio
     properties = properties.filter(p => p.price <= filters.price);
 
-    // 3. Filtrar por recámaras
     if (filters.bedrooms !== 'any') {
       properties = properties.filter(p => {
         const bedroomCount = p.bedrooms;
         const filterValue = filters.bedrooms;
 
         if (filterValue === 'studio') {
-          // Asumimos que un estudio equivale a 1 recámara para fines del filtro
           return bedroomCount === 1;
         }
         if (filterValue === '4+') {
           return bedroomCount >= 4;
         }
-        // Comparamos el número de recámaras (convirtiendo el filtro a número)
         return bedroomCount === parseInt(filterValue);
       });
     }
-    // --- FIN DE CAMBIOS ---
 
-    // 4. Filtrar por comodidades
     if (filters.amenities.size > 0) {
       properties = properties.filter(p => 
         [...filters.amenities].every(amenity => p.amenities.includes(amenity))
       );
     }
 
-    // 5. Ordenar
     switch (sortOrder) {
       case 'price-asc':
-        return properties.sort((a, b) => a.price - a.price);
+        return properties.sort((a, b) => a.price - b.price);
       case 'price-desc':
         return properties.sort((a, b) => b.price - a.price);
       case 'rated':
@@ -128,9 +122,9 @@ const HomePage = ({ searchQuery = '', onSearchQueryChange }) => {
         <h1>Encuentra tu próximo hogar 🏡</h1>
         <ViewOptions 
           view={view} 
-          setView={setView} 
+          onViewChange={setView} 
           sortOrder={sortOrder}
-          setSortOrder={setSortOrder}
+          onSortChange={setSortOrder}
         />
         {loading ? (
           <p className="loading-message">Cargando propiedades...</p>
@@ -139,7 +133,11 @@ const HomePage = ({ searchQuery = '', onSearchQueryChange }) => {
             <main className={`properties-container ${view}-view`}>
               {currentProperties.length > 0 ? (
                 currentProperties.map((property) => (
-                  <PropertyCard key={property.id} property={property} />
+                  <PropertyCard 
+                    key={property.id} 
+                    property={property} 
+                    view={view} /* CAMBIO: Pasamos el prop 'view' */
+                  />
                 ))
               ) : (
                 <p className="no-properties-found">No se encontraron propiedades con estos filtros.</p>
