@@ -10,6 +10,8 @@ import {
   HomeIcon,
   AvatarIcon,
   PlusCircledIcon,
+  HamburgerMenuIcon,
+  Cross1Icon,
 } from "@radix-ui/react-icons";
 
 import appLogo from "../assets/roomify2.png";
@@ -24,6 +26,8 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
 
   // Update local state when searchQuery prop changes
   useEffect(() => {
@@ -43,12 +47,18 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
     setIsDropdownOpen(prev => !prev);
   };
 
-  // Cerrar el menú al hacer clic fuera de él
+  // Cerrar los menús al hacer clic fuera de ellos
   useEffect(() => {
     const handleClickOutside = (event) => {
       const userMenu = document.querySelector('.user-menu');
+      const mobileMenu = document.querySelector('.mobile-menu');
+      
       if (userMenu && !userMenu.contains(event.target)) {
         setIsDropdownOpen(false);
+      }
+      
+      if (mobileMenu && !mobileMenu.contains(event.target) && !event.target.closest('.mobile-menu-toggle')) {
+        setIsMobileMenuOpen(false);
       }
     };
 
@@ -57,6 +67,12 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Cerrar menú móvil al cambiar de ruta
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+    setIsSearchVisible(false);
+  }, [location.pathname]);
 
   const handleImageLoad = () => {
     setImageError(false);
@@ -101,20 +117,40 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
     return location.pathname === '/' || location.pathname === '/roomies';
   };
 
+  // Función para alternar el menú móvil
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(prev => !prev);
+    setIsSearchVisible(false);
+  };
+
+  // Función para alternar la búsqueda móvil
+  const toggleMobileSearch = () => {
+    setIsSearchVisible(prev => !prev);
+    setIsMobileMenuOpen(false);
+  };
+
 
   return (
     <NavigationMenu.Root className="navbar">
       <div className="navbar-left">
-        
-        {/* --- INICIO DE LA MODIFICACIÓN --- */}
+        {/* Botón de menú hamburguesa (solo móvil) */}
+        <button 
+          className="mobile-menu-toggle"
+          onClick={toggleMobileMenu}
+          aria-label="Abrir menú de navegación"
+        >
+          {isMobileMenuOpen ? <Cross1Icon /> : <HamburgerMenuIcon />}
+        </button>
+
+        {/* Logo */}
         <Link to="/" className="navbar-logo-link">
           <div className="navbar-logo">
             <img src={appLogo} alt="Logo de la aplicación" className="logo-image" />
           </div>
         </Link>
-        {/* --- FIN DE LA MODIFICACIÓN --- */}
 
-        <NavigationMenu.List className="navbar-links">
+        {/* Enlaces de navegación (desktop) */}
+        <NavigationMenu.List className="navbar-links desktop-only">
           <NavigationMenu.Item>
             <Link to="/" className={location.pathname === "/" ? "active" : ""}>
               <HomeIcon /> Propiedades
@@ -139,8 +175,9 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
         </NavigationMenu.List>
       </div>
 
+      {/* Barra de búsqueda (desktop) */}
       {shouldShowSearch() && (
-        <div className="navbar-center">
+        <div className="navbar-center desktop-only">
           <form className="search-bar" onSubmit={handleSearchSubmit}>
             <button type="submit" className="search-button">
               <MagnifyingGlassIcon />
@@ -156,18 +193,32 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
       )}
 
       <div className="navbar-right">
+        {/* Botón de búsqueda móvil */}
+        {shouldShowSearch() && (
+          <button 
+            className="icon-button mobile-search-toggle mobile-only"
+            onClick={toggleMobileSearch}
+            aria-label="Buscar"
+          >
+            <MagnifyingGlassIcon />
+          </button>
+        )}
+
+        {/* Botones de acción (siempre visibles) */}
         <button className="icon-button" onClick={toggleTheme}>
           <SunIcon />
         </button>
 
-        <button className="icon-button" onClick={() => navigate('/chat')}><ChatBubbleIcon /></button>
+        <button className="icon-button desktop-only" onClick={() => navigate('/chat')}>
+          <ChatBubbleIcon />
+        </button>
 
-        <button className="icon-button">
+        <button className="icon-button desktop-only">
           <BellIcon />
           <span className="notification-badge">3</span>
         </button>
 
-        {/* --- INICIO DE LA MODIFICACIÓN --- */}
+        {/* Menú de usuario */}
         {user ? (
           <div className="user-menu">
             <div 
@@ -232,8 +283,74 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
         ) : (
           <LoginButton />
         )}
-        {/* --- FIN DE LA MODIFICACIÓN --- */}
       </div>
+
+      {/* Menú móvil */}
+      {isMobileMenuOpen && (
+        <div className="mobile-menu">
+          <div className="mobile-menu-content">
+            <NavigationMenu.List className="mobile-nav-links">
+              <NavigationMenu.Item>
+                <Link to="/" className={location.pathname === "/" ? "active" : ""}>
+                  <HomeIcon /> Propiedades
+                </Link>
+              </NavigationMenu.Item>
+              <NavigationMenu.Item>
+                <Link
+                  to="/roomies"
+                  className={location.pathname === "/roomies" ? "active" : ""}
+                >
+                  <AvatarIcon /> Roomies
+                </Link>
+              </NavigationMenu.Item>
+              <NavigationMenu.Item>
+                <Link
+                  to="/publicar"
+                  className={location.pathname === "/publicar" ? "active" : ""}
+                >
+                  <PlusCircledIcon /> Publicar
+                </Link>
+              </NavigationMenu.Item>
+            </NavigationMenu.List>
+            
+            {/* Botones de acción en móvil */}
+            <div className="mobile-actions">
+              <button className="mobile-action-button" onClick={() => navigate('/chat')}>
+                <ChatBubbleIcon /> Chat
+              </button>
+              <button className="mobile-action-button">
+                <BellIcon /> Notificaciones
+                <span className="notification-badge">3</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Barra de búsqueda móvil */}
+      {isSearchVisible && shouldShowSearch() && (
+        <div className="mobile-search">
+          <form className="mobile-search-bar" onSubmit={handleSearchSubmit}>
+            <button type="submit" className="search-button">
+              <MagnifyingGlassIcon />
+            </button>
+            <input 
+              type="text" 
+              placeholder={location.pathname.includes('roomies') ? "Buscar roomies..." : "Buscar propiedades..."}
+              value={localSearchQuery}
+              onChange={handleSearchChange}
+              autoFocus
+            />
+            <button 
+              type="button" 
+              className="close-search-button"
+              onClick={() => setIsSearchVisible(false)}
+            >
+              <Cross1Icon />
+            </button>
+          </form>
+        </div>
+      )}
     </NavigationMenu.Root>
   );
 };

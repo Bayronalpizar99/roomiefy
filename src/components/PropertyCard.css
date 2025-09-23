@@ -82,8 +82,10 @@
 .amenity-tag {
   background-color: var(--color-input-bg);
   color: var(--color-text-secondary);
+
   padding: 0.25rem 0.6rem;
-  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
   font-size: 0.75rem;
   font-weight: 500;
   flex-shrink: 0;
