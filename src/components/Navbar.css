@@ -96,13 +96,14 @@
 .search-bar {
   display: flex;
   align-items: center;
-  background-color: var(--color-input-bg);
+  background-color: var(--color-background);
+  border-color: var(--color-border);
   border-radius: var(--border-radius);
   padding: 0.5rem 0.8rem;
   width: 100%;
   max-width: 550px;
   transition: all 0.2s ease-in-out;
-  border: 1px solid transparent;
+  border: 1px solid var(--color-border);
 }
 
 .search-bar:focus-within {
@@ -111,7 +112,7 @@
 }
 
 .search-button {
-  background: none;
+  background: var(--color-background);
   border: none;
   padding: 0.25rem;
   display: flex;
@@ -119,12 +120,23 @@
   justify-content: center;
   cursor: pointer;
   color: var(--color-text-secondary);
-  transition: color 0.2s ease-in-out;
+  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
   margin-right: 0.5rem;
+  border-radius: var(--border-radius);
 }
 
 .search-button:hover {
   color: var(--color-primary);
+  background-color: var(--color-surface);
+}
+
+/* Light mode overrides for search button */
+body.light .search-button {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+body.light .search-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .search-bar svg {
@@ -338,7 +350,14 @@
   color: var(--color-text);
 }
 
-.dropdown-item:hover {
-  background-color: var(--color-input-bg);
-  color: var(--color-primary);
+/* Styles for Google login button container */
+.google-login-container {
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius);
+  padding: 0.25rem;
+}
+
+/* Light mode override */
+body.light .google-login-container {
+  background-color: transparent;
 }

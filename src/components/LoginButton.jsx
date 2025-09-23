@@ -14,18 +14,20 @@ const LoginButton = () => {
 
   useEffect(() => {
     if (window.google) {
+      const isLightMode = document.body.classList.contains('light');
+      const theme = isLightMode ? 'outline' : 'filled_black';
       window.google.accounts.id.initialize({
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         callback: handleCredentialResponse
       });
       window.google.accounts.id.renderButton(
         googleButton.current,
-        { theme: "outline", size: "large" }
+        { theme, size: "large" }
       );
     }
   }, []);
 
-  return <div ref={googleButton}></div>;
+  return <div ref={googleButton} className="google-login-container"></div>;
 };
 
 export default LoginButton;
