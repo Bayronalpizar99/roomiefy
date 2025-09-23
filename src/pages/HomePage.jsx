@@ -1,18 +1,13 @@
-// src/pages/HomePage.jsx
-
 import { useState, useEffect, useMemo } from 'react';
-import { fetchProperties } from '../services/api';
 import PropertyCard from '../components/PropertyCard';
 import Filters from '../components/Filters';
 import ViewOptions from '../components/ViewOptions';
 import Pagination from '../components/Pagination';
 import './HomePage.css';
 
-const HomePage = ({ searchQuery = '', onSearchQueryChange }) => {
-  const [allProperties, setAllProperties] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  const [view, setView] = useState('grid'); // Este es el estado que pasaremos
+// CAMBIO 1: Recibimos 'properties' y 'loading' como props desde App.jsx
+const HomePage = ({ searchQuery = '', properties: allProperties, loading }) => {
+  const [view, setView] = useState('grid');
   const [sortOrder, setSortOrder] = useState('recent');
   const [currentPage, setCurrentPage] = useState(1);
   const propertiesPerPage = 12;
@@ -34,15 +29,7 @@ const HomePage = ({ searchQuery = '', onSearchQueryChange }) => {
     }
   }, [searchQuery]);
 
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      const propertiesData = await fetchProperties();
-      setAllProperties(propertiesData);
-      setLoading(false);
-    };
-    loadData();
-  }, []);
+  // CAMBIO 2: Eliminamos el useEffect que llamaba a fetchProperties. ¡Ya no es necesario aquí!
 
   const filteredProperties = useMemo(() => {
     let properties = [...allProperties];
@@ -95,7 +82,8 @@ const HomePage = ({ searchQuery = '', onSearchQueryChange }) => {
         return properties.sort((a, b) => b.rating - a.rating);
       case 'recent':
       default:
-        return properties.sort((a, b) => b.id - a.id);
+        // CAMBIO 3: Usamos un fallback para el ID para evitar errores si no existe
+        return properties.sort((a, b) => (b.id || 0) - (a.id || 0));
     }
   }, [allProperties, filters, sortOrder]);
 
@@ -136,7 +124,7 @@ const HomePage = ({ searchQuery = '', onSearchQueryChange }) => {
                   <PropertyCard 
                     key={property.id} 
                     property={property} 
-                    view={view} /* CAMBIO: Pasamos el prop 'view' */
+                    view={view}
                   />
                 ))
               ) : (

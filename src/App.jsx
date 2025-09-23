@@ -1,11 +1,9 @@
+// src/App.jsx
+
 import { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import * as ScrollArea from '@radix-ui/react-scroll-area';
-
-// 1. Importa el AuthProvider
 import { AuthProvider } from "./context/AuthContext";
-
-// Importa tus componentes y páginas
 import { Navbar } from "./components/Navbar";
 import HomePage from "./pages/HomePage.jsx";
 import RoomiesPage from "./pages/RoomiesPage.jsx";
@@ -14,9 +12,8 @@ import PropertyDetailPage from "./pages/PropertyDetailPage.jsx";
 import RoomieDetailPage from "./pages/RoomieDetailPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
-
-// Import theme hook
 import { useTheme } from "./hooks/useTheme";
+import { fetchProperties } from './services/api'; // <--- 1. Importamos la función de la API
 import "./App.css";
 
 
@@ -25,29 +22,45 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const location = useLocation();
 
+  // --- INICIO DE CAMBIOS ---
+  // 2. Creamos un estado central para las propiedades
+  const [allProperties, setAllProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // 3. Cargamos las propiedades una sola vez, aquí en App.jsx
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      const propertiesData = await fetchProperties();
+      setAllProperties(propertiesData);
+      setLoading(false);
+    };
+    loadData();
+  }, []);
+
+  // 4. Creamos una función para añadir una nueva propiedad a nuestra lista central
+  const handleAddProperty = (newProperty) => {
+    setAllProperties(prevProperties => [newProperty, ...prevProperties]);
+  };
+  // --- FIN DE CAMBIOS ---
+
   const handleSearch = (query) => {
     setSearchQuery(query);
   };
-
+  
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Clear search when navigating between roomies and home pages
   useEffect(() => {
     if (location.pathname === '/roomies') {
-      // Si estamos en roomies, mantener la búsqueda
       return;
     } else if (location.pathname === '/') {
-      // Si estamos en home, mantener la búsqueda pero reiniciar la página
       setCurrentPage(1);
     } else {
-      // En otras páginas, limpiar la búsqueda
       setSearchQuery('');
     }
   }, [location.pathname]);
 
   return (
-
-    // 2. Envuelve toda la aplicación con AuthProvider
     <AuthProvider>
       <div className="app-layout">
         <Navbar
@@ -61,7 +74,8 @@ function App() {
         <ScrollArea.Root className="main-content-area">
           <ScrollArea.Viewport className="scroll-area-viewport">
             <Routes>
-              <Route path="/" element={<HomePage searchQuery={searchQuery} />} />
+              {/* 5. Pasamos la lista de propiedades y el estado de carga a HomePage */}
+              <Route path="/" element={<HomePage searchQuery={searchQuery} properties={allProperties} loading={loading} />} />
               <Route
                 path="roomies"
                 element={
@@ -73,7 +87,8 @@ function App() {
                   />
                 }
               />
-              <Route path="publicar" element={<PublishPage />} />
+              {/* 6. Pasamos la función para añadir propiedades a PublishPage */}
+              <Route path="publicar" element={<PublishPage onAddProperty={handleAddProperty} />} />
               <Route
                 path="/propiedad/:propertyId"
                 element={<PropertyDetailPage />}
@@ -93,7 +108,6 @@ function App() {
       </div>
     </AuthProvider>
    );
-
 }
 
 export default App;
