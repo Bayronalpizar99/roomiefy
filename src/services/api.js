@@ -174,6 +174,37 @@ export const sendMessage = async (conversationId, content) => {
   }
 };
 
+export const fetchProfileOptions = async () => {
+  if (!apiUrl || !apiKey) {
+    console.error("Error: Las variables de entorno VITE_API_URL o VITE_API_KEY no están definidas.");
+    return { intereses: [], idiomas: [] };
+  }
+
+  try {
+    const response = await fetch(apiUrl + 'profile/interests', {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": apiKey,
+        "Accept": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener opciones de perfil: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return {
+      intereses: data?.intereses || [],
+      idiomas: data?.idiomas || []
+    };
+  } catch (error) {
+    console.error(error);
+    return { intereses: [], idiomas: [] };
+  }
+};
+
 // --- CÓDIGO NUEVO INTEGRADO ---
 
 /**
@@ -213,5 +244,40 @@ export const createProperty = async (propertyData) => {
   } catch (error) {
     console.error("Excepción al crear la propiedad:", error);
     throw error; // Re-lanzamos el error para que el componente lo pueda manejar.
+  }
+};
+
+/* Realiza un Post para crear un nuevo perfil de roomie con los datos de ProfilePage */
+export const createRoomieProfile = async (profileData) => {
+  const formData = new FormData();
+  Object.keys(profileData).forEach((key) => {
+    if (key !== "foto" && key !== "fotoPreview") formData.append(key, profileData[key]);
+  });
+  if (profileData.foto) formData.append("foto", profileData.foto, profileData.foto.name);
+
+  const response = await fetch(apiUrl + 'roomies', {
+    method: "POST",
+    headers: {
+      "Ocp-Apim-Subscription-Key": apiKey,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    let errorText;
+    try {
+      const data = await response.json();
+      errorText = data?.message || JSON.stringify(data);
+    } catch {
+      errorText = await response.text();
+    }
+    throw new Error(`Error al crear el perfil: ${response.status} - ${errorText}`);
+  }
+
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    return await response.json();
+  } else {
+    return { message: "Perfil creado correctamente" };
   }
 };

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import * as Slider from "@radix-ui/react-slider";
+import { fetchProfileOptions, createRoomieProfile } from "../services/api";
 import "./ProfileStyles.css";
 
 const steps = ["Personal", "Vivienda", "Preferencias", "Intereses"];
@@ -15,6 +16,7 @@ const RoomieProfileForm = () => {
   const [allIntereses, setAllIntereses] = useState([]);
   const [allIdiomas, setAllIdiomas] = useState([]);
   const [nuevoInteres, setNuevoInteres] = useState(""); // Para input "Otro"
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     //Datos Personales
@@ -35,6 +37,9 @@ const RoomieProfileForm = () => {
     aceptaFumadores: "",
     aceptaMascotas: "",
     aceptaInvitados: "",
+    //Datos de Intereses
+    intereses: [],
+    idiomas: [],
   });
 
   useEffect(() => {
@@ -47,6 +52,15 @@ const RoomieProfileForm = () => {
       }));
     }
   }, [user]);
+
+  useEffect(() => {
+    const loadOptions = async () => {
+      const { intereses, idiomas } = await fetchProfileOptions();
+      setAllIntereses(intereses);
+      setAllIdiomas(idiomas);
+    };
+    loadOptions();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -77,6 +91,19 @@ const RoomieProfileForm = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const validTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
+      const maxSize = 2 * 1024 * 1024; // 2MB
+
+      if (!validTypes.includes(file.type)) {
+        alert("Solo se permiten imágenes en formato JPG, JPEG, PNG o WEBP.");
+        return;
+      }
+
+      if (file.size > maxSize) {
+        alert("El archivo no debe superar los 2MB.");
+        return;
+      }
+
       setFormData((prev) => ({
         ...prev,
         foto: file,
@@ -85,9 +112,31 @@ const RoomieProfileForm = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Datos enviados:", formData);
+    setLoading(true);
+    try {
+      const data = new FormData();
+
+      // Agregar todos los campos al FormData
+      Object.keys(formData).forEach((key) => {
+        if (key === "intereses" || key === "idiomas") {
+          data.append(key, JSON.stringify(formData[key])); // Arrays como JSON
+        } else {
+          data.append(key, formData[key]);
+        }
+      });
+      console.log(data);
+      await createRoomieProfile(data);
+
+      alert("Perfil creado con éxito");
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      alert("Error al crear perfil, vuelve a intentarlo");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const validateStep = () => {
@@ -134,6 +183,14 @@ const RoomieProfileForm = () => {
       if (!formData.aceptaInvitados)
         newErrors.aceptaInvitados = "Selecciona una opción";
     }
+    if (step === 3) {
+      if (!formData.intereses || formData.intereses.length === 0) {
+        newErrors.intereses = "Selecciona al menos un interés";
+      }
+      if (!formData.idiomas || formData.idiomas.length === 0) {
+        newErrors.idiomas = "Selecciona al menos un idioma";
+      }
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -167,6 +224,18 @@ const RoomieProfileForm = () => {
     if (step > 0) {
       setStep(step - 1);
     }
+  };
+
+  const toggleSelection = (name, value) => {
+    setFormData((prev) => {
+      const current = prev[name] || [];
+      return {
+        ...prev,
+        [name]: current.includes(value)
+          ? current.filter((v) => v !== value) // quitar
+          : [...current, value], // agregar
+      };
+    });
   };
 
   return (
@@ -203,11 +272,36 @@ const RoomieProfileForm = () => {
         {step === 0 && (
           <>
             {/* --- PASO 1: PERSONAL --- */}
+            <div className="form-group foto-upload-group">
+              <label>Foto de perfil</label>
+
+              <div className="foto-upload-wrapper">
+                {formData.fotoPreview ? (
+                  <img
+                    src={formData.fotoPreview}
+                    alt="Preview"
+                    className="foto-preview"
+                  />
+                ) : (
+                  <div className="foto-placeholder">
+                    <span>Sube tu foto</span>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="foto-input"
+                />
+              </div>
+            </div>
+
             <div className="form-row">
               <div className="form-group">
                 <label>Nombre Completo *</label>
                 <input
                   type="text"
+                  id="nombre"
                   name="nombre"
                   value={formData.nombre}
                   onChange={handleChange}
@@ -220,6 +314,7 @@ const RoomieProfileForm = () => {
                 <label>Edad *</label>
                 <input
                   type="text"
+                  id="edad"
                   name="edad"
                   value={formData.edad}
                   onChange={handleChange}
@@ -240,18 +335,6 @@ const RoomieProfileForm = () => {
             </div>
 
             <div className="form-group">
-              <label>Foto de perfil</label>
-              <input type="file" accept="image/*" onChange={handleFileChange} />
-              {formData.fotoPreview && (
-                <img
-                  src={formData.fotoPreview}
-                  alt="Preview"
-                  className="foto-preview"
-                />
-              )}
-            </div>
-
-            <div className="form-group">
               <label>Ubicación *</label>
               <input
                 type="text"
@@ -259,6 +342,7 @@ const RoomieProfileForm = () => {
                 value={formData.ubicacion}
                 onChange={handleChange}
                 placeholder="Ej. Ciudad Quesada, Alajuela"
+                maxLength={50}
                 className={errors.ubicacion ? "input-error" : ""}
               />
               {errors.ubicacion && (
@@ -274,6 +358,7 @@ const RoomieProfileForm = () => {
                 value={formData.ocupacion}
                 onChange={handleChange}
                 placeholder="Ej. Estudiante, Ingeniero, Diseñador..."
+                maxLength={50}
                 className={errors.ocupacion ? "input-error" : ""}
               />
               {errors.ocupacion && (
@@ -288,6 +373,7 @@ const RoomieProfileForm = () => {
                 value={formData.descripcion}
                 onChange={handleChange}
                 placeholder="Cuéntanos sobre ti, tus pasatiempos, qué buscas en un roomie..."
+                maxLength={150}
                 className={errors.descripcion ? "input-error" : ""}
               />
               {errors.descripcion && (
@@ -523,6 +609,145 @@ const RoomieProfileForm = () => {
             </div>
           </>
         )}
+        {step === 3 && (
+          <>
+            {/* --- PASO 4: INTERESES --- */}
+            <div className="form-group">
+              <label htmlFor="intereses">Intereses</label>
+              <p className="form-hint">
+                Selecciona tus intereses y pasatiempos para encontrar roomies
+                compatibles
+              </p>
+
+              <div
+                className="chips-container"
+                role="group"
+                aria-label="Intereses disponibles"
+              >
+                {/* Intereses de la API */}
+                {allIntereses.map((interes) => (
+                  <button
+                    type="button"
+                    key={interes.id}
+                    className={`chip ${
+                      formData.intereses.includes(interes.label) ? "active" : ""
+                    }`}
+                    aria-pressed={formData.intereses.includes(interes.label)}
+                    onClick={() => toggleSelection("intereses", interes.label)}
+                  >
+                    {interes.label}
+                  </button>
+                ))}
+
+                {/* Intereses personalizados */}
+                {formData.intereses
+                  .filter((i) => !allIntereses.some((opt) => opt.label === i))
+                  .map((custom, idx) => (
+                    <button
+                      type="button"
+                      key={`custom-${idx}`}
+                      className={`chip ${
+                        formData.intereses.includes(custom) ? "active" : ""
+                      }`}
+                      aria-pressed={formData.intereses.includes(custom)}
+                      onClick={() => toggleSelection("intereses", custom)}
+                    >
+                      {custom}
+                    </button>
+                  ))}
+              </div>
+              {errors.intereses && (
+                <p className="error-text">{errors.intereses}</p>
+              )}
+
+              {/* Input para agregar interés */}
+              <div className="chip-input">
+                <input
+                  type="text"
+                  value={nuevoInteres}
+                  onChange={(e) => setNuevoInteres(e.target.value)}
+                  placeholder="Escribe un interés y presiona 'Agregar'"
+                  maxLength={20}
+                  className="chip-text-input"
+                />
+                <button
+                  type="button"
+                  className="chip add-chip"
+                  onClick={() => {
+                    const trimmed = nuevoInteres.trim();
+
+                    // Validaciones
+                    if (!trimmed) return;
+                    if (formData.intereses.length >= 20) {
+                      alert(
+                        "Solo puedes agregar hasta 15 intereses personalizados."
+                      );
+                      return;
+                    }
+                    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,20}$/.test(trimmed)) {
+                      alert(
+                        "El interés debe tener solo letras, entre 3 y 20 caracteres."
+                      );
+                      return;
+                    }
+                    if (
+                      formData.intereses.includes(trimmed) ||
+                      allIntereses.some((opt) => opt.label === trimmed)
+                    ) {
+                      alert("Ese interés ya está en la lista.");
+                      return;
+                    }
+
+                    toggleSelection("intereses", trimmed);
+                    setNuevoInteres("");
+                  }}
+                >
+                  Agregar
+                </button>
+              </div>
+            </div>
+
+            <hr className="section-divider" />
+
+            {/* --- PASO 5: IDIOMAS --- */}
+            <div className="form-group">
+              <label htmlFor="idiomas">Idiomas</label>
+              <p className="form-hint">Idiomas que hablas</p>
+              <div
+                className="chips-container"
+                role="group"
+                aria-label="Idiomas disponibles"
+              >
+                {allIdiomas.map((idioma) => (
+                  <button
+                    type="button"
+                    key={idioma.id}
+                    className={`chip ${
+                      formData.idiomas.includes(idioma.label) ? "active" : ""
+                    }`}
+                    aria-pressed={formData.idiomas.includes(idioma.label)}
+                    onClick={() => toggleSelection("idiomas", idioma.label)}
+                  >
+                    {idioma.label}
+                  </button>
+                ))}
+
+                {/* Chip fijo "Otro" */}
+                <button
+                  type="button"
+                  className={`chip ${
+                    formData.idiomas.includes("Otro") ? "active" : ""
+                  }`}
+                  aria-pressed={formData.idiomas.includes("Otro")}
+                  onClick={() => toggleSelection("idiomas", "Otro")}
+                >
+                  Otro
+                </button>
+              </div>
+              {errors.idiomas && <p className="error-text">{errors.idiomas}</p>}
+            </div>
+          </>
+        )}
 
         {/* Botones */}
         <div className="form-buttons">
@@ -543,8 +768,17 @@ const RoomieProfileForm = () => {
                 Atrás
               </button>
             )}
-            <button type="button" onClick={handleNext} className="btn primary">
-              {step === steps.length - 1 ? "Finalizar" : "Siguiente"}
+            <button
+              type="button"
+              onClick={handleNext}
+              className="btn primary"
+              disabled={loading}
+            >
+              {loading
+                ? "Guardando..."
+                : step === steps.length - 1
+                ? "Finalizar"
+                : "Siguiente"}
             </button>
           </div>
         </div>

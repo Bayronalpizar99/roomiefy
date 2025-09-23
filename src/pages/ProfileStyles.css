@@ -80,12 +80,21 @@ h2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem 1.5rem;
+  margin-bottom: auto;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
   margin-bottom: 1rem;
+}
+
+.form-hint {
+  font-size: 0.85rem;
+  color: #6b7280; 
+  margin: 0.10rem 0 1rem 0;
+  line-height: 1.4;
+  text-align: left;
 }
 
 label {
@@ -121,6 +130,52 @@ textarea {
   max-width: 120px;
   border-radius: 14px;
   border: 1px solid #e5e7eb;
+}
+
+.foto-upload-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px dashed #d1d5db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.foto-upload-wrapper:hover {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 4px rgba(139,92,246,0.15);
+}
+
+.foto-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.foto-input {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.foto-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* --- Estilo para Vivienda --- */
@@ -220,6 +275,73 @@ textarea {
   padding: 0.3rem 0.6rem;
   border-radius: 10px;
   white-space: nowrap;
+}
+
+/*Chips para intereses e idiomas*/
+.chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.chip {
+  padding: 6px 14px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  background: #f0f0f0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  position: relative;
+}
+
+.chip:hover,
+.chip:focus {
+  background: #e0e0ff;
+  border-color: #6b4eff;
+  outline: none;
+}
+
+.chip.active {
+  background: #6b4eff;
+  color: white;
+  border-color: #6b4eff;
+}
+
+.chip-input {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.chip-text-input {
+  padding: 6px 10px;
+  border-radius: 16px;
+  border: 1px solid #ccc;
+  flex: 1;
+  font-size: 14px;
+}
+
+.add-chip {
+  background-color: #6b4eff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.add-chip:hover {
+  background-color: #5a3ee0;
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid #8e8e90;
+  margin: 2rem 0 1.5rem;
 }
 
 
