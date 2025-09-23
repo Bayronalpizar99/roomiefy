@@ -22,34 +22,66 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const { user, logout } = useAuth();
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Update local state when searchQuery prop changes
   useEffect(() => {
     setLocalSearchQuery(searchQuery);
   }, [searchQuery]);
 
-  // Reset image state when user changes
+  // Reset image states when user changes
   useEffect(() => {
     setImageError(false);
-  }, [user]);
+    setImageLoaded(false);
+    setIsDropdownOpen(false);
+  }, [user?.id]); // Usamos user?.id para que solo se reinicie cuando cambie el usuario
+  
+  // Función para alternar el menú desplegable
+  const toggleDropdown = (e) => {
+    e.stopPropagation();
+    setIsDropdownOpen(prev => !prev);
+  };
+
+  // Cerrar el menú al hacer clic fuera de él
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const userMenu = document.querySelector('.user-menu');
+      if (userMenu && !userMenu.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleImageLoad = () => {
     setImageError(false);
+    setImageLoaded(true);
   };
 
   const handleImageError = () => {
     setImageError(true);
+    setImageLoaded(true);
   };
 
   const getAvatarSrc = () => {
-    if (imageError || !user?.picture) {
+    // Si no hay usuario, retornar null para no mostrar ninguna imagen
+    if (!user) return null;
+    
+    // Si hay un error o no hay imagen de perfil, usar el avatar por defecto
+    if (imageError || !user.picture) {
       return `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=random&size=40`;
     }
+    
+    // Devolver la imagen de perfil
     return user.picture;
   };
 
-  // Only show loading state when user exists but we haven't determined if image works
-  const showLoadingState = user && !imageError && user.picture;
+  const avatarSrc = getAvatarSrc();
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
@@ -138,25 +170,64 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '' }) => {
         {/* --- INICIO DE LA MODIFICACIÓN --- */}
         {user ? (
           <div className="user-menu">
-            <img
-              src={getAvatarSrc()}
-              alt="Avatar de usuario"
-              className={`user-avatar ${showLoadingState ? 'loading' : ''}`}
-              onLoad={handleImageLoad}
-              onError={handleImageError}
-            />
-            <div className="dropdown-menu">
-              <div className="dropdown-header">
-                <strong>{user.name}</strong>
-                <span>{user.email}</span>
-              </div>
-              <Link to="/perfil" className="dropdown-item">
-                <AvatarIcon /> Mi Perfil
-              </Link>
-              <button onClick={logout} className="dropdown-item">
-                Salir
-              </button>
+            <div 
+              className={`user-avatar-container ${isDropdownOpen ? 'active' : ''}`}
+              onClick={toggleDropdown}
+              aria-expanded={isDropdownOpen}
+              aria-haspopup="true"
+              aria-label="Menú de usuario"
+              style={{ cursor: 'pointer' }}
+            >
+              {avatarSrc && (
+                <img
+                  key={user.id || 'user-avatar'}
+                  src={avatarSrc}
+                  alt="User profile"
+                  className="user-avatar"
+                  onLoad={handleImageLoad}
+                  onError={handleImageError}
+                  style={{
+                    opacity: imageLoaded ? 1 : 0,
+                    transition: 'opacity 0.2s ease-in-out'
+                  }}
+                />
+              )}
+              {!imageLoaded && !imageError && (
+                <div className="avatar-placeholder" />
+              )}
             </div>
+            
+            {isDropdownOpen && (
+              <div 
+                className="user-dropdown open"
+                role="menu"
+                aria-orientation="vertical"
+                aria-labelledby="user-menu-button"
+              >
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDropdownOpen(false);
+                    navigate('/perfil');
+                  }} 
+                  className="dropdown-item"
+                  role="menuitem"
+                >
+                 Mi perfil
+                </button>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDropdownOpen(false);
+                    logout();
+                  }} 
+                  className="dropdown-item"
+                  role="menuitem"
+                >
+                 Cerrar sesión
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <LoginButton />

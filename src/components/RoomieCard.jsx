@@ -101,7 +101,7 @@ export default function RoommateCard({ roommate = {}, onClick = () => {}, view =
             <Badge
               variant="soft"
               radius="large"
-              className={`apartment-badge ${roommate?.hasApartment ? 'apartment-badge--has' : 'apartment-badge--no'}`}
+              color={roommate?.hasApartment ? 'purple' : 'gray'}
             >
               <Flex gap="1" align="center">
                 <Home className="h-3 w-3" />
@@ -172,6 +172,7 @@ export default function RoommateCard({ roommate = {}, onClick = () => {}, view =
                         <Badge 
                           key={interest} 
                           variant="soft" 
+                          radius="full"
                           color="purple"
                           style={{ marginBottom: '4px' }}
                         >
