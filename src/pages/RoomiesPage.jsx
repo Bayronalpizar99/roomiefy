@@ -204,7 +204,8 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
           <Dialog.Trigger asChild>
             <Button 
               variant="soft" 
-              className="mobile-filters"
+              color="purple"
+              className="mobile-filters-button"
               size="2"
             >
               <MixerHorizontalIcon /> Filtros
@@ -212,19 +213,11 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
           </Dialog.Trigger>
           <Dialog.Portal>
             <Dialog.Overlay className="dialog-overlay" />
-            <Dialog.Content className="dialog-content" style={{
-              position: 'fixed',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
+            <Dialog.Content className="dialog-content mobile-filters-dialog" style={{
+              zIndex: 100,
               width: '90vw',
               maxWidth: '500px',
-              maxHeight: '85vh',
-              padding: '1.5rem',
-              backgroundColor: 'var(--color-surface)',
-              borderRadius: 'var(--border-radius-lg)',
-              boxShadow: 'var(--shadow-4)',
-              overflowY: 'auto'
+              maxHeight: '85vh'
             }}>
               <div style={{ 
                 display: 'flex', 

@@ -5,6 +5,7 @@
   inset: 0;
   background-color: rgba(14, 19, 22, 0.95); /* Dark overlay with slight transparency for depth */
   backdrop-filter: blur(4px); /* Subtle blur effect */
+  z-index: 50 !important;
   animation: overlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -27,6 +28,7 @@
   animation: contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
   overflow-y: auto;
   color: var(--color-text); /* Use theme text color */
+  z-index: 100 !important;
 }
 
 .dialog-content button:hover {
@@ -110,8 +112,8 @@
   overflow: visible;
   position: relative;
 }
-  
-@media (min-width: 1024px) {
+
+@media (min-width: 768px) {
   .roomies-container {
     flex-direction: row;
     align-items: flex-start;
@@ -133,7 +135,7 @@
   position: relative;
 }
   
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .roomies-results {
     padding-right: 1rem;
   }
@@ -277,13 +279,16 @@
   margin-bottom: 1.5rem;
   /* CAMBIO: Unificamos el padding a 1rem */
   padding-left: 1rem;
+  width: 100%;
+  box-sizing: border-box;
 }
-  
-@media (min-width: 640px) {
+
+@media (min-width: 768px) {
   .roomies-controls {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    padding-left: 0;
   }
 }
 
@@ -318,22 +323,37 @@
   }
 }
 
-/* Filtros móviles */
-.mobile-filters {
+/* Filtros móviles - se muestran en pantallas menores a 768px (tablets y móviles) */
+.mobile-filters-button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 1rem;
   width: fit-content;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
-  
-@media (min-width: 1024px) {
-  .mobile-filters {
+
+.mobile-filters-button:hover {
+  background-color: var(--color-primary-hover, #8b5cf6);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+@media (min-width: 768px) {
+  .mobile-filters-button {
     display: none !important;
   }
 }
 
-/* Filtros de escritorio */
+/* Filtros de escritorio - se muestran en pantallas mayores a 768px */
 .desktop-filters {
   display: none;
   position: sticky;
@@ -352,14 +372,35 @@
   }
 }
 
-/* Animaciones para el dialog */
-@keyframes overlayShow {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+/* Dialog específico para filtros móviles */
+.mobile-filters-dialog {
+  z-index: 100 !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 90vw !important;
+  max-width: 500px !important;
+  max-height: 90vh !important;
+  padding: 1.5rem !important;
+}
+
+/* Botón de cerrar en el dialog */
+.mobile-filters-dialog .icon-button {
+  background: none !important;
+  border: none !important;
+  cursor: pointer !important;
+  padding: 0.5rem !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--color-text) !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.mobile-filters-dialog .icon-button:hover {
+  background-color: var(--color-border) !important;
 }
 
 @keyframes contentShow {
