@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import * as Avatar from '@radix-ui/react-avatar';
 import { fetchRoommates } from '../services/api';
+import { createConversation } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import './RoomieDetailPage.css';
 
 const RoomieDetailPage = () => {
@@ -20,9 +22,42 @@ const RoomieDetailPage = () => {
   const { roommate: roommateFromState } = location.state || {};
   const { roomieId } = useParams();
   const navigate = useNavigate();
+  const { user, requireLogin } = useAuth();
 
-  const [roommate, setRoommate] = useState(roommateFromState || null);
-  const [loading, setLoading] = useState(!roommateFromState);
+  const handleContact = async () => {
+    // Si no está logueado, pedir login
+    if (!user) {
+      requireLogin("Para contactar a este roomie, necesitas iniciar sesión.");
+      return;
+    }
+
+    setContacting(true);
+
+    try {
+      // Crear conversación con mensaje predeterminado
+      const defaultMessage = `¡Hola ${roommate?.name}! 👋 Me interesa compartir apartamento contigo. ¿Podemos conversar sobre los detalles?`;
+      const conversation = await createConversation(roommate.id, defaultMessage);
+
+      if (conversation && conversation.id) {
+        // Navegar al chat con la conversación seleccionada
+        navigate('/chat', {
+          state: {
+            selectedConversation: conversation,
+            prefilledMessage: defaultMessage
+          }
+        });
+      } else {
+        // Si falla la creación de conversación, navegar al chat general
+        navigate('/chat');
+      }
+    } catch (error) {
+      console.error('Error al crear conversación:', error);
+      // En caso de error, navegar al chat general
+      navigate('/chat');
+    } finally {
+      setContacting(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -249,7 +284,14 @@ const RoomieDetailPage = () => {
         <aside className="roomie-sidebar">
           <div className="contact-card">
             <h3>Contactar</h3>
-            <button className="btn primary"><MessageCircle size={18} /> Enviar mensaje</button>
+            <button
+              className="btn primary"
+              onClick={handleContact}
+              disabled={contacting}
+            >
+              <MessageCircle size={18} />
+              {contacting ? 'Iniciando conversación...' : 'Enviar mensaje'}
+            </button>
             <button className="btn"><Mail size={18} /> Email</button>
           </div>
         </aside>

@@ -360,3 +360,230 @@ export const fetchNotifications = async () => {
     return []; // Devuelve un array vacío si hay un error
   }
 };
+
+/**
+ * Crea una nueva conversación con un usuario específico.
+ * @param {string|number} userId - El ID del usuario con el que crear la conversación.
+ * @param {string} initialMessage - El mensaje inicial para la conversación.
+ * @returns {Promise<object|null>} La conversación creada o null si falla
+ */
+export const createConversation = async (userId, initialMessage = '') => {
+  if (!apiUrl) {
+    console.error("Error: La variable de entorno VITE_API_URL no está definida.");
+    return null;
+  }
+  if (!apiKey) {
+    console.error("Error: La variable de entorno VITE_API_KEY no está definida.");
+    return null;
+  }
+
+  try {
+    const conversationData = {
+      participantId: userId,
+      initialMessage: initialMessage
+    };
+
+    const response = await fetch(`${apiUrl}conversations`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": apiKey,
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(conversationData)
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        console.error("Error de autenticación: La API KEY es incorrecta o no tiene permisos.");
+      } else if (response.status === 404) {
+        console.error("Error: La URL de la API no es válida o el recurso no existe.");
+      } else {
+        console.error(`Error al crear la conversación: ${response.status} ${response.statusText}`);
+      }
+      throw new Error(`Error al crear la conversación: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error de red o excepción al crear la conversación:", error);
+    return null;
+  }
+};
+/**
+ * Obtiene los mensajes de una conversación específica.
+ * @param {string|number} conversationId - El ID de la conversación.
+ * @returns {Promise<Array|null>} Lista de mensajes o null si falla
+ */
+export const fetchMessages = async (conversationId) => {
+  if (!apiUrl) {
+    console.error("Error: La variable de entorno VITE_API_URL no está definida.");
+    return null;
+  }
+  if (!apiKey) {
+    console.error("Error: La variable de entorno VITE_API_KEY no está definida.");
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${apiUrl}conversations/${conversationId}/messages`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": apiKey,
+        "Accept": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        console.error("Error de autenticación: La API KEY es incorrecta o no tiene permisos.");
+      } else if (response.status === 404) {
+        console.error("Error: La conversación no existe o no se puede acceder.");
+      } else {
+        console.error(`Error al obtener los mensajes: ${response.status} ${response.statusText}`);
+      }
+      throw new Error(`Error al obtener los mensajes: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error de red o excepción al obtener los mensajes:", error);
+    return null;
+  }
+};
+
+/**
+ * Obtiene una conversación específica con sus mensajes.
+ * @param {string|number} conversationId - El ID de la conversación.
+ * @returns {Promise<object|null>} La conversación completa con mensajes o null si falla
+ */
+export const fetchConversation = async (conversationId) => {
+  if (!apiUrl) {
+    console.error("Error: La variable de entorno VITE_API_URL no está definida.");
+    return null;
+  }
+  if (!apiKey) {
+    console.error("Error: La variable de entorno VITE_API_KEY no está definida.");
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${apiUrl}conversations/${conversationId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": apiKey,
+        "Accept": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        console.error("Error de autenticación: La API KEY es incorrecta o no tiene permisos.");
+      } else if (response.status === 404) {
+        console.error("Error: La conversación no existe.");
+      } else {
+        console.error(`Error al obtener la conversación: ${response.status} ${response.statusText}`);
+      }
+      throw new Error(`Error al obtener la conversación: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error de red o excepción al obtener la conversación:", error);
+    return null;
+  }
+};
+
+/**
+ * Actualiza el estado de un mensaje (leído, entregado, etc).
+ * @param {string|number} messageId - El ID del mensaje.
+ * @param {string} status - El nuevo estado ('read', 'delivered', 'sent').
+ * @returns {Promise<object|null>} El mensaje actualizado o null si falla
+ */
+export const updateMessageStatus = async (messageId, status) => {
+  if (!apiUrl) {
+    console.error("Error: La variable de entorno VITE_API_URL no está definida.");
+    return null;
+  }
+  if (!apiKey) {
+    console.error("Error: La variable de entorno VITE_API_KEY no está definida.");
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${apiUrl}messages/${messageId}/status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": apiKey,
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({ status })
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        console.error("Error de autenticación: La API KEY es incorrecta o no tiene permisos.");
+      } else if (response.status === 404) {
+        console.error("Error: El mensaje no existe.");
+      } else {
+        console.error(`Error al actualizar el estado del mensaje: ${response.status} ${response.statusText}`);
+      }
+      throw new Error(`Error al actualizar el estado del mensaje: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error de red o excepción al actualizar el estado del mensaje:", error);
+    return null;
+  }
+};
+
+/**
+ * Marca todos los mensajes de una conversación como leídos.
+ * @param {string|number} conversationId - El ID de la conversación.
+ * @returns {Promise<boolean>} True si se actualizó correctamente, false si falla
+ */
+export const markConversationAsRead = async (conversationId) => {
+  if (!apiUrl) {
+    console.error("Error: La variable de entorno VITE_API_URL no está definida.");
+    return false;
+  }
+  if (!apiKey) {
+    console.error("Error: La variable de entorno VITE_API_KEY no está definida.");
+    return false;
+  }
+
+  try {
+    const response = await fetch(`${apiUrl}conversations/${conversationId}/read`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": apiKey,
+        "Accept": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        console.error("Error de autenticación: La API KEY es incorrecta o no tiene permisos.");
+      } else if (response.status === 404) {
+        console.error("Error: La conversación no existe.");
+      } else {
+        console.error(`Error al marcar como leída la conversación: ${response.status} ${response.statusText}`);
+      }
+      throw new Error(`Error al marcar como leída la conversación: ${response.status} ${response.statusText}`);
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error de red o excepción al marcar como leída la conversación:", error);
+    return false;
+  }
+};
