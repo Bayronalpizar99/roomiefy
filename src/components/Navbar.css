@@ -784,3 +784,99 @@ body:not(.light) .google-login-container:hover iframe {
   background-color: #2d2d2d !important;
   border-color: var(--color-primary);
 }
+
+/* Contenedor para posicionar el menú desplegable */
+.notification-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Menú desplegable */
+.notifications-dropdown {
+  position: absolute;
+  top: 120%; /* Un poco más abajo del icono */
+  right: 0;
+  width: 360px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Cabecera del menú */
+.notifications-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.notifications-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.notifications-header button {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Lista de notificaciones */
+.notifications-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Cada ítem de notificación */
+.notification-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-item:hover {
+  background-color: var(--color-input-bg);
+}
+
+.notification-item p {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.notification-item .time {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+/* Estilo para notificaciones no leídas */
+.notification-item.unread {
+  background-color: rgba(124, 58, 237, 0.05);
+  border-left: 3px solid var(--color-primary);
+}
+
+.notification-item.unread p {
+  font-weight: 500;
+}
+
+.notification-item.loading {
+  text-align: center;
+  color: var(--color-text-secondary);
+  padding: 1.5rem;
+}

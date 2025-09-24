@@ -331,3 +331,32 @@ export const updateProperty = async (propertyId, propertyData) => {
         throw error;
     }
 };
+
+ /**
+ * Obtiene la lista de notificaciones del usuario.
+ * @returns {Promise<Array>} Una lista de notificaciones.
+ */
+export const fetchNotifications = async () => {
+  if (!apiUrl || !apiKey) {
+    console.error("Error: Variables de entorno de API no definidas.");
+    return [];
+  }
+  try {
+    // La URL se construye usando el sufijo 'notifications' que definiste en Azure
+    const response = await fetch(`${apiUrl}notifications`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": apiKey,
+        "Accept": "application/json"
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`Error al obtener las notificaciones: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Excepción en fetchNotifications:", error);
+    return []; // Devuelve un array vacío si hay un error
+  }
+};
