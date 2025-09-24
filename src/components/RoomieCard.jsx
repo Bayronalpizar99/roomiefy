@@ -102,7 +102,7 @@ export default function RoommateCard({ roommate = {}, onClick = () => {}, view =
               >
                 <Flex gap="1" align="center">
                   <Home className="h-3 w-3" />
-                  <Text size="1">{roommate?.hasApartment ? 'Tiene casa' : 'No tiene casa'}</Text>
+                  <Text size="1">{roommate?.hasApartment ? 'Tiene apartamento' : 'No tiene apartamento'}</Text>
                 </Flex>
               </Badge>
 

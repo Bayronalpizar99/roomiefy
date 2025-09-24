@@ -9,6 +9,7 @@ import ViewOptions from '../components/ViewOptions';
 import Pagination from '../components/Pagination';
 import RoomieFilters from '../components/RoomieFilters';
 import './RoomiesPage.css';
+import FirstTimeHelp from '../components/FirstTimeHelp';
 
 const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
   const [allRoommates, setAllRoommates] = useState([]);  
@@ -196,6 +197,7 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
 
   return (
     <div className="roomies-page">
+      <FirstTimeHelp />
       <div className="roomies-container">
         {/* Filtros en móvil */}
         <Dialog.Root>

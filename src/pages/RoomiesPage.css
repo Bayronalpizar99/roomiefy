@@ -1,5 +1,76 @@
 /* src/pages/RoomiesPage.css */
+/* Styles for FirstTimeHelp dialog */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent overlay using theme colors */
+  animation: overlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
 
+.dialog-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: 500px;
+  max-height: 85vh;
+  padding: 1.5rem;
+  background-color: var(--color-surface); /* Use theme surface color */
+  border: 1px solid var(--color-border); /* Use theme border color */
+  border-radius: var(--border-radius); /* Use theme border radius */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  animation: contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+  color: var(--color-text); /* Use theme text color */
+}
+
+.dialog-content button {
+  background-color: var(--color-button-bg); /* Use theme button background */
+  border: 1px solid var(--color-border); /* Use theme border color */
+  color: var(--color-text); /* Use theme text color */
+  border-radius: var(--border-radius); /* Use theme border radius */
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dialog-content button:hover {
+  background-color: var(--color-primary); /* Use theme primary color on hover */
+  border-color: var(--color-primary); /* Use theme primary color on hover */
+  color: white; /* White text on hover for contrast */
+}
+
+.dialog-content h2 {
+  color: var(--color-heading); /* Use theme heading color */
+  margin-bottom: 1rem;
+}
+
+.dialog-content p {
+  color: var(--color-text-secondary); /* Use theme secondary text color */
+  margin-bottom: 1rem;
+  line-height: var(--line-height); /* Use theme line height */
+}
+
+.dialog-content ul {
+  color: var(--color-text); /* Use theme text color */
+  margin-bottom: 1rem;
+}
+
+.dialog-content li {
+  margin-bottom: 0.5rem;
+  line-height: var(--line-height); /* Use theme line height */
+}
+
+@keyframes overlayShow {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes contentShow {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
 /* Estilos específicos para la página de Roomies */
 .roomies-page {
   width: 100%;

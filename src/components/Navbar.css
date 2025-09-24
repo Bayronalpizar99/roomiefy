@@ -207,7 +207,12 @@ body.light .search-button:hover {
 }
 
 .mobile-only {
-  display: none;
+  display: none !important; /* Use !important to ensure it overrides other display properties */
+}
+
+/* Ensure mobile-only works with icon-button */
+.mobile-only.icon-button {
+  display: none !important;
 }
 
 /* Botón de menú hamburguesa */
@@ -387,18 +392,100 @@ body.light .search-button:hover {
   background-color: var(--color-input-bg);
 }
 
-/* Responsive breakpoints */
-@media (max-width: 1024px) {
+/* Responsive breakpoints para tablets y desktop mediano (768px - 1450px) */
+@media (min-width: 768px) and (max-width: 1450px) {
   .navbar-left {
-    gap: 2rem;
+    gap: 1.5rem;
   }
-  
+
   .navbar-center {
-    margin-left: 2rem;
+    margin-left: 1.5rem;
   }
-  
+
+  .navbar-right {
+    gap: 0.75rem;
+  }
+
   .search-bar {
-    max-width: 400px;
+    max-width: 300px;
+  }
+
+  /* Ocultar texto de los enlaces de navegación, mostrar solo iconos */
+  .navbar-links a {
+    padding: 0.5rem;
+    min-width: 40px;
+    justify-content: center;
+    position: relative; /* Para tooltips */
+  }
+
+  .navbar-links a span {
+    display: none; /* Ocultar texto */
+  }
+
+  /* Tooltips para mostrar funcionalidad al hacer hover */
+  .navbar-links a::after {
+    content: attr(aria-label);
+    position: absolute;
+    bottom: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 1000;
+    border: 1px solid var(--color-border);
+  }
+
+  .navbar-links a:hover::after {
+    opacity: 1;
+  }
+
+  /* Mostrar solo iconos en botones del navbar */
+  .icon-button {
+    width: 36px;
+    height: 36px;
+    padding: 0.375rem;
+  }
+
+  /* Tooltips para botones de iconos */
+  .icon-button::after {
+    content: attr(aria-label);
+    position: absolute;
+    bottom: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 1000;
+    border: 1px solid var(--color-border);
+  }
+
+  .icon-button:hover::after {
+    opacity: 1;
+  }
+
+  /* Ajustar logo */
+  .logo-image {
+    height: 45px;
+  }
+
+  /* Ajustar avatar */
+  .user-avatar-container {
+    width: 36px;
+    height: 36px;
   }
 }
 
@@ -427,11 +514,12 @@ body.light .search-button:hover {
   }
   
   .mobile-only {
-    display: flex;
+    display: flex !important; /* Show on mobile */
   }
   
-  .mobile-menu-toggle {
-    display: flex;
+  /* Ensure mobile-only works with icon-button */
+  .mobile-only.icon-button {
+    display: flex !important; /* Show on mobile */
   }
   
   /* Ajustar logo en móvil */
