@@ -1,5 +1,3 @@
-// src/App.jsx
-
 import { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import * as ScrollArea from '@radix-ui/react-scroll-area';
@@ -8,26 +6,27 @@ import { Navbar } from "./components/Navbar";
 import HomePage from "./pages/HomePage.jsx";
 import RoomiesPage from "./pages/RoomiesPage.jsx";
 import PublishPage from "./pages/PublishPage.jsx";
+import MyPropertiesPage from './pages/MyPropertiesPage.jsx';
+import EditPropertyPage from './pages/EditPropertyPage.jsx'; // 1. Importamos la nueva página de edición
 import PropertyDetailPage from "./pages/PropertyDetailPage.jsx";
 import RoomieDetailPage from "./pages/RoomieDetailPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
 import { useTheme } from "./hooks/useTheme";
-import { fetchProperties } from './services/api'; // <--- 1. Importamos la función de la API
+// 2. Importamos TODAS las funciones de la API que necesitamos
+import { fetchProperties, deleteProperty, updateProperty } from './services/api';
 import "./App.css";
-
 
 function App() {
   const { theme, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const location = useLocation();
 
-  // --- INICIO DE CAMBIOS ---
-  // 2. Creamos un estado central para las propiedades
   const [allProperties, setAllProperties] = useState([]);
+  const [myProperties, setMyProperties] = useState([]);
+  const [hasPublished, setHasPublished] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // 3. Cargamos las propiedades una sola vez, aquí en App.jsx
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -38,26 +37,43 @@ function App() {
     loadData();
   }, []);
 
-  // 4. Creamos una función para añadir una nueva propiedad a nuestra lista central
   const handleAddProperty = (newProperty) => {
-    setAllProperties(prevProperties => [newProperty, ...prevProperties]);
+    setAllProperties(prev => [newProperty, ...prev]);
+    setMyProperties(prev => [newProperty, ...prev]);
+    setHasPublished(true);
   };
-  // --- FIN DE CAMBIOS ---
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
+  const handleDeleteProperty = async (propertyId) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta propiedad? Esta acción es permanente.')) {
+      try {
+        await deleteProperty(propertyId);
+        setAllProperties(prev => prev.filter(p => p.id !== propertyId));
+        setMyProperties(prev => prev.filter(p => p.id !== propertyId));
+        alert('Propiedad eliminada exitosamente (simulado).');
+      } catch (error) {
+        console.error("Fallo al eliminar la propiedad:", error);
+        alert(`No se pudo eliminar la propiedad: ${error.message}`);
+      }
+    }
   };
-  
+
+  // --- INICIO DE NUEVOS CAMBIOS ---
+  // 3. Creamos la función para ACTUALIZAR una propiedad en ambas listas
+  const handleUpdateProperty = (propertyId, updatedProperty) => {
+    const updateList = (list) => list.map(p => (String(p.id) === String(propertyId) ? updatedProperty : p));
+    
+    setAllProperties(prev => updateList(prev));
+    setMyProperties(prev => updateList(prev));
+  };
+  // --- FIN DE NUEVOS CAMBIOS ---
+
+  const handleSearch = (query) => setSearchQuery(query);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    if (location.pathname === '/roomies') {
-      return;
-    } else if (location.pathname === '/') {
-      setCurrentPage(1);
-    } else {
-      setSearchQuery('');
-    }
+    if (location.pathname === '/roomies') return;
+    if (location.pathname === '/') setCurrentPage(1);
+    else setSearchQuery('');
   }, [location.pathname]);
 
   return (
@@ -69,45 +85,37 @@ function App() {
           searchQuery={searchQuery}
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
+          hasPublished={hasPublished}
         />
-
         <ScrollArea.Root className="main-content-area">
           <ScrollArea.Viewport className="scroll-area-viewport">
             <Routes>
-              {/* 5. Pasamos la lista de propiedades y el estado de carga a HomePage */}
+              {/* Rutas existentes (sin cambios) */}
               <Route path="/" element={<HomePage searchQuery={searchQuery} properties={allProperties} loading={loading} />} />
-              <Route
-                path="roomies"
-                element={
-                  <RoomiesPage
-                    searchQuery={searchQuery}
-                    onSearchQueryChange={handleSearch}
-                    currentPage={currentPage}
-                    setCurrentPage={setCurrentPage}
-                  />
-                }
-              />
-              {/* 6. Pasamos la función para añadir propiedades a PublishPage */}
+              <Route path="roomies" element={<RoomiesPage searchQuery={searchQuery} onSearchQueryChange={handleSearch} currentPage={currentPage} setCurrentPage={setCurrentPage} />} />
               <Route path="publicar" element={<PublishPage onAddProperty={handleAddProperty} />} />
-              <Route
-                path="/propiedad/:propertyId"
-                element={<PropertyDetailPage />}
+              <Route path="/mis-propiedades" element={<MyPropertiesPage myProperties={myProperties} onDeleteProperty={handleDeleteProperty} />} />
+              
+              {/* 4. Añadimos la NUEVA RUTA para la página de edición */}
+              <Route 
+                path="/propiedad/editar/:propertyId" 
+                element={<EditPropertyPage myProperties={myProperties} onUpdateProperty={handleUpdateProperty} />} 
               />
+
+              {/* Resto de rutas (sin cambios) */}
+              <Route path="/propiedad/:propertyId" element={<PropertyDetailPage />} />
               <Route path="/roomie/:roomieId" element={<RoomieDetailPage />} />
               <Route path="perfil" element={<ProfilePage />} />
               <Route path="chat" element={<ChatPage />} />
             </Routes>
           </ScrollArea.Viewport>
-          <ScrollArea.Scrollbar
-            className="scroll-area-scrollbar"
-            orientation="vertical"
-          >
+          <ScrollArea.Scrollbar className="scroll-area-scrollbar" orientation="vertical">
             <ScrollArea.Thumb className="scroll-area-thumb" />
           </ScrollArea.Scrollbar>
         </ScrollArea.Root>
       </div>
     </AuthProvider>
-   );
+  );
 }
 
 export default App;

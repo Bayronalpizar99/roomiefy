@@ -179,11 +179,10 @@ const PublishPage = ({ onAddProperty }) => {
       setSubmitting(true);
       const apiResponse = await createProperty(payload);
 
-      // Creamos un objeto de propiedad completo para añadir a nuestro estado
+    
       const newPropertyForState = {
         ...payload,
         id: apiResponse.id || `local-${Date.now()}`, // Usamos ID de la API o uno local
-        // Añadimos datos de ejemplo que la tarjeta espera
         property_photo: 'https://via.placeholder.com/400x300.png?text=Mi+Nueva+Propiedad',
         owner_name: 'Tú (Propietario)',
         owner_profile_pic: 'https://via.placeholder.com/150',
@@ -192,13 +191,9 @@ const PublishPage = ({ onAddProperty }) => {
         name: payload.title,
       };
 
-      // ¡Aquí está la magia! Llamamos a la función de App.jsx para actualizar el estado central
       onAddProperty(newPropertyForState);
-
-      alert('¡Propiedad publicada! Serás redirigido a la página principal.');
-      
-      // Navegamos a la página principal para ver la nueva tarjeta
-      navigate('/');
+      alert('¡Propiedad publicada! Serás redirigido a tus propiedades.');
+      navigate('/mis-propiedades');
 
     } catch (err) {
       console.error(err);
@@ -209,7 +204,6 @@ const PublishPage = ({ onAddProperty }) => {
   };
 
   const fillDemo = () => setFormData(prev => ({
-    //... (esta función no cambia)
   }));
 
   return (
