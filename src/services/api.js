@@ -314,27 +314,20 @@ export const deleteProperty = async (propertyId) => {
  * @returns {Promise<object>} La respuesta de la API.
  */
 export const updateProperty = async (propertyId, propertyData) => {
-  if (!apiUrl || !apiKey) {
-    throw new Error("La configuración de la API no está completa.");
-  }
-  try {
-    // --- APLICAMOS LA MISMA CORRECCIÓN AQUÍ ---
-    const response = await fetch(`${apiUrl}properties/${propertyId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Ocp-Apim-Subscription-Key': apiKey,
-      },
-      body: JSON.stringify(propertyData),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Error al actualizar la propiedad: ${response.status} ${errorText}`);
+    if (!apiUrl || !apiKey) throw new Error("API config incomplete.");
+    try {
+        const response = await fetch(`${apiUrl}properties/${propertyId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Ocp-Apim-Subscription-Key': apiKey },
+            body: JSON.stringify(propertyData),
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Error updating property: ${response.status} ${errorText}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Exception in updateProperty:", error);
+        throw error;
     }
-    return await response.json();
-  } catch (error) {
-    console.error("Excepción al actualizar la propiedad:", error);
-    throw error;
-  }
 };

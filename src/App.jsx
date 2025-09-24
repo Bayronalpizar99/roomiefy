@@ -7,12 +7,14 @@ import HomePage from "./pages/HomePage.jsx";
 import RoomiesPage from "./pages/RoomiesPage.jsx";
 import PublishPage from "./pages/PublishPage.jsx";
 import MyPropertiesPage from './pages/MyPropertiesPage.jsx';
+import EditPropertyPage from './pages/EditPropertyPage.jsx'; // 1. Importamos la nueva página de edición
 import PropertyDetailPage from "./pages/PropertyDetailPage.jsx";
 import RoomieDetailPage from "./pages/RoomieDetailPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
 import { useTheme } from "./hooks/useTheme";
-import { fetchProperties, deleteProperty } from './services/api';
+// 2. Importamos TODAS las funciones de la API que necesitamos
+import { fetchProperties, deleteProperty, updateProperty } from './services/api';
 import "./App.css";
 
 function App() {
@@ -41,26 +43,29 @@ function App() {
     setHasPublished(true);
   };
 
-  // --- CAMBIO 2: Actualizamos la función 'handleDeleteProperty' para que llame a la API ---
-  const handleDeleteProperty = async (propertyId) => { // La convertimos en async
+  const handleDeleteProperty = async (propertyId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta propiedad? Esta acción es permanente.')) {
       try {
-        // Primero, llamamos a la API para simular la eliminación en el "servidor"
         await deleteProperty(propertyId);
-
-        // Si la llamada a la API tiene éxito, actualizamos el estado local
         setAllProperties(prev => prev.filter(p => p.id !== propertyId));
         setMyProperties(prev => prev.filter(p => p.id !== propertyId));
-
         alert('Propiedad eliminada exitosamente (simulado).');
-
       } catch (error) {
-        // Si la API falla, informamos al usuario y no cambiamos el estado
         console.error("Fallo al eliminar la propiedad:", error);
         alert(`No se pudo eliminar la propiedad: ${error.message}`);
       }
     }
   };
+
+  // --- INICIO DE NUEVOS CAMBIOS ---
+  // 3. Creamos la función para ACTUALIZAR una propiedad en ambas listas
+  const handleUpdateProperty = (propertyId, updatedProperty) => {
+    const updateList = (list) => list.map(p => (String(p.id) === String(propertyId) ? updatedProperty : p));
+    
+    setAllProperties(prev => updateList(prev));
+    setMyProperties(prev => updateList(prev));
+  };
+  // --- FIN DE NUEVOS CAMBIOS ---
 
   const handleSearch = (query) => setSearchQuery(query);
   const [currentPage, setCurrentPage] = useState(1);
@@ -85,10 +90,19 @@ function App() {
         <ScrollArea.Root className="main-content-area">
           <ScrollArea.Viewport className="scroll-area-viewport">
             <Routes>
+              {/* Rutas existentes (sin cambios) */}
               <Route path="/" element={<HomePage searchQuery={searchQuery} properties={allProperties} loading={loading} />} />
               <Route path="roomies" element={<RoomiesPage searchQuery={searchQuery} onSearchQueryChange={handleSearch} currentPage={currentPage} setCurrentPage={setCurrentPage} />} />
               <Route path="publicar" element={<PublishPage onAddProperty={handleAddProperty} />} />
               <Route path="/mis-propiedades" element={<MyPropertiesPage myProperties={myProperties} onDeleteProperty={handleDeleteProperty} />} />
+              
+              {/* 4. Añadimos la NUEVA RUTA para la página de edición */}
+              <Route 
+                path="/propiedad/editar/:propertyId" 
+                element={<EditPropertyPage myProperties={myProperties} onUpdateProperty={handleUpdateProperty} />} 
+              />
+
+              {/* Resto de rutas (sin cambios) */}
               <Route path="/propiedad/:propertyId" element={<PropertyDetailPage />} />
               <Route path="/roomie/:roomieId" element={<RoomieDetailPage />} />
               <Route path="perfil" element={<ProfilePage />} />

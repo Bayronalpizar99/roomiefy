@@ -10,17 +10,14 @@ const MyPropertiesPage = ({ myProperties, onDeleteProperty }) => {
   return (
     <div className="homepage-layout" style={{ display: 'block' }}>
       <div className="properties-section">
-        {/* --- INICIO DE LA MODIFICACIÓN --- */}
-        {/* Contenedor principal de la cabecera */}
+        {/* Contenedor principal de la cabecera (sin cambios) */}
         <div style={{
           display: 'grid',
-          // Creamos 3 columnas: botón a la izq, título centrado, y un espacio vacío a la der
           gridTemplateColumns: '1fr auto 1fr', 
           alignItems: 'center',
-          padding: '0 1rem', // Mantenemos el padding para alinear con las tarjetas
+          padding: '0 1rem',
           marginBottom: '1.5rem'
         }}>
-          {/* Columna 1: El botón */}
           <div style={{ justifySelf: 'start' }}>
             <button
               className="form-button"
@@ -38,16 +35,11 @@ const MyPropertiesPage = ({ myProperties, onDeleteProperty }) => {
               Publicar Nueva Propiedad
             </button>
           </div>
-
-          {/* Columna 2: El título centrado */}
           <h1 style={{ margin: 0, justifySelf: 'center' }}>
             Mis Propiedades
           </h1>
-
-          {/* Columna 3: Vacía, para mantener el título centrado */}
           <div></div>
         </div>
-        {/* --- FIN DE LA MODIFICACIÓN --- */}
 
         {myProperties.length > 0 ? (
           <main className="properties-container grid-view">
@@ -58,7 +50,9 @@ const MyPropertiesPage = ({ myProperties, onDeleteProperty }) => {
                 view="grid"
                 showActions={true}
                 onDelete={() => onDeleteProperty(property.id)}
-                onEdit={() => alert(`Funcionalidad de editar para "${property.name}" (próximamente)`)}
+                // --- ¡AQUÍ ESTÁ EL CAMBIO! ---
+                // Reemplazamos la alerta por la navegación a la página de edición.
+                onEdit={() => navigate(`/propiedad/editar/${property.id}`)}
               />
             ))}
           </main>
