@@ -3,7 +3,8 @@
 .dialog-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent overlay using theme colors */
+  background-color: rgba(14, 19, 22, 0.95); /* Dark overlay with slight transparency for depth */
+  backdrop-filter: blur(4px); /* Subtle blur effect */
   animation: overlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -19,20 +20,38 @@
   background-color: var(--color-surface); /* Use theme surface color */
   border: 1px solid var(--color-border); /* Use theme border color */
   border-radius: var(--border-radius); /* Use theme border radius */
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 10px 15px -3px rgba(0, 0, 0, 0.3); /* Enhanced shadow for dark mode */
   animation: contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
   overflow-y: auto;
   color: var(--color-text); /* Use theme text color */
 }
 
-.dialog-content button {
-  background-color: var(--color-button-bg); /* Use theme button background */
-  border: 1px solid var(--color-border); /* Use theme border color */
-  color: var(--color-text); /* Use theme text color */
-  border-radius: var(--border-radius); /* Use theme border radius */
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.dialog-content button:hover {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.dialog-content button:active {
+  transform: translateY(0);
+}
+
+.dialog-content h2, .dialog-content h3 {
+  color: var(--color-heading);
+  margin: 0 0 1rem 0;
+}
+
+.dialog-content p, .dialog-content li {
+  color: var(--color-text);
+  line-height: var(--line-height);
+}
+
+.dialog-content li {
+  margin-bottom: 0.5rem;
 }
 
 .dialog-content button:hover {
@@ -55,21 +74,6 @@
 .dialog-content ul {
   color: var(--color-text); /* Use theme text color */
   margin-bottom: 1rem;
-}
-
-.dialog-content li {
-  margin-bottom: 0.5rem;
-  line-height: var(--line-height); /* Use theme line height */
-}
-
-@keyframes overlayShow {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes contentShow {
-  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
-  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 /* Estilos específicos para la página de Roomies */
 .roomies-page {
@@ -323,7 +327,7 @@
   width: fit-content;
 }
   
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .mobile-filters {
     display: none !important;
   }
@@ -348,21 +352,6 @@
   }
 }
 
-/* Dialog overlay */
-.dialog-overlay {
-  background-color: rgba(0, 0, 0, 0.5);
-  position: fixed;
-  inset: 0;
-  animation: overlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 999;
-}
-
-/* Dialog content */
-.dialog-content {
-  background-color: var(--color-surface);
-  z-index: 1000;
-}
-
 /* Animaciones para el dialog */
 @keyframes overlayShow {
   from {
@@ -371,4 +360,9 @@
   to {
     opacity: 1;
   }
+}
+
+@keyframes contentShow {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }

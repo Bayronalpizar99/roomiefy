@@ -30,13 +30,13 @@ const FirstTimeHelp = () => {
           <Dialog.Title>Welcome to the Roomies Page!</Dialog.Title>
           <Dialog.Description>
             Get started with these tips:
-            <ul style={{ marginTop: '1rem' }}>
-              <li>Use the filter button (mobile) or sidebar (desktop) to narrow your search.</li>
-              <li>Try the search bar to find roomies by name or location.</li>
-              <li>Switch between grid and list views using the view options.</li>
-              <li>Click on a roomie card to view their full profile.</li>
-            </ul>
           </Dialog.Description>
+          <ul style={{ marginTop: '1rem', marginBottom: '1rem' }}>
+            <li>Use the filter button (mobile) or sidebar (desktop) to narrow your search.</li>
+            <li>Try the search bar to find roomies by name or location.</li>
+            <li>Switch between grid and list views using the view options.</li>
+            <li>Click on a roomie card to view their full profile.</li>
+          </ul>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
             <Dialog.Close asChild>
               <button onClick={handleClose} style={{ marginRight: '0.5rem', padding: '0.5rem 1rem', background: 'none', border: '1px solid var(--color-border)', borderRadius: 'var(--border-radius)', cursor: 'pointer' }}>
