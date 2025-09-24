@@ -281,3 +281,60 @@ export const createRoomieProfile = async (profileData) => {
     return { message: "Perfil creado correctamente" };
   }
 };
+
+/**
+ * Elimina una propiedad por su ID llamando a la API.
+ * @param {string|number} propertyId - El ID de la propiedad a eliminar.
+ * @returns {Promise<object>} Un objeto indicando el éxito de la operación.
+ */
+export const deleteProperty = async (propertyId) => {
+  if (!apiUrl || !apiKey) throw new Error("Configuración de API incompleta.");
+  try {
+    const response = await fetch(`${apiUrl}properties/${propertyId}`, { // URL corregida
+      method: 'DELETE',
+      headers: { 'Ocp-Apim-Subscription-Key': apiKey },
+    });
+    if (response.status === 204) return { success: true, status: 204 };
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Error al eliminar la propiedad: ${response.status} ${errorText}`);
+    }
+    return response;
+  } catch (error) {
+    console.error("Excepción en deleteProperty:", error);
+    throw error;
+  }
+};
+
+
+/**
+ * Actualiza una propiedad existente.
+ * @param {string|number} propertyId - El ID de la propiedad a modificar.
+ * @param {object} propertyData - Los nuevos datos de la propiedad.
+ * @returns {Promise<object>} La respuesta de la API.
+ */
+export const updateProperty = async (propertyId, propertyData) => {
+  if (!apiUrl || !apiKey) {
+    throw new Error("La configuración de la API no está completa.");
+  }
+  try {
+    // --- APLICAMOS LA MISMA CORRECCIÓN AQUÍ ---
+    const response = await fetch(`${apiUrl}properties/${propertyId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Ocp-Apim-Subscription-Key': apiKey,
+      },
+      body: JSON.stringify(propertyData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Error al actualizar la propiedad: ${response.status} ${errorText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Excepción al actualizar la propiedad:", error);
+    throw error;
+  }
+};
