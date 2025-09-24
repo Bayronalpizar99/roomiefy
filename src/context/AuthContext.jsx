@@ -1,32 +1,54 @@
 import React, { createContext, useState, useContext } from 'react';
 
-// 1. Creamos el contexto
 const AuthContext = createContext(null);
 
-// 2. Creamos el "Proveedor" que envolverá nuestra aplicación
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);       // Almacenará la info del perfil de Google
-  const [idToken, setIdToken] = useState(null); // Almacenará el token para las llamadas a la API
+  const [user, setUser] = useState(null);
+  const [idToken, setIdToken] = useState(null);
+  
+  // Estados para controlar el modal
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState("Para continuar, por favor inicia sesión.");
 
   const login = (userData, token) => {
     setUser(userData);
     setIdToken(token);
+    setIsLoginModalOpen(false); // Cierra el modal automáticamente al iniciar sesión
   };
 
   const logout = () => {
     setUser(null);
     setIdToken(null);
-    // Aquí también podrías añadir la lógica para que Google "olvide" al usuario
+  };
+
+  // Función para abrir el modal desde cualquier parte de la app
+  const requireLogin = (message) => {
+    setModalMessage(message || "Para continuar, por favor inicia sesión.");
+    setIsLoginModalOpen(true);
+  };
+
+  const closeLoginModal = () => {
+    setIsLoginModalOpen(false);
+  };
+
+  const value = {
+    user,
+    idToken,
+    login,
+    logout,
+    isLoginModalOpen,
+    modalMessage,
+    requireLogin,
+    closeLoginModal,
   };
 
   return (
-    <AuthContext.Provider value={{ user, idToken, login, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// 3. Creamos un "hook" personalizado para usar el contexto fácilmente
 export const useAuth = () => {
   return useContext(AuthContext);
 };

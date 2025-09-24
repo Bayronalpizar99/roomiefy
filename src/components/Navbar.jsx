@@ -9,6 +9,7 @@ import {
   BellIcon,
   HomeIcon,
   AvatarIcon,
+  PersonIcon,
   PlusCircledIcon,
   HamburgerMenuIcon,
   Cross1Icon,
@@ -16,13 +17,14 @@ import {
 
 import appLogo from "../assets/roomify2.png";
 import { useAuth } from "../context/AuthContext";
-import LoginButton from "./LoginButton";
-import { fetchNotifications } from '../services/api'; // 1. Importamos la nueva función
+import { fetchNotifications } from '../services/api';
+import { PersonStandingIcon } from 'lucide-react';
 
 export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  // --- CAMBIO 1: Obtenemos el usuario y la nueva función 'requireLogin' del contexto ---
+  const { user, logout, requireLogin } = useAuth();
   
   // Estados existentes
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
@@ -32,11 +34,10 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
 
-  // --- INICIO DE NUEVOS ESTADOS PARA NOTIFICACIONES ---
+  // Estados para notificaciones
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
-  // --- FIN DE NUEVOS ESTADOS ---
 
   useEffect(() => {
     setLocalSearchQuery(searchQuery);
@@ -57,18 +58,11 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
     const handleClickOutside = (event) => {
       const userMenu = document.querySelector('.user-menu');
       const mobileMenu = document.querySelector('.mobile-menu');
-      const notificationsWrapper = document.querySelector('.notification-wrapper'); // Para cerrar notificaciones
+      const notificationsWrapper = document.querySelector('.notification-wrapper');
       
-      if (userMenu && !userMenu.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-      if (mobileMenu && !mobileMenu.contains(event.target) && !event.target.closest('.mobile-menu-toggle')) {
-        setIsMobileMenuOpen(false);
-      }
-      // Cerramos notificaciones si se hace clic fuera
-      if (notificationsWrapper && !notificationsWrapper.contains(event.target)) {
-        setShowNotifications(false);
-      }
+      if (userMenu && !userMenu.contains(event.target)) setIsDropdownOpen(false);
+      if (mobileMenu && !mobileMenu.contains(event.target) && !event.target.closest('.mobile-menu-toggle')) setIsMobileMenuOpen(false);
+      if (notificationsWrapper && !notificationsWrapper.contains(event.target)) setShowNotifications(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -92,11 +86,8 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
   const avatarSrc = getAvatarSrc();
 
   const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setLocalSearchQuery(value);
-    if (onSearch) {
-      onSearch(value);
-    }
+    setLocalSearchQuery(e.target.value);
+    if (onSearch) onSearch(e.target.value);
   };
 
   const handleSearchSubmit = (e) => {
@@ -104,7 +95,15 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
     onSearch?.(localSearchQuery);
   };
   
-  // --- NUEVA FUNCIÓN PARA MANEJAR NOTIFICACIONES ---
+  // --- CAMBIO 2: Nueva función para proteger el enlace de "Publicar" ---
+  const handlePublishClick = (event) => {
+    if (!user) {
+      event.preventDefault(); // Detenemos la navegación si no hay usuario
+      requireLogin("Debes iniciar sesión para publicar una propiedad."); // Abrimos el modal
+    }
+    // Si el usuario existe, el <Link> de React Router funciona normalmente.
+  };
+
   const handleBellClick = async () => {
     if (showNotifications) {
       setShowNotifications(false);
@@ -130,7 +129,7 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
   return (
     <NavigationMenu.Root className="navbar">
       <div className="navbar-left">
-        <button className="mobile-menu-toggle" onClick={toggleMobileMenu}>
+        <button className="mobile-menu-toggle" onClick={toggleMobileMenu} aria-label="Abrir menú de navegación">
           {isMobileMenuOpen ? <Cross1Icon /> : <HamburgerMenuIcon />}
         </button>
         <Link to="/" className="navbar-logo-link">
@@ -149,13 +148,14 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
               <AvatarIcon /> Roomies
             </Link>
           </NavigationMenu.Item>
+          {/* --- CAMBIO 3: Añadimos el onClick al enlace --- */}
           <NavigationMenu.Item>
             {hasPublished ? (
-              <Link to="/mis-propiedades" className={location.pathname === "/mis-propiedades" ? "active" : ""}>
+              <Link to="/mis-propiedades" onClick={handlePublishClick} className={location.pathname === "/mis-propiedades" ? "active" : ""}>
                 <PlusCircledIcon /> Mis propiedades
               </Link>
             ) : (
-              <Link to="/publicar" className={location.pathname === "/publicar" ? "active" : ""}>
+              <Link to="/publicar" onClick={handlePublishClick} className={location.pathname === "/publicar" ? "active" : ""}>
                 <PlusCircledIcon /> Publicar
               </Link>
             )}
@@ -176,14 +176,11 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
         {shouldShowSearch() && ( <button className="icon-button mobile-search-toggle mobile-only" onClick={toggleMobileSearch} aria-label="Buscar"><MagnifyingGlassIcon /></button> )}
         <button className="icon-button" onClick={toggleTheme}><SunIcon /></button>
         <button className="icon-button desktop-only" onClick={() => navigate('/chat')}><ChatBubbleIcon /></button>
-
-        {/* --- INICIO DE MODIFICACIONES EN LA CAMPANA --- */}
         <div className="notification-wrapper">
           <button className="icon-button desktop-only" onClick={handleBellClick}>
             <BellIcon />
             {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
           </button>
-          
           {showNotifications && (
             <div className="notifications-dropdown">
               <div className="notifications-header">
@@ -191,28 +188,17 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
                 <button onClick={() => alert("Funcionalidad 'Marcar como leído' próximamente")}>Marcar todo como leído</button>
               </div>
               <div className="notifications-list">
-                {loadingNotifications ? (
-                  <div className="notification-item loading">Cargando...</div>
-                ) : notifications.length === 0 ? (
-                  <div className="notification-item">No tienes notificaciones.</div>
-                ) : (
-                  notifications.map(notif => (
-                    <div key={notif.id} className={`notification-item ${!notif.read ? 'unread' : ''}`} onClick={() => { setShowNotifications(false); navigate(notif.link); }}>
-                      <p>{notif.text}</p>
-                      <span className="time">{notif.time}</span>
-                    </div>
-                  ))
-                )}
+                {loadingNotifications ? <div className="notification-item loading">Cargando...</div> : notifications.length === 0 ? <div className="notification-item">No tienes notificaciones.</div> : notifications.map(notif => (<div key={notif.id} className={`notification-item ${!notif.read ? 'unread' : ''}`} onClick={() => { setShowNotifications(false); navigate(notif.link); }}><p>{notif.text}</p><span className="time">{notif.time}</span></div>))}
               </div>
             </div>
           )}
         </div>
-        {/* --- FIN DE MODIFICACIONES EN LA CAMPANA --- */}
 
+        {/* --- CAMBIO 4: Lógica para mostrar avatar o ícono de perfil --- */}
         {user ? (
           <div className="user-menu">
             <div className={`user-avatar-container ${isDropdownOpen ? 'active' : ''}`} onClick={toggleDropdown} aria-expanded={isDropdownOpen} aria-haspopup="true" aria-label="Menú de usuario" style={{ cursor: 'pointer' }}>
-              {avatarSrc && <img key={user.id || 'user-avatar'} src={avatarSrc} alt="User profile" className="user-avatar" onLoad={handleImageLoad} onError={handleImageError} style={{ opacity: imageLoaded ? 1 : 0, transition: 'opacity 0.2s ease-in-out' }} />}
+              {avatarSrc && <img key={user.id || 'user-avatar'} src={avatarSrc} alt="User profile" className="user-avatar" onLoad={handleImageLoad} onError={handleImageError} style={{ opacity: imageLoaded ? 1 : 0 }} />}
               {!imageLoaded && !imageError && ( <div className="avatar-placeholder" /> )}
             </div>
             {isDropdownOpen && (
@@ -222,9 +208,18 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
               </div>
             )}
           </div>
-        ) : <LoginButton />}
+        ) : (
+          <button 
+            className="icon-button" 
+            onClick={() => requireLogin("Inicia sesión para acceder a tu perfil y publicar.")}
+            aria-label="Iniciar sesión"
+          >
+            <PersonIcon />
+          </button>
+        )}
       </div>
 
+      {/* Menú móvil (con la misma lógica condicional) */}
       {isMobileMenuOpen && (
         <div className="mobile-menu">
           <div className="mobile-menu-content">
@@ -232,7 +227,7 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
               <NavigationMenu.Item><Link to="/" className={location.pathname === "/" ? "active" : ""}> <HomeIcon /> Propiedades</Link></NavigationMenu.Item>
               <NavigationMenu.Item><Link to="/roomies" className={location.pathname === "/roomies" ? "active" : ""}><AvatarIcon /> Roomies</Link></NavigationMenu.Item>
               <NavigationMenu.Item>
-                {hasPublished ? (<Link to="/mis-propiedades" className={location.pathname === "/mis-propiedades" ? "active" : ""}><PlusCircledIcon /> Mis propiedades</Link>) : (<Link to="/publicar" className={location.pathname === "/publicar" ? "active" : ""}><PlusCircledIcon /> Publicar</Link>)}
+                {hasPublished ? (<Link to="/mis-propiedades" onClick={handlePublishClick} className={location.pathname === "/mis-propiedades" ? "active" : ""}><PlusCircledIcon /> Mis propiedades</Link>) : (<Link to="/publicar" onClick={handlePublishClick} className={location.pathname === "/publicar" ? "active" : ""}><PlusCircledIcon /> Publicar</Link>)}
               </NavigationMenu.Item>
             </NavigationMenu.List>
             <div className="mobile-actions">

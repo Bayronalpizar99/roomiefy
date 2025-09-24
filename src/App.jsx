@@ -7,13 +7,13 @@ import HomePage from "./pages/HomePage.jsx";
 import RoomiesPage from "./pages/RoomiesPage.jsx";
 import PublishPage from "./pages/PublishPage.jsx";
 import MyPropertiesPage from './pages/MyPropertiesPage.jsx';
-import EditPropertyPage from './pages/EditPropertyPage.jsx'; // 1. Importamos la nueva página de edición
+import EditPropertyPage from './pages/EditPropertyPage.jsx'; 
 import PropertyDetailPage from "./pages/PropertyDetailPage.jsx";
 import RoomieDetailPage from "./pages/RoomieDetailPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
 import { useTheme } from "./hooks/useTheme";
-// 2. Importamos TODAS las funciones de la API que necesitamos
+import LoginModal from './components/LoginModal';
 import { fetchProperties, deleteProperty, updateProperty } from './services/api';
 import "./App.css";
 
@@ -113,6 +113,7 @@ function App() {
             <ScrollArea.Thumb className="scroll-area-thumb" />
           </ScrollArea.Scrollbar>
         </ScrollArea.Root>
+        <LoginModal />
       </div>
     </AuthProvider>
   );
