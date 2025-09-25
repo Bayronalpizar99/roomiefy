@@ -1,18 +1,16 @@
-// src/pages/HomePage.jsx
-
 import { useState, useEffect, useMemo } from 'react';
-import { fetchProperties } from '../services/api';
 import PropertyCard from '../components/PropertyCard';
 import Filters from '../components/Filters';
 import ViewOptions from '../components/ViewOptions';
 import Pagination from '../components/Pagination';
+import * as Dialog from '@radix-ui/react-dialog';
+import { MixerHorizontalIcon, Cross2Icon } from '@radix-ui/react-icons';
+import { Button } from '@radix-ui/themes';
 import './HomePage.css';
 
-const HomePage = ({ searchQuery = '', onSearchQueryChange }) => {
-  const [allProperties, setAllProperties] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  const [view, setView] = useState('grid'); // Este es el estado que pasaremos
+// CAMBIO 1: Recibimos 'properties' y 'loading' como props desde App.jsx
+const HomePage = ({ searchQuery = '', properties: allProperties, loading }) => {
+  const [view, setView] = useState('grid');
   const [sortOrder, setSortOrder] = useState('recent');
   const [currentPage, setCurrentPage] = useState(1);
   const propertiesPerPage = 12;
@@ -33,16 +31,6 @@ const HomePage = ({ searchQuery = '', onSearchQueryChange }) => {
       setCurrentPage(1);
     }
   }, [searchQuery]);
-
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      const propertiesData = await fetchProperties();
-      setAllProperties(propertiesData);
-      setLoading(false);
-    };
-    loadData();
-  }, []);
 
   const filteredProperties = useMemo(() => {
     let properties = [...allProperties];
@@ -95,7 +83,7 @@ const HomePage = ({ searchQuery = '', onSearchQueryChange }) => {
         return properties.sort((a, b) => b.rating - a.rating);
       case 'recent':
       default:
-        return properties.sort((a, b) => b.id - a.id);
+        return properties.sort((a, b) => (b.id || 0) - (a.id || 0));
     }
   }, [allProperties, filters, sortOrder]);
 
@@ -116,7 +104,42 @@ const HomePage = ({ searchQuery = '', onSearchQueryChange }) => {
 
   return (
     <div className="homepage-layout"> 
-      <Filters filters={filters} setFilters={setFilters} />
+      {/* Filtros en móvil */}
+      <Dialog.Root>
+        <Dialog.Trigger asChild>
+          <Button 
+            variant="soft" 
+            className="mobile-filters-button"
+            size="2"
+          >
+            <MixerHorizontalIcon /> Filtros
+          </Button>
+        </Dialog.Trigger>
+        <Dialog.Portal>
+          <Dialog.Overlay className="dialog-overlay" />
+          <Dialog.Content className="dialog-content mobile-filters-dialog">
+            <div className="dialog-header">
+              <Dialog.Title>Filtros</Dialog.Title>
+              <Dialog.Close asChild>
+                <button 
+                  className="icon-button" 
+                  aria-label="Cerrar"
+                >
+                  <Cross2Icon />
+                </button>
+              </Dialog.Close>
+            </div>
+            <div className="dialog-body">
+              <Filters filters={filters} setFilters={setFilters} />
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      {/* Filtros en escritorio */}
+      <div className="desktop-filters">
+        <Filters filters={filters} setFilters={setFilters} />
+      </div>
       
       <div className="properties-section">
         <h1>Encuentra tu próximo hogar 🏡</h1>
@@ -136,7 +159,7 @@ const HomePage = ({ searchQuery = '', onSearchQueryChange }) => {
                   <PropertyCard 
                     key={property.id} 
                     property={property} 
-                    view={view} /* CAMBIO: Pasamos el prop 'view' */
+                    view={view}
                   />
                 ))
               ) : (

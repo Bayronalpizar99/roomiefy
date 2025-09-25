@@ -1,0 +1,88 @@
+/* src/components/LoginModal.css */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(14, 19, 22, 0.95); /* Dark overlay with slight transparency for depth */
+  backdrop-filter: blur(4px); /* Subtle blur effect - same as other modals */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: overlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-content {
+  background-color: var(--color-surface);
+  padding: 2rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  position: relative;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 10px 15px -3px rgba(0, 0, 0, 0.3); /* Enhanced shadow for dark mode */
+  animation: contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  background-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+  color: var(--color-text);
+}
+
+.modal-content p {
+  margin-bottom: 1.5rem;
+  color: var(--color-text-secondary);
+}
+
+.modal-login-button-container {
+  display: flex;
+  justify-content: center;
+}
+
+/* Animación para el overlay del modal de login */
+@keyframes overlayShow {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Animación para el contenido del modal de login */
+@keyframes contentShow {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}

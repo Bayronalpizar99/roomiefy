@@ -1,55 +1,67 @@
 .perfil-form-container {
   max-width: 720px;
   margin: 2rem auto;
-  background: #ffffff;
+  background: var(--color-surface);
   padding: 2rem 2.5rem;
-  border-radius: 20px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-  font-family: "Inter", sans-serif;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  font-family: var(--font-family);
+  color: var(--color-text);
 }
 
 .back-button {
   background: none;
   border: none;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   cursor: pointer;
   font-size: 0.9rem;
+  font-family: var(--font-family);
   margin-bottom: 1rem;
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
+  transition: color 0.2s ease;
+}
+
+.back-button:hover {
+  color: var(--color-primary);
 }
 
 h2 {
   font-size: 1.4rem;
   font-weight: 600;
   margin: 0 0 0.3rem;
-  color: #111827;
+  color: var(--color-heading);
+  font-family: var(--font-family);
 }
 
 .progress-text {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   margin-bottom: 0.5rem;
+  font-family: var(--font-family);
 }
 
 /* Barra de progreso */
 .progress-bar {
-  background: #f3f4f6;
+  background: var(--color-input-bg);
   height: 8px;
   border-radius: 10px;
   margin: 1rem 0 2rem;
   overflow: hidden;
+  border: 1px solid var(--color-border);
 }
 
 .progress-fill {
-  background: linear-gradient(90deg, #a78bfa, #7c3aed);
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-hover));
   height: 100%;
   transition: width 0.4s ease;
 }
 
 /* Tabs de pasos */
 .steps-tabs {
+  
   display: flex;
   justify-content: space-between;
   margin-bottom: 2rem;
@@ -59,20 +71,22 @@ h2 {
   flex: 1;
   padding: 0.8rem 0.6rem;
   margin: 0 0.3rem;
-  border: none;
-  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-family);
   cursor: pointer;
-  background: #f5f3ff;
-  color: #6d28d9;
+  background: var(--color-button-bg);
+  color: var(--color-text);
   transition: all 0.2s ease;
 }
 
 .step-tab.active {
-  background: #6d28d9;
-  color: #fff;
-  box-shadow: 0 2px 6px rgba(109,40,217,0.3);
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
 }
 
 /* Formulario */
@@ -80,6 +94,7 @@ h2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem 1.5rem;
+  margin-bottom: auto;
 }
 
 .form-group {
@@ -88,26 +103,41 @@ h2 {
   margin-bottom: 1rem;
 }
 
+.form-hint {
+  font-size: 0.85rem;
+  color: #6b7280; 
+  margin: 0.10rem 0 1rem 0;
+  line-height: 1.4;
+  text-align: left;
+}
+
 label {
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-family);
   margin-bottom: 0.4rem;
-  color: #374151;
+  color: var(--color-text);
+  opacity: 0.9;
 }
 
 input, textarea {
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
   padding: 0.7rem;
   font-size: 0.9rem;
-  background: #fff;
-  color: #111827;
+  background: var(--color-input-bg);
+  color: var(--color-text);
   transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:-internal-autofill-selected {
+  background: var(--color-input-bg);
+  color: var(--color-text);
 }
 
 input:focus, textarea:focus {
   outline: none;
-  border-color: #8b5cf6;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(139,92,246,0.25);
 }
 
@@ -120,7 +150,53 @@ textarea {
   margin-top: 0.8rem;
   max-width: 120px;
   border-radius: 14px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
+}
+
+.foto-upload-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px dashed #d1d5db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.foto-upload-wrapper:hover {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 4px rgba(139,92,246,0.15);
+}
+
+.foto-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.foto-input {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.foto-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* --- Estilo para Vivienda --- */
@@ -134,16 +210,16 @@ textarea {
 
 .radio-option {
   flex: 1;
-  border: 1px solid #d1d5db;
-  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
   padding: 1rem;
   text-align: center;
   font-size: 0.9rem;
-  font-weight: 500;
-  color: #374151;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
   cursor: pointer;
   transition: all 0.2s ease;
-  background: #fafafa;
+  background: var(--color-button-bg);
 }
 
 .radio-option input {
@@ -151,12 +227,12 @@ textarea {
 }
 
 .radio-option:hover {
-  border-color: #8b5cf6;
-  background: #f5f3ff;
+  border-color: var(--color-primary);
+  background: var(--color-button-bg);
 }
 
 .radio-option.active {
-  border-color: #6d28d9;
+  border-color: var(--color-primary);
   background: #ede9fe;
   color: #6d28d9;
   box-shadow: 0 0 0 3px rgba(109,40,217,0.15);
@@ -222,6 +298,73 @@ textarea {
   white-space: nowrap;
 }
 
+/*Chips para intereses e idiomas*/
+.chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.chip {
+  padding: 6px 14px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  background: #f0f0f0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  position: relative;
+}
+
+.chip:hover,
+.chip:focus {
+  background: #e0e0ff;
+  border-color: #6b4eff;
+  outline: none;
+}
+
+.chip.active {
+  background: #6b4eff;
+  color: white;
+  border-color: #6b4eff;
+}
+
+.chip-input {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.chip-text-input {
+  padding: 6px 10px;
+  border-radius: 16px;
+  border: 1px solid #ccc;
+  flex: 1;
+  font-size: 14px;
+}
+
+.add-chip {
+  background-color: #6b4eff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.add-chip:hover {
+  background-color: #5a3ee0;
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid #8e8e90;
+  margin: 2rem 0 1.5rem;
+}
+
 
 /* Botones */
 .form-buttons {
@@ -241,20 +384,20 @@ textarea {
 }
 
 .btn.cancel {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  color: #374151;
+  background: var(--color-button-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
 }
 
 .btn.secondary {
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  color: #374151;
+  background: var(--color-button-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
 }
 
 .btn.primary {
-  background: #6d28d9;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-text);
   font-weight: 500;
 }
 
@@ -264,7 +407,8 @@ textarea {
 
 .btn-group {
   display: flex;
-  gap: 0.7rem;
+  gap: 1rem;
+  padding: 1rem;
 }
 
 .input-error {

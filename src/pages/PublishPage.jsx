@@ -1,8 +1,9 @@
 import React, { useState, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom'; // <--- CAMBIO: Importamos useNavigate
 import './PublishStyles.css';
 import * as Checkbox from '@radix-ui/react-checkbox';
 import { CheckIcon, UploadIcon } from '@radix-ui/react-icons';
-import { createProperty } from '../services/api'; // <--- Usamos esta, la que importamos.
+import { createProperty } from '../services/api';
 
 /* ============================================================================= */
 
@@ -105,7 +106,9 @@ export function FileUploadBox({
 }
 
 /* ====== Página ====== */
-const PublishPage = () => {
+// CAMBIO: Recibimos 'onAddProperty' que viene desde App.jsx
+const PublishPage = ({ onAddProperty }) => {
+  const navigate = useNavigate(); // <--- CAMBIO: Inicializamos useNavigate
   const MIN = 1;
   const MAX = 10;
 
@@ -118,13 +121,11 @@ const PublishPage = () => {
     bedrooms: MIN,
     bathrooms: MIN,
     files: [],
-    // checks usados en el JSX:
     wifi: false,
     garage: false,
     laundry: false,
     pool: false,
     centrico: false,
-    // otros que tenías
     allowPhotos: true,
     allowVideos: true,
     watermark: false,
@@ -147,6 +148,7 @@ const PublishPage = () => {
     setFormData((prev) => ({ ...prev, files: uploadedFiles }));
   };
 
+  // CAMBIO: Toda la lógica de handleSubmit se actualiza
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -165,7 +167,6 @@ const PublishPage = () => {
         pool: formData.pool,
         centrico: formData.centrico,
       }).filter(([, v]) => v).map(([k]) => k),
-      // Para mocks no enviamos binarios; mandamos nombres
       files: formData.files.map((f) => f.name),
     };
 
@@ -176,9 +177,24 @@ const PublishPage = () => {
 
     try {
       setSubmitting(true);
-      const result = await createProperty(payload);
-      console.log('API response:', result);
-      alert('Propiedad publicada exitosamente (simulado).');
+      const apiResponse = await createProperty(payload);
+
+    
+      const newPropertyForState = {
+        ...payload,
+        id: apiResponse.id || `local-${Date.now()}`, // Usamos ID de la API o uno local
+        property_photo: 'https://via.placeholder.com/400x300.png?text=Mi+Nueva+Propiedad',
+        owner_name: 'Tú (Propietario)',
+        owner_profile_pic: 'https://via.placeholder.com/150',
+        rating: 0,
+        square_meters: payload.area,
+        name: payload.title,
+      };
+
+      onAddProperty(newPropertyForState);
+      alert('¡Propiedad publicada! Serás redirigido a tus propiedades.');
+      navigate('/mis-propiedades');
+
     } catch (err) {
       console.error(err);
       alert(`Fallo al enviar: ${err.message}`);
@@ -187,19 +203,7 @@ const PublishPage = () => {
     }
   };
 
-  // (Opcional) botón para autollenar y probar rápido
   const fillDemo = () => setFormData(prev => ({
-    ...prev,
-    title: 'Depto demo en Florencia',
-    location: 'San Carlos, cerca del TEC',
-    description: 'Apartamento cómodo, cerca del parque.',
-    price: '250000',
-    area: '80',
-    bedrooms: 2,
-    bathrooms: 1,
-    wifi: true,
-    garage: true,
-    centrico: true,
   }));
 
   return (
@@ -208,8 +212,8 @@ const PublishPage = () => {
       <p>Completa el formulario para añadir tu propiedad a la lista.</p>
 
       <form onSubmit={handleSubmit} className='publish-form' noValidate>
-          {/* Título y Ubicación */}
-          <div className="form-row">
+        {/* ... (todo el JSX del formulario se queda exactamente igual) ... */}
+        <div className="form-row">
             <div className="form-field">
               <Label.Root className="form-label">Título de la publicación *</Label.Root>
               <input

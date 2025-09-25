@@ -21,7 +21,8 @@
   --color-border: rgba(255, 255, 255, 0.1);
   --color-primary: #7c3aed;
   --color-primary-hover: #7c3aed;
-  --color-button-bg: #f9f9f9;
+  --color-secondary: #8445f0;
+  --color-button-bg: #242424;
   --color-button-border-hover: var(--color-primary);
   --color-input-bg: rgba(0, 0, 0, 0.05);
   --color-icon: rgba(33, 53, 71, 0.7);
@@ -45,13 +46,14 @@
 /* Tema Claro (se activa cuando el contenedor tiene la clase 'light') */
 body.light { 
   --color-text: #213547;
-  --color-heading: #e0e0e0; 
+  --color-heading: #213547; 
   --color-text-secondary: rgba(33, 53, 71, 0.6);
+  --color-secondary: #8445f0;
   --color-background: #ffffff;
   --color-surface: #ffffff;
   --color-border: rgba(0, 0, 0, 0.1);
   --color-primary-hover: #7c3aed;
-  --color-button-bg: #f9f9f9;
+  --color-button-bg: #f0f0f0;
   --color-input-bg: rgba(0, 0, 0, 0.05);
   --color-icon: rgba(33, 53, 71, 0.7);
 

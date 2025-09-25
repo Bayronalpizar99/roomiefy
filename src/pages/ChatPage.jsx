@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import './PageStyles.css';
 import './ChatPage.css';
-import { fetchConversations, sendMessage } from '../services/api';
+import { fetchConversations, sendMessage, fetchMessages, fetchConversation, markConversationAsRead } from '../services/api';
 import { PaperPlaneIcon, CheckIcon } from '@radix-ui/react-icons';
+import { useLocation } from 'react-router-dom';
 
 const ChatPage = () => {
+  const location = useLocation();
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,6 +20,13 @@ const ChatPage = () => {
         setLoading(true);
         const data = await fetchConversations();
         setConversations(data);
+
+        // Si hay una conversación preseleccionada desde la navegación
+        if (location.state?.selectedConversation) {
+          setSelectedConversation(location.state.selectedConversation);
+          setNewMessage(location.state.prefilledMessage || '');
+        }
+
         setLoading(false);
       } catch (err) {
         setError('Error al cargar las conversaciones');
@@ -27,11 +36,29 @@ const ChatPage = () => {
     };
 
     getConversations();
-  }, []);
+  }, [location.state]);
 
-  const handleSelectConversation = (conversation) => {
+  const handleSelectConversation = async (conversation) => {
     setSelectedConversation(conversation);
     setNewMessage('');
+    
+    // Marcar conversación como leída
+    if (conversation.id) {
+      await markConversationAsRead(conversation.id);
+      
+      // Cargar mensajes de la conversación
+      try {
+        const messages = await fetchMessages(conversation.id);
+        if (messages) {
+          setSelectedConversation(prev => ({
+            ...prev,
+            messages: messages
+          }));
+        }
+      } catch (error) {
+        console.error('Error al cargar mensajes:', error);
+      }
+    }
   };
 
   const handleSendMessage = async () => {

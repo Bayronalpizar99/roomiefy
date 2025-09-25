@@ -21,6 +21,7 @@
 .view-switcher {
   display: flex;
   align-items: center;
+  border: 1px solid var(--color-border);
   background-color: var(--color-input-bg);
   padding: 4px;
   border-radius: var(--border-radius);

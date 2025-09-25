@@ -26,7 +26,7 @@
   padding: 0.5rem 0.75rem;
   border-radius: var(--border-radius);
   border: 1px solid var(--color-border);
-  background: var(--color-button-bg);
+  background: var(--color-surface);
   color: var(--color-text);
   cursor: pointer;
 }
