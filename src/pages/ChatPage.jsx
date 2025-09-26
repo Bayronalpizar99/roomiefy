@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './PageStyles.css';
 import './ChatPage.css';
-import { fetchConversations, sendMessage, fetchMessages, fetchConversation, markConversationAsRead } from '../services/api';
+import { fetchConversations, sendMessage, fetchConversation, markConversationAsRead } from '../services/api';
 import { PaperPlaneIcon, CheckIcon } from '@radix-ui/react-icons';
 import { useLocation } from 'react-router-dom';
 
@@ -13,25 +13,31 @@ const ChatPage = () => {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const messageInputRef = useRef(null);
 
   useEffect(() => {
     const getConversations = async () => {
       try {
         setLoading(true);
-        const data = await fetchConversations();
-        setConversations(data);
+        const { data, error } = await fetchConversations();
+        if (error) {
+          setError('Error al cargar las conversaciones');
+          setConversations([]);
+        } else {
+          const list = Array.isArray(data) ? data : [];
+          setConversations(list);
+        }
 
         // Si hay una conversación preseleccionada desde la navegación
         if (location.state?.selectedConversation) {
           setSelectedConversation(location.state.selectedConversation);
           setNewMessage(location.state.prefilledMessage || '');
         }
-
-        setLoading(false);
       } catch (err) {
         setError('Error al cargar las conversaciones');
-        setLoading(false);
         console.error('Error al cargar las conversaciones:', err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -45,18 +51,26 @@ const ChatPage = () => {
     // Marcar conversación como leída
     if (conversation.id) {
       await markConversationAsRead(conversation.id);
-      
-      // Cargar mensajes de la conversación
+
+      // Cargar conversación con sus mensajes desde la API de conversación/{id}
       try {
-        const messages = await fetchMessages(conversation.id);
-        if (messages) {
+        const { data: convData, error } = await fetchConversation(conversation.id);
+        if (!error && convData) {
+          let messages = [];
+          if (Array.isArray(convData)) {
+            // La API devuelve un arreglo de conversaciones; buscar la que coincida por id
+            const found = convData.find(c => String(c?.id) === String(conversation.id));
+            messages = Array.isArray(found?.messages) ? found.messages : [];
+          } else if (Array.isArray(convData?.messages)) {
+            messages = convData.messages;
+          }
           setSelectedConversation(prev => ({
             ...prev,
-            messages: messages
+            messages
           }));
         }
       } catch (error) {
-        console.error('Error al cargar mensajes:', error);
+        console.error('Error al cargar la conversación:', error);
       }
     }
   };
@@ -122,6 +136,14 @@ const ChatPage = () => {
     }
   };
 
+  // Auto-resize del textarea
+  useEffect(() => {
+    const el = messageInputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+  }, [newMessage, selectedConversation]);
+
   if (loading) {
     return <div className="loading-container">Cargando conversaciones...</div>;
   }
@@ -131,7 +153,7 @@ const ChatPage = () => {
   }
 
   return (
-    <div className="main-content">
+    <div className="main-content chat-main">
       <div className="chat-page-container">
         <h1>Mis Conversaciones</h1>
         
@@ -196,13 +218,13 @@ const ChatPage = () => {
                 </div>
                 <div className="message-input">
                   <div className="search-bar">
-                    <input
-                      type="text"
-                      placeholder="Escribe un mensaje..."
+                    <textarea
+                      ref={messageInputRef}
+                      placeholder="Escribe un mensaje... (Ctrl+Enter para enviar)"
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
+                        if ((e.key === 'Enter') && (e.ctrlKey || e.metaKey)) {
                           e.preventDefault();
                           handleSendMessage();
                         }
