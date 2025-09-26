@@ -24,6 +24,14 @@ const RoomieDetailPage = () => {
   const navigate = useNavigate();
   const { user, requireLogin } = useAuth();
 
+  // --- INICIO DE LA CORRECCIÓN ---
+  // 1. Se inicializa el estado 'roommate' con los datos de roommateFromState si existen.
+  const [roommate, setRoommate] = useState(roommateFromState || null);
+  // 2. El estado de 'loading' ahora depende de si los datos ya llegaron.
+  const [loading, setLoading] = useState(!roommateFromState);
+  const [contacting, setContacting] = useState(false);
+  // --- FIN DE LA CORRECCIÓN ---
+
   const handleContact = async () => {
     // Si no está logueado, pedir login
     if (!user) {
@@ -61,7 +69,9 @@ const RoomieDetailPage = () => {
 
   useEffect(() => {
     const load = async () => {
-      if (roommateFromState) return; // Ya tenemos datos
+      // 3. Si ya tenemos un roommate en el estado, no hacemos nada.
+      if (roommate) return;
+      
       setLoading(true);
       try {
         const list = await fetchRoommates();
@@ -75,7 +85,8 @@ const RoomieDetailPage = () => {
       }
     };
     load();
-  }, [roomieId, roommateFromState]);
+    // 4. La dependencia ahora es el estado local 'roommate'.
+  }, [roomieId, roommate]);
 
   const budgetText = useMemo(() => {
     const fmt = (n) => `$${new Intl.NumberFormat('es-MX').format(Number(n))}`;
@@ -301,4 +312,3 @@ const RoomieDetailPage = () => {
 };
 
 export default RoomieDetailPage;
-

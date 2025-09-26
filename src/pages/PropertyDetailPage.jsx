@@ -54,7 +54,7 @@ const PropertyDetailPage = () => {
   return (
     <div className="property-detail-container">
       <button className="back-btn-detail" onClick={() => navigate('/')}>
-        <ArrowLeft size={18} /> Volver a las propiedades
+        <ArrowLeft size={18} /> Volver 
       </button>
 
       {/* --- INICIO DE LA MODIFICACIÓN --- */}
