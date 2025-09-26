@@ -38,7 +38,9 @@ export const fetchProperties = async () => {
     }
 
     const data = await response.json();
-    return { data, error: null };
+    // --- CAMBIO CLAVE ---
+    // Ahora la función devuelve un objeto con la data y el error
+    return { data, error: null }; 
   } catch (error) {
     console.error("Error de red o excepción:", error);
     return { data: [], error: error?.message || 'Fallo de red al obtener propiedades.' };

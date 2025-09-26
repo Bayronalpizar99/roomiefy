@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import {
   Share2,
@@ -11,27 +11,58 @@ import {
   Phone,
 } from 'lucide-react';
 import StarRating from '../components/StarRating';
-import { DateRange } from 'react-date-range';
-import 'react-date-range/dist/styles.css'; // main style file
-import 'react-date-range/dist/theme/default.css'; // theme css file
-import { addDays, format } from 'date-fns';
-
+import { fetchProperties } from '../services/api';
 import './PropertyDetailPage.css';
 
 const PropertyDetailPage = () => {
   const location = useLocation();
-  const { property } = location.state || {};
   const { propertyId } = useParams();
   const navigate = useNavigate();
 
+  const [property, setProperty] = useState(location.state?.property || null);
+  const [loading, setLoading] = useState(!property);
   const [isFavorited, setIsFavorited] = useState(false);
-  const [dateRange, setDateRange] = useState([
-    {
-      startDate: new Date(),
-      endDate: addDays(new Date(), 7),
-      key: 'selection',
-    },
-  ]);
+
+  useEffect(() => {
+    const findProperty = async () => {
+      if (property) return;
+
+      setLoading(true);
+      try {
+        // --- INICIO DE LA CORRECCIÓN ---
+        const result = await fetchProperties(); // 1. Recibimos el objeto { data, error }
+
+        if (result.error) { // 2. Manejamos el caso de error primero
+          console.error("Error al buscar la propiedad:", result.error);
+          setProperty(null);
+          return;
+        }
+
+        // 3. Extraemos el array del objeto 'data'. Asumimos que está en una clave 'properties'.
+        // Si no está anidado, sería solo 'result.data'
+        const propertiesArray = result.data.properties || result.data || [];
+        
+        // 4. Buscamos la propiedad en el array corregido
+        const foundProperty = propertiesArray.find(p => p.id == propertyId);
+        
+        if (foundProperty) {
+          setProperty(foundProperty);
+        } else {
+          setProperty(null); 
+        }
+        // --- FIN DE LA CORRECCIÓN ---
+
+      } catch (error) {
+        console.error("Error en el componente:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    findProperty();
+  }, [propertyId, property]);
+
+  // ... (El resto del componente sigue igual)
 
   const handleShare = () => {
     const url = window.location.href;
@@ -40,30 +71,33 @@ const PropertyDetailPage = () => {
     });
   };
 
-  if (!property) {
+  if (loading) {
     return (
-      <div>
-        Cargando información de la propiedad... (o propiedad no encontrada)
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        Cargando información de la propiedad...
       </div>
     );
   }
 
-  const formattedStartDate = format(dateRange[0].startDate, "dd/MM/yyyy");
-  const formattedEndDate = format(dateRange[0].endDate, "dd/MM/yyyy");
+  if (!property) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        Propiedad no encontrada.
+      </div>
+    );
+  }
 
   return (
     <div className="property-detail-container">
       <button className="back-btn-detail" onClick={() => navigate('/')}>
-        <ArrowLeft size={18} /> Volver 
+        <ArrowLeft size={18} /> Volver a las propiedades
       </button>
 
-      {/* --- INICIO DE LA MODIFICACIÓN --- */}
       <div className="property-header">
         <h1 className="property-title">{property.name}</h1>
         <p className="property-location-detail">{property.location}</p>
       </div>
-      {/* --- FIN DE LA MODIFICACIÓN --- */}
-
+      
       <div className="property-main-image">
         <img src={property.property_photo} alt={property.name} />
       </div>
@@ -71,8 +105,6 @@ const PropertyDetailPage = () => {
       <div className="property-content-layout">
         <div className="property-details-main">
           
-          {/* El título y la ubicación se han movido arriba */}
-
           <div className="property-stats-detail">
             <span className="stat-item">
               <Bed size={20} /> {property.bedrooms} rec.
@@ -122,12 +154,6 @@ const PropertyDetailPage = () => {
               <div className="owner-actions">
                 <button
                   className="owner-action-btn"
-                  aria-label="Iniciar chat"
-                >
-                  <MessageSquare size={26} strokeWidth={2} />
-                </button>
-                <button
-                  className="owner-action-btn"
                   aria-label="Contactar por teléfono"
                 >
                   <Phone size={26} strokeWidth={2} />
@@ -144,33 +170,10 @@ const PropertyDetailPage = () => {
               <span className="price-label">/ noche</span>
             </div>
             
-            <div className="date-picker-container">
-              <div className="calendar-wrapper">
-                <div className="calendar-header">
-                  <div className="header-item">
-                    <strong>Fecha de inicio:</strong>
-                    <span>{formattedStartDate}</span>
-                  </div>
-                   <div className="header-item">
-                    <strong>Fecha de fin:</strong>
-                    <span>{formattedEndDate}</span>
-                  </div>
-                </div>
-                <DateRange
-                  editableDateInputs={true}
-                  onChange={(item) => setDateRange([item.selection])}
-                  moveRangeOnFirstSelection={false}
-                  ranges={dateRange}
-                  minDate={new Date()}
-                />
-              </div>
-            </div>
-            
             <div className="action-buttons">
               <button className="action-btn primary reserve-btn">
-                Reservar ahora
+                <MessageSquare size={18} /> Contactar propietario
               </button>
-
               <button className="action-btn share-btn" onClick={handleShare}>
                 <Share2 size={18} /> Compartir
               </button>
