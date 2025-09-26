@@ -44,4 +44,4 @@ Roomiefy utiliza varias bibliotecas y herramientas de código abierto. Las depen
 - react-router-dom para la navegación.
 - lucide-react para iconos.
 - Otras utilidades como jwt-decode y react-date-range para características específicas.
-![alt text](image.png)
+=
