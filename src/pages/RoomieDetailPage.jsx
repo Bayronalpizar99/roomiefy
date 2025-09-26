@@ -12,7 +12,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import * as Avatar from '@radix-ui/react-avatar';
-import { fetchRoommateById } from '../services/api';
+import { fetchRoommates } from '../services/api';
 import { createConversation } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import './RoomieDetailPage.css';
@@ -55,15 +55,13 @@ const RoomieDetailPage = () => {
           }
         });
       } else {
-        // Si la API no responde o devuelve null, mostramos mensaje flotante
-        showErrorToast('El microservicio de mensajería no está funcionando. Inténtalo más tarde.');
-        return;
+        // Si falla la creación de conversación, navegar al chat general
+        navigate('/chat');
       }
     } catch (error) {
       console.error('Error al crear conversación:', error);
-      // Mostrar mensaje flotante en caso de error
-      showErrorToast('El microservicio de mensajería no está funcionando. Inténtalo más tarde.');
-      return;
+      // En caso de error, navegar al chat general
+      navigate('/chat');
     } finally {
       setContacting(false);
     }
@@ -76,8 +74,9 @@ const RoomieDetailPage = () => {
       
       setLoading(true);
       try {
-        const { data } = await fetchRoommateById(roomieId);
-        setRoommate(data || null);
+        const list = await fetchRoommates();
+        const found = list.find((r) => String(r.id) === String(roomieId));
+        setRoommate(found || null);
       } catch (e) {
         console.error(e);
         setRoommate(null);
@@ -308,12 +307,6 @@ const RoomieDetailPage = () => {
           </div>
         </aside>
       </div>
-      {toastVisible && (
-        <div className="toast toast-error" role="alert" aria-live="assertive">
-          <span>{toastMessage}</span>
-          <button className="toast-close" aria-label="Cerrar" onClick={() => setToastVisible(false)}>×</button>
-        </div>
-      )}
     </div>
   );
 };
