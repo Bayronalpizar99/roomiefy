@@ -13,16 +13,16 @@ Para ejecutar Roomiefy localmente, siga estos pasos:
 ## Capturas de pantalla del sistema en funcionamiento
 
 ### Login 
-![alt text](/screenshots/image.png)
+![alt text](/Screenshots/image.png)
 
 ### Propiedades
-![alt text](/screenshots/image-1.png)
+![alt text](/Screenshots/image-1.png)
 
 ### Chat
-![alt text](/screenshots/image-2.png)
+![alt text](/Screenshots/image-2.png)
 
 ### Roomies
-![alt text](/screenshots/image-3.png)
+![alt text](/Screenshots/image-3.png)
 
 ## Estructura del Repositorio
 El repositorio está organizado de la siguiente manera:
