@@ -24,7 +24,7 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
   const [view, setView] = useState('grid');
   const [sortOrder, setSortOrder] = useState('recent');
   const [currentPage, setCurrentPage] = useState(1);
-  const roommatesPerPage = 8; // Mostrar siempre 6 por página (prototipo)
+  const roommatesPerPage = 8;
   const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
 
   // Límites fijos solicitados
