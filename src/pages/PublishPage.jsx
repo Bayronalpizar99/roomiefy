@@ -4,10 +4,11 @@ import './PublishStyles.css';
 import * as Checkbox from '@radix-ui/react-checkbox';
 import { CheckIcon, UploadIcon } from '@radix-ui/react-icons';
 import { createProperty } from '../services/api';
-import placeholderImage from '../assets/placeholder.jpg'; 
-
+import placeholderImage from '../assets/placeholder.jpg';
+import { useAuth } from '../context/AuthContext'; 
 
 const Label = { Root: (props) => <label {...props} /> };
+
 export function CheckboxField({ id, checked, onCheckedChange, children, required = false }) {
   return (
     <div className="cbx">
@@ -103,8 +104,10 @@ export function FileUploadBox({
   );
 }
 
+/* Página */
 const PublishPage = ({ onAddProperty }) => {
   const navigate = useNavigate();
+  const { user } = useAuth(); 
   const MIN = 1;
   const MAX = 10;
 
@@ -150,6 +153,7 @@ const PublishPage = ({ onAddProperty }) => {
     }
   
     setSubmitting(true);
+  
     let imagePreviewUrl = placeholderImage; 
     if (formData.files.length > 0) {
       try {
@@ -190,7 +194,7 @@ const PublishPage = ({ onAddProperty }) => {
         id: apiResponse.id || `local-${Date.now()}`,
         property_photo: imagePreviewUrl,
         owner_name: 'Tú (Propietario)',
-        owner_profile_pic: 'https://via.placeholder.com/150',
+        owner_profile_pic: user?.picture || defaultAvatar,
         rating: 0,
         square_meters: payload.area,
         name: payload.title,
