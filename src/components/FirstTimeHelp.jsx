@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import '../pages/RoomiesPage.css'; // Reuse existing styles for consistency
+import '../pages/RoomiesPage.css';
 
 const FirstTimeHelp = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,20 +27,21 @@ const FirstTimeHelp = () => {
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <Dialog.Content className="dialog-content">
-          <Dialog.Title>Welcome to the Roomies Page!</Dialog.Title>
+          <Dialog.Title>Bienvenido a la página de Roomies!</Dialog.Title>
           <Dialog.Description>
-            Get started with these tips:
+            Comienza con estos consejos:
           </Dialog.Description>
           <ul style={{ marginTop: '1rem', marginBottom: '1rem' }}>
-            <li>Use the filter button (mobile) or sidebar (desktop) to narrow your search.</li>
-            <li>Try the search bar to find roomies by name or location.</li>
-            <li>Switch between grid and list views using the view options.</li>
-            <li>Click on a roomie card to view their full profile.</li>
+          <li>Usa el botón de filtro (móvil) o la barra lateral (escritorio) para refinar tu búsqueda.</li>
+          <li>Prueba la barra de búsqueda para encontrar roomies por nombre o ubicación.</li>
+          <li>Cambia entre la vista de cuadrícula y lista usando las opciones de vista.</li>
+          <li>Haz clic en una tarjeta de roomie para ver su perfil completo.</li>
+
           </ul>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
             <Dialog.Close asChild>
               <button onClick={handleClose} style={{ marginRight: '0.5rem', padding: '0.5rem 1rem', background: 'none', border: '1px solid var(--color-border)', borderRadius: 'var(--border-radius)', cursor: 'pointer' }}>
-                Got it!
+                Entendido
               </button>
             </Dialog.Close>
             <Dialog.Close asChild>
