@@ -440,18 +440,16 @@ body.light .search-button:hover {
     display: flex !important; /* Show on mobile */
   }
   
+  /* Mostrar el botón hamburguesa en móvil */
+  .mobile-menu-toggle {
+    display: flex;
+  }
+  
   /* Ajustar logo en móvil */
   .logo-image {
     height: 40px;
   }
-  
-  /* Ajustar avatar en móvil */
-  .user-avatar-container {
-    width: 36px;
-    height: 36px;
-  }
 }
-
 @media (max-width: 480px) {
   .navbar {
     padding: 0.5rem 0.75rem;
