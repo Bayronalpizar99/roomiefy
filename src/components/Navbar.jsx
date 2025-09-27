@@ -23,10 +23,8 @@ import { PersonStandingIcon } from 'lucide-react';
 export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  // --- CAMBIO 1: Obtenemos el usuario y la nueva función 'requireLogin' del contexto ---
   const { user, logout, requireLogin } = useAuth();
   
-  // Estados existentes
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -34,10 +32,28 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
 
-  // Estados para notificaciones
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
+
+  // --- INICIO DE LA CORRECCIÓN ---
+  // Este useEffect se ejecuta una sola vez cuando el componente se carga por primera vez.
+  useEffect(() => {
+    const loadInitialNotifications = async () => {
+      // Solo intentamos cargar las notificaciones si hay un usuario logueado.
+      if (user) {
+        try {
+          const data = await fetchNotifications();
+          setNotifications(data);
+        } catch (error) {
+          console.error("Error al cargar notificaciones iniciales:", error);
+        }
+      }
+    };
+
+    loadInitialNotifications();
+  }, [user]); // Se ejecuta cuando el estado del 'user' cambia (al iniciar sesión).
+  // --- FIN DE LA CORRECCIÓN ---
 
   useEffect(() => {
     setLocalSearchQuery(searchQuery);
@@ -95,15 +111,14 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
     onSearch?.(localSearchQuery);
   };
   
-  // --- CAMBIO 2: Nueva función para proteger el enlace de "Publicar" ---
   const handlePublishClick = (event) => {
     if (!user) {
-      event.preventDefault(); // Detenemos la navegación si no hay usuario
-      requireLogin("Debes iniciar sesión para publicar una propiedad."); // Abrimos el modal
+      event.preventDefault();
+      requireLogin("Debes iniciar sesión para publicar una propiedad.");
     }
-    // Si el usuario existe, el <Link> de React Router funciona normalmente.
   };
 
+  // La lógica de clic ahora puede servir para refrescar las notificaciones si lo deseas.
   const handleBellClick = async () => {
     if (showNotifications) {
       setShowNotifications(false);
@@ -140,23 +155,22 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
         <NavigationMenu.List className="navbar-links desktop-only">
           <NavigationMenu.Item>
             <Link to="/" className={location.pathname === "/" ? "active" : ""}>
-              <HomeIcon /> Propiedades
+              <HomeIcon /> <span className="nav-link-text">Propiedades</span>
             </Link>
           </NavigationMenu.Item>
           <NavigationMenu.Item>
             <Link to="/roomies" className={location.pathname === "/roomies" ? "active" : ""}>
-              <AvatarIcon /> Roomies
+              <AvatarIcon /> <span className="nav-link-text">Roomies</span>
             </Link>
           </NavigationMenu.Item>
-          {/* --- CAMBIO 3: Añadimos el onClick al enlace --- */}
           <NavigationMenu.Item>
             {hasPublished ? (
               <Link to="/mis-propiedades" onClick={handlePublishClick} className={location.pathname === "/mis-propiedades" ? "active" : ""}>
-                <PlusCircledIcon /> Mis propiedades
+                <PlusCircledIcon /> <span className="nav-link-text">Mis propiedades</span>
               </Link>
             ) : (
               <Link to="/publicar" onClick={handlePublishClick} className={location.pathname === "/publicar" ? "active" : ""}>
-                <PlusCircledIcon /> Publicar
+                <PlusCircledIcon /> <span className="nav-link-text">Publicar</span>
               </Link>
             )}
           </NavigationMenu.Item>
@@ -194,7 +208,6 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
           )}
         </div>
 
-        {/* --- CAMBIO 4: Lógica para mostrar avatar o ícono de perfil --- */}
         {user ? (
           <div className="user-menu">
             <div className={`user-avatar-container ${isDropdownOpen ? 'active' : ''}`} onClick={toggleDropdown} aria-expanded={isDropdownOpen} aria-haspopup="true" aria-label="Menú de usuario" style={{ cursor: 'pointer' }}>
@@ -219,7 +232,6 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
         )}
       </div>
 
-      {/* Menú móvil (con la misma lógica condicional) */}
       {isMobileMenuOpen && (
         <div className="mobile-menu">
           <div className="mobile-menu-content">

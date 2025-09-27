@@ -5,7 +5,7 @@
   margin: 0.5rem 0.5rem 1rem 0; /* Sin margen izquierdo en móvil */
   position: sticky;
   top: 1rem;
-  max-height: calc(100vh - 2rem);
+  max-height: 90vh;
   overflow-y: auto;
   padding: 1rem;
   background-color: var(--color-surface);

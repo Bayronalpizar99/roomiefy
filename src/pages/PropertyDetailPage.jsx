@@ -90,7 +90,7 @@ const PropertyDetailPage = () => {
   return (
     <div className="property-detail-container">
       <button className="back-btn-detail" onClick={() => navigate('/')}>
-        <ArrowLeft size={18} /> Volver a las propiedades
+        <ArrowLeft size={18} /> Volver 
       </button>
 
       <div className="property-header">
@@ -167,7 +167,7 @@ const PropertyDetailPage = () => {
           <div className="actions-box">
             <div className="price-per-night">
               <span className="price-amount">${property.price}</span>
-              <span className="price-label">/ noche</span>
+              <span className="price-label">/ mes</span>
             </div>
             
             <div className="action-buttons">
