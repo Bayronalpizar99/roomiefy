@@ -203,7 +203,7 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
 
         <div className="roomies-results">
           <div className="roomies-header">
-            <Heading as="h1" size="6" mb="2">Encuentra tu Roomie Ideal</Heading>
+            <Heading as="h1" size="6" mb="2">Encuentra tu Roomie Ideal 👋</Heading>
             <Text size="2" color="gray">
               {Number.isFinite(totalCount)
                 ? `${totalCount} ${totalCount === 1 ? 'roomie encontrado' : 'roomies encontrados'}`

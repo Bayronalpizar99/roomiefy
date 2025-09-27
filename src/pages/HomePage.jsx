@@ -8,6 +8,7 @@ import { MixerHorizontalIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { Button } from '@radix-ui/themes';
 import './HomePage.css';
 
+
 // CAMBIO 1: Recibimos 'properties' y 'loading' como props desde App.jsx
 const HomePage = ({ searchQuery = '', properties: allProperties, loading }) => {
   const [view, setView] = useState('grid');
@@ -104,6 +105,8 @@ const HomePage = ({ searchQuery = '', properties: allProperties, loading }) => {
 
   return (
     <div className="homepage-layout"> 
+       {/* <-- 2. Componente añadido */}
+
       {/* Filtros en móvil */}
       <Dialog.Root>
         <Dialog.Trigger asChild>
