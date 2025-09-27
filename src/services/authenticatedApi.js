@@ -2,7 +2,7 @@
  * Este archivo contiene las llamadas a la API que requieren
  * que el usuario haya iniciado sesión con Google.
  */
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 /**
  * Función genérica para realizar llamadas a endpoints protegidos.

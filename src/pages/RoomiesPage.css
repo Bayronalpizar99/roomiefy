@@ -44,12 +44,14 @@
 
 .dialog-content h2, .dialog-content h3 {
   color: var(--color-heading);
+  text-align: center;
   margin: 0 0 1rem 0;
 }
 
 .dialog-content p, .dialog-content li {
   color: var(--color-text);
   line-height: var(--line-height);
+  margin-left: 1.5rem;
 }
 
 .dialog-content li {
