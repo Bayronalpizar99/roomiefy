@@ -3,7 +3,6 @@
   justify-content: center;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 2.5rem; /* Espacio por encima del paginador */
 }
 
 .page-btn {
