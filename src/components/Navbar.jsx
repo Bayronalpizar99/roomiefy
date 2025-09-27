@@ -155,22 +155,22 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
         <NavigationMenu.List className="navbar-links desktop-only">
           <NavigationMenu.Item>
             <Link to="/" className={location.pathname === "/" ? "active" : ""}>
-              <HomeIcon /> Propiedades
+              <HomeIcon /> <span className="nav-link-text">Propiedades</span>
             </Link>
           </NavigationMenu.Item>
           <NavigationMenu.Item>
             <Link to="/roomies" className={location.pathname === "/roomies" ? "active" : ""}>
-              <AvatarIcon /> Roomies
+              <AvatarIcon /> <span className="nav-link-text">Roomies</span>
             </Link>
           </NavigationMenu.Item>
           <NavigationMenu.Item>
             {hasPublished ? (
               <Link to="/mis-propiedades" onClick={handlePublishClick} className={location.pathname === "/mis-propiedades" ? "active" : ""}>
-                <PlusCircledIcon /> Mis propiedades
+                <PlusCircledIcon /> <span className="nav-link-text">Mis propiedades</span>
               </Link>
             ) : (
               <Link to="/publicar" onClick={handlePublishClick} className={location.pathname === "/publicar" ? "active" : ""}>
-                <PlusCircledIcon /> Publicar
+                <PlusCircledIcon /> <span className="nav-link-text">Publicar</span>
               </Link>
             )}
           </NavigationMenu.Item>

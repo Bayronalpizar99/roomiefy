@@ -80,23 +80,35 @@
   padding: 0.6rem 1rem;
   border-radius: var(--border-radius);
   transition: all 0.2s ease-in-out;
-}
- 
- .navbar-links a:hover {
+} 
+
+.navbar-links a:hover {
    background-color: var(--color-button-bg);
    color: var(--color-text);
  }
 
  .navbar-links a.active {
-   background-color: var(--color-primary);
-   color: var(--color-text);
- }
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+/* Barra de búsqueda */
+.search-bar {
+  display: flex;
+  align-items: center;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: 0.5rem 0.25rem;
+  width: 100%;
+  max-width: 500px;
+  transition: all 0.2s ease-in-out;
+}
 
 .search-bar:focus-within {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.1);
 }
-{{ ... }}
 
 .search-button {
   background: var(--color-background);
@@ -119,11 +131,11 @@
 
 /* Light mode overrides for search button */
 body.light .search-button {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: var(--color-button-bg);
 }
 
 body.light .search-button:hover {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: var(--color-button-bg);
 }
 
 .search-bar svg {
@@ -169,7 +181,7 @@ body.light .search-button:hover {
 
 
 .icon-button:hover {
-  background-color: var(--color-input-bg);
+  background-color: var(--color-button-bg);
 }
 
 .notification-badge {
@@ -277,13 +289,13 @@ body.light .search-button:hover {
 }
 
 .mobile-nav-links a:hover {
-  color: var(--color-primary);
-  background-color: var(--color-input-bg);
+  background-color: var(--color-button-bg);
+  color: var(--color-text);
 }
 
 .mobile-nav-links a.active {
-  background-color: rgba(100, 108, 255, 0.1);
-  color: var(--color-primary);
+  background-color: var(--color-primary);
+  color: #ffffff;
   border-color: var(--color-primary);
 }
 
@@ -314,7 +326,7 @@ body.light .search-button:hover {
 }
 
 .mobile-action-button:hover {
-  background-color: var(--color-input-bg);
+  background-color: var(--color-button-bg);
   color: var(--color-primary);
 }
 
@@ -375,11 +387,29 @@ body.light .search-button:hover {
 }
 
 .close-search-button:hover {
+  background-color: var(--color-button-bg);
   color: var(--color-primary);
-  background-color: var(--color-input-bg);
 }
 
 /* Responsive breakpoints */
+
+/* Ocultar texto de los links de navegación en pantallas medianas */
+@media (min-width: 769px) and (max-width: 1280px) {
+  .nav-link-text {
+    display: none;
+  }
+
+  .navbar-links a {
+    padding: 0.75rem; /* Hacemos el botón más cuadrado */
+    gap: 0;
+    justify-content: center;
+  }
+
+  .navbar-left {
+    gap: 1rem; /* Reducimos el espacio entre logo y navegación */
+  }
+}
+
 @media (max-width: 1024px) {
   .navbar-left {
     gap: 2rem;
@@ -614,7 +644,7 @@ body.light .search-button:hover {
 }
 
 .dropdown-item:hover {
-  background-color: var(--color-background);
+  background-color: var(--color-button-bg);
   color: var(--color-primary);
 }
 
