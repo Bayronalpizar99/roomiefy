@@ -1,11 +1,9 @@
-// src/pages/EditPropertyPage.jsx
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { updateProperty } from '../services/api';
-// Cambiamos la importación para mayor claridad, ya que solo necesitamos los helpers
 import { CheckboxField, FileUploadBox } from './PublishPage';
 import './PublishStyles.css';
+import placeholderImage from '../assets/placeholder.jpg'; // Importa la imagen local
 
 const EditPropertyPage = ({ myProperties, onUpdateProperty }) => {
   const { propertyId } = useParams();
@@ -20,7 +18,7 @@ const EditPropertyPage = ({ myProperties, onUpdateProperty }) => {
     if (property) {
       setPropertyToEdit(property);
       setFormData({
-        title: property.name || property.title || '', // Usamos 'name' como fuente principal
+        title: property.name || property.title || '',
         location: property.location || '',
         description: property.description || '',
         price: property.price || '',
@@ -53,9 +51,26 @@ const EditPropertyPage = ({ myProperties, onUpdateProperty }) => {
     setFormData((prev) => ({ ...prev, files: uploadedFiles }));
   };
 
+  // --- INICIO DE LA MODIFICACIÓN ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
+
+    // Lógica para manejar la imagen
+    let newImagePreviewUrl = propertyToEdit.property_photo || placeholderImage;
+    if (formData.files.length > 0) {
+      // Si se subió un nuevo archivo, lo convertimos a Base64
+      try {
+        newImagePreviewUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(formData.files[0]);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = (error) => reject(error);
+        });
+      } catch (error) {
+        console.error("Error al leer el nuevo archivo de imagen:", error);
+      }
+    }
 
     const payload = {
       title: formData.title,
@@ -78,14 +93,12 @@ const EditPropertyPage = ({ myProperties, onUpdateProperty }) => {
     try {
       await updateProperty(propertyId, payload);
 
-      // --- ¡AQUÍ ESTÁ LA CORRECCIÓN CLAVE! ---
-      // Creamos el objeto actualizado para el estado, asegurándonos de que
-      // el campo 'name' (usado por la tarjeta) se actualice con el 'title' del formulario.
       const updatedPropertyForState = {
-        ...propertyToEdit,       // Mantenemos los datos originales (como la foto, dueño, etc.)
-        ...payload,              // Sobrescribimos con los nuevos datos del formulario
-        name: payload.title,     // ¡Aseguramos que 'name' se actualice!
-        square_meters: payload.area, // También actualizamos el área
+        ...propertyToEdit,
+        ...payload,
+        name: payload.title,
+        square_meters: payload.area,
+        property_photo: newImagePreviewUrl, // <-- Usamos la URL de la nueva imagen
       };
       
       onUpdateProperty(propertyId, updatedPropertyForState);
@@ -99,6 +112,7 @@ const EditPropertyPage = ({ myProperties, onUpdateProperty }) => {
       setSubmitting(false);
     }
   };
+  // --- FIN DE LA MODIFICACIÓN ---
 
   if (!formData) {
     return <div style={{ padding: '2rem', textAlign: 'center' }}>Cargando datos de la propiedad...</div>;

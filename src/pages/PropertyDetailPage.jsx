@@ -1,69 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useParams, useNavigate } from 'react-router-dom';
-import {
-  Share2,
-  Heart,
-  Bed,
-  Bath,
-  Crop,
-  ArrowLeft,
-  MessageSquare,
-  Phone,
-} from 'lucide-react';
+import React, { useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Share2, Heart, Bed, Bath, Crop, ArrowLeft, Phone } from 'lucide-react';
 import StarRating from '../components/StarRating';
-import { fetchProperties } from '../services/api';
 import './PropertyDetailPage.css';
 
-const PropertyDetailPage = () => {
-  const location = useLocation();
+// --- INICIO DE LA MODIFICACIÓN ---
+const PropertyDetailPage = ({ allProperties, loading }) => {
   const { propertyId } = useParams();
   const navigate = useNavigate();
 
-  const [property, setProperty] = useState(location.state?.property || null);
-  const [loading, setLoading] = useState(!property);
-  const [isFavorited, setIsFavorited] = useState(false);
+  // Buscamos la propiedad en la lista global que viene desde App.jsx
+  const property = useMemo(() => {
+    return allProperties.find(p => String(p.id) === String(propertyId));
+  }, [propertyId, allProperties]);
 
-  useEffect(() => {
-    const findProperty = async () => {
-      if (property) return;
-
-      setLoading(true);
-      try {
-        // --- INICIO DE LA CORRECCIÓN ---
-        const result = await fetchProperties(); // 1. Recibimos el objeto { data, error }
-
-        if (result.error) { // 2. Manejamos el caso de error primero
-          console.error("Error al buscar la propiedad:", result.error);
-          setProperty(null);
-          return;
-        }
-
-        // 3. Extraemos el array del objeto 'data'. Asumimos que está en una clave 'properties'.
-        // Si no está anidado, sería solo 'result.data'
-        const propertiesArray = result.data.properties || result.data || [];
-        
-        // 4. Buscamos la propiedad en el array corregido
-        const foundProperty = propertiesArray.find(p => p.id == propertyId);
-        
-        if (foundProperty) {
-          setProperty(foundProperty);
-        } else {
-          setProperty(null); 
-        }
-        // --- FIN DE LA CORRECCIÓN ---
-
-      } catch (error) {
-        console.error("Error en el componente:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    findProperty();
-  }, [propertyId, property]);
-
-  // ... (El resto del componente sigue igual)
-
+  // (El estado para 'favorited' se mantiene local al componente)
+  const [isFavorited, setIsFavorited] = React.useState(false);
+  
   const handleShare = () => {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(() => {
@@ -86,6 +39,7 @@ const PropertyDetailPage = () => {
       </div>
     );
   }
+  // --- FIN DE LA MODIFICACIÓN ---
 
   return (
     <div className="property-detail-container">
@@ -172,7 +126,7 @@ const PropertyDetailPage = () => {
             
             <div className="action-buttons">
               <button className="action-btn primary reserve-btn">
-                <MessageSquare size={18} /> Contactar propietario
+                 Contactar propietario
               </button>
               <button className="action-btn share-btn" onClick={handleShare}>
                 <Share2 size={18} /> Compartir

@@ -1,7 +1,3 @@
-/**
- * Este archivo contiene las llamadas a la API que requieren
- * que el usuario haya iniciado sesión con Google.
- */
 const apiUrl = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 /**
@@ -22,8 +18,8 @@ export const callProtectedApi = async (endpoint, idToken, options = {}) => {
   }
 
   const config = {
-    method: 'GET', // Método por defecto
-    ...options,    // Sobrescribe con las opciones que pases
+    method: 'GET', 
+    ...options,    
     headers: {
       ...options.headers,
       'Authorization': `Bearer ${idToken}`,
@@ -38,7 +34,6 @@ export const callProtectedApi = async (endpoint, idToken, options = {}) => {
       throw new Error(`Error de API: ${response.status} ${response.statusText}`);
     }
 
-    // No intenta parsear JSON si la respuesta no tiene contenido (ej. un 204 No Content)
     if (response.status === 204) {
       return null;
     }

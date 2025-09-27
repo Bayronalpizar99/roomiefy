@@ -199,9 +199,6 @@ textarea {
   object-fit: cover;
 }
 
-/* --- Estilo para Vivienda --- */
-
-/* Radio buttons como tarjetas */
 .radio-group {
   display: flex;
   gap: 1rem;
@@ -238,7 +235,6 @@ textarea {
   box-shadow: 0 0 0 3px rgba(109,40,217,0.15);
 }
 
-/* Radix Slider para presupuesto*/
 .slider-root {
   position: relative;
   display: flex;
