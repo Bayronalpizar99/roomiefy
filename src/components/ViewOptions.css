@@ -6,8 +6,7 @@
   justify-content: flex-start;
   margin-bottom: 1.5rem;
   gap: 1rem;
-  /* CAMBIO: Añadimos padding para alinear con las tarjetas */
-  padding-left: 1rem;
+  max-width: 95%;
 }
 
 @media (max-width: 640px) {

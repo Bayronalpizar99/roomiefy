@@ -12,7 +12,7 @@
 .main-content-area {
   flex: 1; 
   overflow-y: auto; /* Permite el scroll vertical */
-  padding: 1rem 2rem 2rem; /* Mueve el padding aquí */
+  padding-top: 1rem; /* Mueve el padding aquí */
   display: flex;
   flex-direction: column;
 }
@@ -20,4 +20,30 @@
 .scroll-area-viewport {
   height: 100%;
   width: 100%;
+}
+
+/* Desactivar scroll por completo (usado en /roomies estático) */
+.main-content-area.no-scroll {
+  overflow: hidden !important;
+  padding-top: 0 !important; /* Evita sumar altura que provoque scroll residual */
+  overscroll-behavior: none; /* Bloquea el encadenamiento de scroll */
+}
+
+.no-scroll-viewport {
+  overflow: hidden !important;
+  height: 100% !important;
+  overscroll-behavior: none; /* Evita pequeños rebotes/scrolls */
+}
+
+/* Bloqueo a nivel body para que la rueda del ratón no desplace nada */
+body.lock-scroll {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  height: 100vh; /* Previene rebotes en algunos navegadores */
+}
+
+/* Ajuste específico para la página Roomies cuando el scroll está bloqueado */
+.main-content-area.no-scroll .roomies-page {
+  min-height: 0 !important;
+  height: 100% !important;
 }

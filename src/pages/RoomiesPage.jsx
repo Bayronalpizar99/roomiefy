@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Flex, Box, Text, Button, Badge, Heading } from '@radix-ui/themes';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -17,12 +17,14 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
   const [totalCount, setTotalCount] = useState(null);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const navigate = useNavigate();
   
   const [view, setView] = useState('grid');
   const [sortOrder, setSortOrder] = useState('recent');
   const [currentPage, setCurrentPage] = useState(1);
-  const roommatesPerPage = 12;
+  const roommatesPerPage = 8; // Mostrar siempre 6 por página (prototipo)
   const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
 
   // Límites fijos solicitados
@@ -42,6 +44,14 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
     minSocial: 3,
   });
   
+  // Detectar cambio de viewport para habilitar modo móvil (scroll infinito)
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   // Update filters when searchQuery changes
   useEffect(() => {
     setFilters(prev => ({
@@ -54,7 +64,12 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
 
   useEffect(() => {
     const loadRoommates = async () => {
-      setLoading(true);
+      const appending = isMobile && currentPage > 1;
+      if (appending) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
       try {
         const sortMap = {
           'recent': 'recent',
@@ -80,34 +95,76 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
         });
 
         if (error) {
-          setRoommates([]);
-          setTotalCount(null);
-          setHasNextPage(false);
+          // Si estamos agregando en móvil, no limpiamos resultados previos
+          if (!(isMobile && currentPage > 1)) {
+            setRoommates([]);
+            setTotalCount(null);
+            setHasNextPage(false);
+          }
           setToast({ visible: true, type: 'error', message: `No se pudieron cargar los roomies. ${error}` });
         } else {
-          const items = Array.isArray(data) ? data : [];
-          setRoommates(items);
-          const total = meta?.total ?? null;
+          const rawItems = Array.isArray(data) ? data : [];
+          const totalFromMeta = meta?.total;
+          let total = Number.isFinite(totalFromMeta) ? Number(totalFromMeta) : null;
+
+          // Fallback: si la API devuelve más elementos de los solicitados, hacemos paginación en cliente
+          const sliceStart = (currentPage - 1) * roommatesPerPage;
+          const needsClientPaging = rawItems.length > roommatesPerPage;
+          const pageItems = needsClientPaging
+            ? rawItems.slice(sliceStart, sliceStart + roommatesPerPage)
+            : rawItems;
+
+          // En móvil (scroll infinito) agregamos; en escritorio reemplazamos siempre.
+          if (isMobile && currentPage > 1) {
+            setRoommates(prev => {
+              const existingIds = new Set(prev.map((it) => it.id));
+              const toAdd = pageItems.filter((it) => !existingIds.has(it.id));
+              return [...prev, ...toAdd];
+            });
+          } else {
+            setRoommates(pageItems);
+          }
+
+          // Determinar total y hasNextPage
+          if (!Number.isFinite(total)) {
+            // Si no hay total del backend y estamos paginando en cliente, usamos el largo del dataset
+            if (needsClientPaging) {
+              total = rawItems.length;
+            }
+          }
           setTotalCount(Number.isFinite(total) ? Number(total) : null);
+
           if (Number.isFinite(total)) {
             const totalPages = Math.ceil(total / roommatesPerPage);
             setHasNextPage(currentPage < totalPages);
           } else {
-            // Fallback: si no sabemos el total, estimamos siguiente página por tamaño de página
-            setHasNextPage(items.length === roommatesPerPage);
+            // Fallback cuando no hay total: si recibimos al menos pageSize, podríamos tener más
+            // y si estamos rebanando en cliente, verificamos contra el dataset crudo
+            if (needsClientPaging) {
+              setHasNextPage(sliceStart + pageItems.length < rawItems.length);
+            } else {
+              setHasNextPage(rawItems.length >= roommatesPerPage);
+            }
           }
         }
       } catch (error) {
         console.error('Error al cargar roommates:', error);
-        setRoommates([]);
-        setTotalCount(null);
-        setHasNextPage(false);
+        if (!(isMobile && currentPage > 1)) {
+          setRoommates([]);
+          setTotalCount(null);
+          setHasNextPage(false);
+        }
+        setToast({ visible: true, type: 'error', message: `No se pudieron cargar los roomies. ${error}` });
       } finally {
-        setLoading(false);
+        if (isMobile && currentPage > 1) {
+          setLoadingMore(false);
+        } else {
+          setLoading(false);
+        }
       }
     };
     loadRoommates();
-  }, [currentPage, filters, sortOrder]);
+  }, [currentPage, filters, sortOrder, isMobile]);
 
   // Paginación basada en servidor
   const totalPages = Number.isFinite(totalCount) ? Math.ceil(totalCount / roommatesPerPage) : null;
@@ -117,9 +174,27 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
     document.querySelector('.scroll-area-viewport')?.scrollTo(0, 0);
   };
 
+  // Reiniciar a la primera página cuando cambian filtros/orden o cambia el modo (móvil/desktop)
   useEffect(() => {
+    setRoommates([]);
     setCurrentPage(1);
-  }, [filters, sortOrder]);
+  }, [filters, sortOrder, isMobile]);
+
+  // Scroll infinito en móvil usando IntersectionObserver
+  const loadMoreRef = useRef(null);
+  useEffect(() => {
+    if (!isMobile) return; // Solo en móvil
+    const target = loadMoreRef.current;
+    if (!target) return;
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && hasNextPage && !loading && !loadingMore) {
+        setCurrentPage((prev) => prev + 1);
+      }
+    }, { root: null, rootMargin: '200px', threshold: 0 });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [isMobile, hasNextPage, loading, loadingMore]);
 
   return (
     <div className="roomies-page">
@@ -203,7 +278,6 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
 
         <div className="roomies-results">
           <div className="roomies-header">
-            <Heading as="h1" size="6" mb="2">Encuentra tu Roomie Ideal 👋</Heading>
             <Text size="2" color="gray">
               {Number.isFinite(totalCount)
                 ? `${totalCount} ${totalCount === 1 ? 'roomie encontrado' : 'roomies encontrados'}`
@@ -238,9 +312,19 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
                   />
                 ))}
               </div>
+              {/* Indicador y sentinel para scroll infinito en móvil */}
+              {isMobile && (
+                <>
+                  {loadingMore && (
+                    <div className="infinite-loader">Cargando más...</div>
+                  )}
+                  {/* Sentinel: cuando entra en viewport, pedimos más */}
+                  <div ref={loadMoreRef} className="infinite-sentinel" aria-hidden="true" />
+                </>
+              )}
               
-              {(Number.isFinite(totalPages) ? totalPages > 1 : (currentPage > 1 || hasNextPage)) && (
-                <div className="pagination-container">
+              {!isMobile && (Number.isFinite(totalPages) ? totalPages > 1 : (currentPage > 1 || hasNextPage)) && (
+                <div className="pagination-container desktop-only">
                   {Number.isFinite(totalPages) ? (
                     <Pagination
                       currentPage={currentPage}
