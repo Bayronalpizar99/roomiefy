@@ -23,12 +23,10 @@
   background-color: var(--color-input-bg);
 }
 
-/* --- INICIO DE LA MODIFICACIÓN --- */
 .property-header {
   margin-bottom: 2rem; 
-  text-align: justify; /* El texto ahora está justificado */
+  text-align: justify;
 }
-/* --- FIN DE LA MODIFICACIÓN --- */
 
 .property-main-image img {
   width: 100%;
@@ -46,17 +44,17 @@
 }
 
 .property-title {
-  font-size: 2.5rem; /* Cambia el tamaño del texto */
+  font-size: 2.5rem;
   color: var(--color-text);
   margin-bottom: 0.5rem;
-  text-align: left; /* Alineación a la izquierda */
+  text-align: left;
 }
 
 .property-location-detail {
   font-size: 1.1rem;
   color: var(--color-text-secondary);
   margin-bottom: 0;
-  text-align: left; /* Alineación a la izquierda */
+  text-align: left;
 }
 
 .property-stats-detail {
@@ -100,7 +98,9 @@
 .property-sidebar {
   position: sticky;
   top: 2rem;
-  margin-top: 2rem;
+  /* --- INICIO DEL CAMBIO --- */
+  margin-top: 4.5rem; /* Ajustado para alinear con la primera línea divisora */
+  /* --- FIN DEL CAMBIO --- */
 }
 
 .actions-box {
@@ -125,7 +125,7 @@
 .action-buttons {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .action-btn {

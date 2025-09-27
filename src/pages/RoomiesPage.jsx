@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Flex, Box, Text, Button, Badge, Heading } from '@radix-ui/themes';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -10,9 +10,12 @@ import Pagination from '../components/Pagination';
 import RoomieFilters from '../components/RoomieFilters';
 import './RoomiesPage.css';
 import FirstTimeHelp from '../components/FirstTimeHelp';
+import Toast from '../components/Toast';
 
 const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
-  const [allRoommates, setAllRoommates] = useState([]);  
+  const [roommates, setRoommates] = useState([]);
+  const [totalCount, setTotalCount] = useState(null);
+  const [hasNextPage, setHasNextPage] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   
@@ -20,6 +23,7 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
   const [sortOrder, setSortOrder] = useState('recent');
   const [currentPage, setCurrentPage] = useState(1);
   const roommatesPerPage = 12;
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
 
   // Límites fijos solicitados
   const [minBudget, setMinBudget] = useState(100);
@@ -52,139 +56,61 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
     const loadRoommates = async () => {
       setLoading(true);
       try {
-        const data = await fetchRoommates();
-        if (data && data.length > 0) {
-          // Mantenemos los rangos fijos solicitados
-          setFilters(prev => ({ ...prev, priceRange: [minBudget, maxBudget], ageRange: [minAge, maxAge] }));
-          setAllRoommates(data);
+        const sortMap = {
+          'recent': 'recent',
+          'rated': 'rated_desc',
+          'price-asc': 'price_asc',
+          'price-desc': 'price_desc',
+        };
+
+        const { data, meta, error } = await fetchRoommates({
+          page: currentPage,
+          pageSize: roommatesPerPage,
+          search: filters.location,
+          priceMin: filters.priceRange?.[0],
+          priceMax: filters.priceRange?.[1],
+          ageMin: filters.ageRange?.[0],
+          ageMax: filters.ageRange?.[1],
+          hasApartment: filters.hasApartment,
+          verifiedOnly: filters.verifiedOnly,
+          minCleanliness: filters.minCleanliness,
+          minSocial: filters.minSocial,
+          interests: filters.interests ? Array.from(filters.interests) : [],
+          sort: sortMap[sortOrder] || 'recent',
+        });
+
+        if (error) {
+          setRoommates([]);
+          setTotalCount(null);
+          setHasNextPage(false);
+          setToast({ visible: true, type: 'error', message: `No se pudieron cargar los roomies. ${error}` });
+        } else {
+          const items = Array.isArray(data) ? data : [];
+          setRoommates(items);
+          const total = meta?.total ?? null;
+          setTotalCount(Number.isFinite(total) ? Number(total) : null);
+          if (Number.isFinite(total)) {
+            const totalPages = Math.ceil(total / roommatesPerPage);
+            setHasNextPage(currentPage < totalPages);
+          } else {
+            // Fallback: si no sabemos el total, estimamos siguiente página por tamaño de página
+            setHasNextPage(items.length === roommatesPerPage);
+          }
         }
       } catch (error) {
         console.error('Error al cargar roommates:', error);
-        setAllRoommates([]);
+        setRoommates([]);
+        setTotalCount(null);
+        setHasNextPage(false);
       } finally {
         setLoading(false);
       }
     };
     loadRoommates();
-  }, []);
+  }, [currentPage, filters, sortOrder]);
 
-  const filteredRoommates = useMemo(() => {
-    let list = [...allRoommates];
-
-    // Search functionality - search in name, location, bio, and interests
-    if (filters.location) {
-      const searchTerm = filters.location.toLowerCase().trim();
-      if (searchTerm) {
-        list = list.filter(roommate => {
-          const searchIn = [
-            roommate.name || '',
-            roommate.location || '',
-            roommate.bio || '',
-            ...(roommate.interests || []).join(' ')
-          ].join(' ').toLowerCase();
-          
-          return searchIn.includes(searchTerm);
-        });
-      }
-    }
-
-    // Presupuesto: rango que se solape con el seleccionado
-    list = list.filter(r => {
-      const rbMin = r?.budget?.min ?? r?.budget ?? 0;
-      const rbMax = r?.budget?.max ?? r?.budget ?? rbMin;
-      const [fMin, fMax] = filters.priceRange;
-      return !(rbMax < fMin || rbMin > fMax);
-    });
-
-    // Edad dentro del rango seleccionado (si se conoce)
-    list = list.filter(r => {
-      const age = r?.age;
-      if (!Number.isFinite(age)) return true;
-      const [aMin, aMax] = filters.ageRange;
-      return age >= aMin && age <= aMax;
-    });
-
-    // Tiene casa
-    if (filters.hasApartment !== 'any') {
-      const desired = filters.hasApartment === 'yes';
-      list = list.filter(r => Boolean(r?.hasApartment) === desired);
-    }
-
-    // Solo verificados
-    if (filters.verifiedOnly) {
-      list = list.filter(r => Boolean(r?.verified));
-    }
-
-    // Filtros de niveles mínimos (si existen)
-    list = list.filter(r => {
-      const cleanScore = r?.cleanlinessScore ?? ({
-        'Muy limpio': 5,
-        'Limpio': 4,
-        'Promedio': 3,
-        'Relajado': 2,
-        'Desordenado': 1,
-      }[r?.cleanlinessLevel] ?? null);
-      if (cleanScore !== null && cleanScore < (filters.minCleanliness ?? 1)) return false;
-
-      const socialScore = r?.socialScore ?? ({
-        'Introvertido': 2,
-        'Equilibrado': 3,
-        'Extrovertido': 5,
-      }[r?.socialLevel] ?? null);
-      if (socialScore !== null && socialScore < (filters.minSocial ?? 1)) return false;
-      return true;
-    });
-
-    // Intereses: todos los seleccionados deben estar presentes
-    if (filters.interests.size > 0) {
-      list = list.filter(r => {
-        const interests = r?.interests || [];
-        return [...filters.interests].every(it => interests.includes(it));
-      });
-    }
-
-      // Crear una copia del array para no mutar el estado original
-    const sortedList = [...list];
-    
-    // Ordenar según la opción seleccionada
-    switch (sortOrder) {
-      case 'price-asc': {
-        return sortedList.sort((a, b) => {
-          const aPrice = a?.budget?.max ?? 0;
-          const bPrice = b?.budget?.max ?? 0;
-          return aPrice - bPrice;
-        });
-      }
-      case 'price-desc': {
-        return sortedList.sort((a, b) => {
-          const aPrice = a?.budget?.max ?? 0;
-          const bPrice = b?.budget?.max ?? 0;
-          return bPrice - aPrice;
-        });
-      }
-      case 'rated': {
-        return sortedList.sort((a, b) => {
-          const aRating = a?.rating ?? 0;
-          const bRating = b?.rating ?? 0;
-          if (aRating === bRating) {
-            // Si tienen el mismo rating, ordenar por ID (más reciente primero)
-            return (b?.id ?? 0) - (a?.id ?? 0);
-          }
-          return bRating - aRating;
-        });
-      }
-      case 'recent':
-      default: {
-        return sortedList.sort((a, b) => (b?.id ?? 0) - (a?.id ?? 0));
-      }
-    }
-  }, [allRoommates, filters, sortOrder]);
-
-  const totalPages = Math.ceil(filteredRoommates.length / roommatesPerPage) || 1;
-  const currentRoommates = useMemo(() => {
-    const startIndex = (currentPage - 1) * roommatesPerPage;
-    return filteredRoommates.slice(startIndex, startIndex + roommatesPerPage);
-  }, [filteredRoommates, currentPage]);
+  // Paginación basada en servidor
+  const totalPages = Number.isFinite(totalCount) ? Math.ceil(totalCount / roommatesPerPage) : null;
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -279,7 +205,9 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
           <div className="roomies-header">
             <Heading as="h1" size="6" mb="2">Encuentra tu Roomie Ideal</Heading>
             <Text size="2" color="gray">
-              {filteredRoommates.length} {filteredRoommates.length === 1 ? 'roomie encontrado' : 'roomies encontrados'}
+              {Number.isFinite(totalCount)
+                ? `${totalCount} ${totalCount === 1 ? 'roomie encontrado' : 'roomies encontrados'}`
+                : `Mostrando ${roommates.length} resultados`}
             </Text>
           </div>
 
@@ -294,32 +222,14 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
 
           {loading ? (
             <div className="loading-message">Cargando roomies...</div>
-          ) : filteredRoommates.length === 0 ? (
+          ) : roommates.length === 0 ? (
             <div className="no-results">
               <Text as="p" mb="3">No se encontraron roomies que coincidan con tu búsqueda.</Text>
-              <Button 
-                variant="soft" 
-                onClick={() => {
-                  setFilters({
-                    location: '',
-                    priceRange: [minBudget, maxBudget],
-                    ageRange: [minAge, maxAge],
-                    hasApartment: 'any',
-                    interests: new Set(),
-                    verifiedOnly: false,
-                    minCleanliness: 3,
-                    minSocial: 3,
-                  });
-                  onSearchQueryChange?.('');
-                }}
-              >
-                Limpiar filtros
-              </Button>
             </div>
           ) : (
             <>
               <div className={view === 'grid' ? 'roomies-grid' : 'roomies-list'}>
-                {currentRoommates.map((roommate) => (
+                {roommates.map((roommate) => (
                   <RoommateCard 
                     key={roommate.id} 
                     roommate={roommate} 
@@ -329,19 +239,43 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
                 ))}
               </div>
               
-              {totalPages > 1 && (
+              {(Number.isFinite(totalPages) ? totalPages > 1 : (currentPage > 1 || hasNextPage)) && (
                 <div className="pagination-container">
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={setCurrentPage}
-                  />
+                  {Number.isFinite(totalPages) ? (
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={(page) => {
+                        setCurrentPage(page);
+                        document.querySelector('.scroll-area-viewport')?.scrollTo(0, 0);
+                      }}
+                    />
+                  ) : (
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={0}
+                      hasPrev={currentPage > 1}
+                      hasNext={hasNextPage}
+                      hideNumbers
+                      onPageChange={(page) => {
+                        setCurrentPage(page);
+                        document.querySelector('.scroll-area-viewport')?.scrollTo(0, 0);
+                      }}
+                    />
+                  )}
                 </div>
               )}
             </>
           )}
         </div>
       </div>
+      <Toast
+        visible={toast.visible}
+        type={toast.type}
+        message={toast.message}
+        onClose={() => setToast(prev => ({ ...prev, visible: false }))}
+        position="bottom-right"
+      />
     </div>
   );
 };

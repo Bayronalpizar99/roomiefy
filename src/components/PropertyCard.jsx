@@ -34,7 +34,7 @@ const PropertyCard = ({ property, view = 'grid', showActions = false, onDelete, 
             <span className="amenity-tag">+{hiddenAmenitiesCount}</span>
           )}
         </div>
-        <p className="price">${price}/noche</p>
+        <p className="price">${price}/mes</p>
         <div className="owner-info">
           <div className="owner-details">
             <img src={owner_profile_pic} alt={owner_name} className="owner-pic" />

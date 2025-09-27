@@ -16,6 +16,7 @@ import { useTheme } from "./hooks/useTheme";
 import LoginModal from './components/LoginModal';
 import { fetchProperties, deleteProperty, updateProperty } from './services/api';
 import "./App.css";
+import Toast from './components/Toast';
 
 function App() {
   const { theme, toggleTheme } = useTheme();
@@ -26,13 +27,23 @@ function App() {
   const [myProperties, setMyProperties] = useState([]);
   const [hasPublished, setHasPublished] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      const propertiesData = await fetchProperties();
-      setAllProperties(propertiesData);
-      setLoading(false);
+      try {
+        const { data, error } = await fetchProperties();
+        setAllProperties(Array.isArray(data) ? data : []);
+        if (error) {
+          setToast({ visible: true, type: 'error', message: `No se pudieron cargar las propiedades. ${error}` });
+        }
+      } catch (e) {
+        setAllProperties([]);
+        setToast({ visible: true, type: 'error', message: 'No se pudieron cargar las propiedades. Fallo inesperado.' });
+      } finally {
+        setLoading(false);
+      }
     };
     loadData();
   }, []);
@@ -57,15 +68,11 @@ function App() {
     }
   };
 
-  // --- INICIO DE NUEVOS CAMBIOS ---
-  // 3. Creamos la función para ACTUALIZAR una propiedad en ambas listas
   const handleUpdateProperty = (propertyId, updatedProperty) => {
     const updateList = (list) => list.map(p => (String(p.id) === String(propertyId) ? updatedProperty : p));
-    
     setAllProperties(prev => updateList(prev));
     setMyProperties(prev => updateList(prev));
   };
-  // --- FIN DE NUEVOS CAMBIOS ---
 
   const handleSearch = (query) => setSearchQuery(query);
   const [currentPage, setCurrentPage] = useState(1);
@@ -90,19 +97,14 @@ function App() {
         <ScrollArea.Root className="main-content-area">
           <ScrollArea.Viewport className="scroll-area-viewport">
             <Routes>
-              {/* Rutas existentes (sin cambios) */}
               <Route path="/" element={<HomePage searchQuery={searchQuery} properties={allProperties} loading={loading} />} />
               <Route path="roomies" element={<RoomiesPage searchQuery={searchQuery} onSearchQueryChange={handleSearch} currentPage={currentPage} setCurrentPage={setCurrentPage} />} />
               <Route path="publicar" element={<PublishPage onAddProperty={handleAddProperty} />} />
               <Route path="/mis-propiedades" element={<MyPropertiesPage myProperties={myProperties} onDeleteProperty={handleDeleteProperty} />} />
-              
-              {/* 4. Añadimos la NUEVA RUTA para la página de edición */}
               <Route 
                 path="/propiedad/editar/:propertyId" 
                 element={<EditPropertyPage myProperties={myProperties} onUpdateProperty={handleUpdateProperty} />} 
               />
-
-              {/* Resto de rutas (sin cambios) */}
               <Route path="/propiedad/:propertyId" element={<PropertyDetailPage />} />
               <Route path="/roomie/:roomieId" element={<RoomieDetailPage />} />
               <Route path="perfil" element={<ProfilePage />} />
@@ -114,6 +116,13 @@ function App() {
           </ScrollArea.Scrollbar>
         </ScrollArea.Root>
         <LoginModal />
+        <Toast
+          visible={toast.visible}
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(prev => ({ ...prev, visible: false }))}
+          position="bottom-right"
+        />
       </div>
     </AuthProvider>
   );
