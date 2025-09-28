@@ -12,8 +12,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import * as Avatar from '@radix-ui/react-avatar';
-import { fetchRoommates } from '../services/api';
-import { createConversation } from '../services/api';
+import { fetchRoommateById, createConversation } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import './RoomieDetailPage.css';
 
@@ -69,24 +68,26 @@ const RoomieDetailPage = () => {
 
   useEffect(() => {
     const load = async () => {
-      // 3. Si ya tenemos un roommate en el estado, no hacemos nada.
-      if (roommate) return;
-      
-      setLoading(true);
+      // Siempre refrescamos desde la API por ID; si venimos con state, renderizamos al instante sin spinner.
+      if (!roomieId) return;
+      if (!roommateFromState && !roommate) setLoading(true);
       try {
-        const list = await fetchRoommates();
-        const found = list.find((r) => String(r.id) === String(roomieId));
-        setRoommate(found || null);
+        const { data, error } = await fetchRoommateById(roomieId);
+        if (error) {
+          console.error(error);
+          if (!roommateFromState && !roommate) setRoommate(null);
+        } else {
+          setRoommate(data || null);
+        }
       } catch (e) {
         console.error(e);
-        setRoommate(null);
+        if (!roommateFromState && !roommate) setRoommate(null);
       } finally {
-        setLoading(false);
+        if (!roommateFromState && !roommate) setLoading(false);
       }
     };
     load();
-    // 4. La dependencia ahora es el estado local 'roommate'.
-  }, [roomieId, roommate]);
+  }, [roomieId]);
 
   const budgetText = useMemo(() => {
     const fmt = (n) => `$${new Intl.NumberFormat('es-MX').format(Number(n))}`;
@@ -102,7 +103,21 @@ const RoomieDetailPage = () => {
   const cleanlinessLevel = roommate?.cleanlinessLevel ?? null;
   const socialLevel = roommate?.socialLevel ?? null;
 
+  // Etiquetas amigables si el backend envía niveles numéricos (1-5)
+  const cleanlinessLabel = useMemo(() => {
+    if (typeof cleanlinessLevel === 'number') return `${cleanlinessLevel}/5`;
+    if (typeof cleanlinessLevel === 'string' && cleanlinessLevel.trim() !== '' && !isNaN(Number(cleanlinessLevel))) {
+      return `${Number(cleanlinessLevel)}/5`;
+    }
+    return cleanlinessLevel || null;
+  }, [cleanlinessLevel]);
+
   const cleanlinessPercent = useMemo(() => {
+    if (typeof cleanlinessLevel === 'number') return Math.max(0, Math.min(100, cleanlinessLevel * 20));
+    if (typeof cleanlinessLevel === 'string' && cleanlinessLevel.trim() !== '' && !isNaN(Number(cleanlinessLevel))) {
+      const n = Number(cleanlinessLevel);
+      return Math.max(0, Math.min(100, n * 20));
+    }
     const map = {
       'Muy limpio': 100,
       'Limpio': 80,
@@ -113,7 +128,20 @@ const RoomieDetailPage = () => {
     return map[cleanlinessLevel] ?? null;
   }, [cleanlinessLevel]);
 
+  const socialLabel = useMemo(() => {
+    if (typeof socialLevel === 'number') return `${socialLevel}/5`;
+    if (typeof socialLevel === 'string' && socialLevel.trim() !== '' && !isNaN(Number(socialLevel))) {
+      return `${Number(socialLevel)}/5`;
+    }
+    return socialLevel || null;
+  }, [socialLevel]);
+
   const socialPercent = useMemo(() => {
+    if (typeof socialLevel === 'number') return Math.max(0, Math.min(100, socialLevel * 20));
+    if (typeof socialLevel === 'string' && socialLevel.trim() !== '' && !isNaN(Number(socialLevel))) {
+      const n = Number(socialLevel);
+      return Math.max(0, Math.min(100, n * 20));
+    }
     const map = {
       'Introvertido': 20,
       'Equilibrado': 50,
@@ -122,6 +150,8 @@ const RoomieDetailPage = () => {
     if (!socialLevel) return null;
     return map[socialLevel] ?? null;
   }, [socialLevel]);
+
+  // Nota: showLifestyleSection se calcula después de policyItems para evitar TDZ
 
   // Galería de fotos del apartamento (solo datos reales si existen)
   const apartmentPhotos = useMemo(() => {
@@ -135,14 +165,79 @@ const RoomieDetailPage = () => {
   // Políticas dinámicas (solo si existen en los datos)
   const policyItems = useMemo(() => {
     const items = [];
-    const pets = roommate?.allowsPets ?? roommate?.petsAllowed ?? roommate?.petFriendly;
+    const pets = roommate?.acceptsPets ?? roommate?.allowsPets ?? roommate?.petsAllowed ?? roommate?.petFriendly ?? roommate?.pet_friendly;
     if (pets !== undefined) items.push({ key: 'pets', label: 'Mascotas', ok: !!pets });
-    const smoke = roommate?.allowsSmoking ?? roommate?.smokingAllowed ?? roommate?.smoker;
+    const smoke = roommate?.acceptsSmokers ?? roommate?.acceptsSmoking ?? roommate?.allowsSmoking ?? roommate?.smokingAllowed ?? roommate?.smokeFriendly ?? roommate?.smoker;
     if (smoke !== undefined) items.push({ key: 'smoke', label: 'Fumadores', ok: !!smoke });
-    const guests = roommate?.allowsGuests ?? roommate?.guestsAllowed;
+    const guests = roommate?.acceptsGuests ?? roommate?.allowsGuests ?? roommate?.guestsAllowed ?? roommate?.guestFriendly ?? roommate?.visitorsAllowed;
     if (guests !== undefined) items.push({ key: 'guests', label: 'Invitados', ok: !!guests });
     return items;
   }, [roommate]);
+
+  // Idiomas
+  const languageList = useMemo(() => {
+    const acc = [];
+    const norm = (v) => {
+      if (v == null) return null;
+      if (typeof v === 'string') return v.trim();
+      if (typeof v === 'number') return String(v);
+      if (typeof v === 'object') {
+        return (
+          v.name || v.label || v.value || v.language || v.lang || v.code || v.id || JSON.stringify(v)
+        );
+      }
+      return String(v);
+    };
+    const addArr = (arr) => {
+      if (Array.isArray(arr)) {
+        for (const it of arr) {
+          const n = norm(it);
+          if (n) acc.push(n);
+        }
+      }
+    };
+    const addStr = (str) => {
+      if (typeof str === 'string') {
+        for (const part of str.split(',')) {
+          const n = norm(part);
+          if (n) acc.push(n);
+        }
+      }
+    };
+    const addObjMap = (obj) => {
+      if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+        for (const v of Object.values(obj)) {
+          const n = norm(v);
+          if (n) acc.push(n);
+        }
+      }
+    };
+
+    // Planos
+    addArr(roommate?.languages);
+    addArr(roommate?.idiomas);
+    addArr(roommate?.spokenLanguages);
+    addArr(roommate?.langs);
+    addStr(roommate?.languages);
+    addStr(roommate?.idiomas);
+    addStr(roommate?.language);
+    addStr(roommate?.idioma);
+    addObjMap(roommate?.languages);
+
+    // Anidados en profile
+    addArr(roommate?.profile?.languages);
+    addArr(roommate?.profile?.idiomas);
+    addStr(roommate?.profile?.languages);
+    addStr(roommate?.profile?.idiomas);
+    addObjMap(roommate?.profile?.languages);
+
+    // Normalizar y deduplicar
+    return Array.from(new Set(acc.map(s => String(s).trim()).filter(Boolean)));
+  }, [roommate]);
+
+  const showLifestyleSection = useMemo(() => {
+    return (cleanlinessPercent != null) || (socialPercent != null) || policyItems.length > 0;
+  }, [cleanlinessPercent, socialPercent, policyItems]);
 
   if (loading) {
     return <div className="roomie-detail-container">Cargando perfil...</div>;
@@ -236,15 +331,15 @@ const RoomieDetailPage = () => {
           )}
 
           {/* Preferencias y estilo de vida (solo si hay datos) */}
-          {(cleanlinessLevel || socialLevel || policyItems.length > 0) && (
+          {showLifestyleSection && (
             <section className="section card-surface">
               <h2>Preferencias y estilo de vida</h2>
 
-              {cleanlinessLevel && cleanlinessPercent != null && (
+              {cleanlinessPercent != null && (
                 <div className="progress-row">
                   <div className="progress-labels">
                     <span>Nivel de limpieza</span>
-                    <span className="muted">{cleanlinessLevel}</span>
+                    <span className="muted">{cleanlinessLabel}</span>
                   </div>
                   <div className="progress-bar">
                     <div className="progress-fill" style={{ width: `${cleanlinessPercent}%` }} />
@@ -252,11 +347,11 @@ const RoomieDetailPage = () => {
                 </div>
               )}
 
-              {socialLevel && socialPercent != null && (
+              {socialPercent != null && (
                 <div className="progress-row">
                   <div className="progress-labels">
                     <span>Nivel social</span>
-                    <span className="muted">{socialLevel}</span>
+                    <span className="muted">{socialLabel}</span>
                   </div>
                   <div className="progress-bar">
                     <div className="progress-fill light" style={{ width: `${socialPercent}%` }} />
@@ -286,6 +381,20 @@ const RoomieDetailPage = () => {
                 ))
               ) : (
                 <span className="muted">Sin intereses especificados</span>
+              )}
+            </div>
+          </section>
+
+          {/* Idiomas */}
+          <section className="section card-surface">
+            <h2>Idiomas</h2>
+            <div className="interests">
+              {languageList.length ? (
+                languageList.map((lang) => (
+                  <span key={lang} className="tag">{lang}</span>
+                ))
+              ) : (
+                <span className="muted">Sin idiomas especificados</span>
               )}
             </div>
           </section>

@@ -1,0 +1,90 @@
+.welcome-tour-dialog {
+    /* Estilos generales del diálogo, quizás ancho fijo y centrado */
+    max-width: 450px;
+    width: 90%;
+    padding: 2rem;
+    border-radius: 12px;
+  }
+  
+  .dialog-title-centered {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .step-indicator {
+    text-align: center;
+    color: var(--color-text-secondary, #666);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .step-content-container {
+    text-align: center;
+  }
+  
+  .step-icon {
+    width: 40px;
+    height: 40px;
+    color: var(--color-primary); /* El color principal de tu marca */
+    margin-bottom: 1rem;
+  }
+  
+  .step-title {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .step-description {
+    color: var(--color-text-default);
+    margin-bottom: 1.5rem;
+  }
+  
+  .roomie-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 1rem;
+  }
+  
+  .option-button {
+    background-color: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .option-button:hover {
+    background-color: var(--color-primary-light);
+    border-color: var(--color-primary);
+  }
+  
+  .bullet-point {
+      margin-right: 0.5rem;
+      font-size: 1.1rem;
+  }
+  
+  .step-separator {
+    border: none;
+    border-top: 1px solid var(--color-border-subtle, #eee);
+    margin: 1.5rem 0;
+  }
+  
+  .dialog-actions-footer {
+    display: flex;
+    justify-content: space-between; /* Mueve "Saltar" a la izquierda y "Siguiente" a la derecha */
+    align-items: center;
+    margin-top: 1rem;
+  }
+  
+  .close-button {
+    /* Estilo para el botón 'X' en la esquina */
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    /* ... estilos de botón sin fondo y pequeño ... */
+  }
+
