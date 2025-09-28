@@ -1,27 +1,61 @@
-import React, { useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Share2, Heart, Bed, Bath, Crop, ArrowLeft, Phone } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
+import { Share2, Heart, Bed, Bath, Crop, ArrowLeft, MessageSquare, Phone } from 'lucide-react';
 import StarRating from '../components/StarRating';
+import { createConversation } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import './PropertyDetailPage.css';
 
-// --- INICIO DE LA MODIFICACIÓN ---
 const PropertyDetailPage = ({ allProperties, loading }) => {
   const { propertyId } = useParams();
   const navigate = useNavigate();
+  const { user, requireLogin } = useAuth();
+  const [isContacting, setIsContacting] = useState(false);
 
-  // Buscamos la propiedad en la lista global que viene desde App.jsx
   const property = useMemo(() => {
     return allProperties.find(p => String(p.id) === String(propertyId));
   }, [propertyId, allProperties]);
 
-  // (El estado para 'favorited' se mantiene local al componente)
-  const [isFavorited, setIsFavorited] = React.useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
   
   const handleShare = () => {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(() => {
       alert('¡Enlace copiado al portapapeles!');
     });
+  };
+
+  const handleContactOwner = async () => {
+    if (!user) {
+      requireLogin("Para contactar al propietario, necesitas iniciar sesión.");
+      return;
+    }
+
+    // Asegúrate de que tu objeto 'property' tenga un 'ownerId'.
+    // Si no lo tiene, usaremos un ID de ejemplo para que la demo funcione.
+    const ownerId = property?.ownerId || 'user-123'; // CAMBIO: Añadido fallback
+
+    setIsContacting(true);
+    try {
+      const defaultMessage = `¡Hola ${property.owner_name}! Estoy interesado/a en tu propiedad "${property.name}" y me gustaría saber más. ¿Podemos conversar?`;
+      const conversation = await createConversation(ownerId, defaultMessage);
+
+      if (conversation && conversation.id) {
+        navigate('/chat', {
+          state: {
+            selectedConversation: conversation,
+            prefilledMessage: defaultMessage
+          }
+        });
+      } else {
+        navigate('/chat');
+      }
+    } catch (error) {
+      console.error('Error al iniciar la conversación:', error);
+      navigate('/chat');
+    } finally {
+      setIsContacting(false);
+    }
   };
 
   if (loading) {
@@ -39,7 +73,6 @@ const PropertyDetailPage = ({ allProperties, loading }) => {
       </div>
     );
   }
-  // --- FIN DE LA MODIFICACIÓN ---
 
   return (
     <div className="property-detail-container">
@@ -125,8 +158,13 @@ const PropertyDetailPage = ({ allProperties, loading }) => {
             </div>
             
             <div className="action-buttons">
-              <button className="action-btn primary reserve-btn">
-                 Contactar propietario
+              <button 
+                className="action-btn primary reserve-btn" 
+                onClick={handleContactOwner}
+                disabled={isContacting}
+              >
+                <MessageSquare size={18} /> 
+                {isContacting ? 'Iniciando...' : 'Contactar propietario'}
               </button>
               <button className="action-btn share-btn" onClick={handleShare}>
                 <Share2 size={18} /> Compartir
