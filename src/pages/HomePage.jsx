@@ -7,6 +7,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { MixerHorizontalIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { Button } from '@radix-ui/themes';
 import './HomePage.css';
+import WelcomeTourDialog from '../components/WelcomeTourDialog';
 
 
 // CAMBIO 1: Recibimos 'properties' y 'loading' como props desde App.jsx
@@ -15,6 +16,7 @@ const HomePage = ({ searchQuery = '', properties: allProperties, loading }) => {
   const [sortOrder, setSortOrder] = useState('recent');
   const [currentPage, setCurrentPage] = useState(1);
   const propertiesPerPage = 12;
+  const [tourOpen, setTourOpen] = useState(false);
   
   const [filters, setFilters] = useState({
     location: searchQuery,
@@ -23,6 +25,23 @@ const HomePage = ({ searchQuery = '', properties: allProperties, loading }) => {
     amenities: new Set(),
   });
   
+  // Mostrar tour solo la primera vez que el usuario entra al HomePage
+  useEffect(() => {
+    try {
+      const done = localStorage.getItem('roomiefy_welcome_tour_done');
+      if (done !== 'true') setTourOpen(true);
+    } catch (_) {
+      setTourOpen(true);
+    }
+  }, []);
+
+  const handleTourClose = () => {
+    try {
+      localStorage.setItem('roomiefy_welcome_tour_done', 'true');
+    } catch (_) {}
+    setTourOpen(false);
+  };
+
   useEffect(() => {
     if (searchQuery !== undefined) {
       setFilters(prev => ({
@@ -106,7 +125,11 @@ const HomePage = ({ searchQuery = '', properties: allProperties, loading }) => {
   return (
     <div className="homepage-layout"> 
        {/* <-- 2. Componente añadido */}
-
+      <WelcomeTourDialog 
+        isOpen={tourOpen} 
+        setIsOpen={setTourOpen} 
+        handleClose={handleTourClose} 
+      />
       {/* Filtros en móvil */}
       <Dialog.Root>
         <Dialog.Trigger asChild>

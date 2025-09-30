@@ -18,7 +18,6 @@ import {
 import appLogo from "../assets/roomify2.png";
 import { useAuth } from "../context/AuthContext";
 import { fetchNotifications } from '../services/api';
-import { PersonStandingIcon } from 'lucide-react';
 
 export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }) => {
   const location = useLocation();
@@ -36,11 +35,8 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
   const [showNotifications, setShowNotifications] = useState(false);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
 
-  // --- INICIO DE LA CORRECCIÓN ---
-  // Este useEffect se ejecuta una sola vez cuando el componente se carga por primera vez.
   useEffect(() => {
     const loadInitialNotifications = async () => {
-      // Solo intentamos cargar las notificaciones si hay un usuario logueado.
       if (user) {
         try {
           const data = await fetchNotifications();
@@ -48,12 +44,17 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
         } catch (error) {
           console.error("Error al cargar notificaciones iniciales:", error);
         }
+      } else {
+        // --- INICIO DE LA MODIFICACIÓN ---
+        // Si no hay usuario, limpia las notificaciones.
+        setNotifications([]);
+        setShowNotifications(false);
+        // --- FIN DE LA MODIFICACIÓN ---
       }
     };
 
     loadInitialNotifications();
-  }, [user]); // Se ejecuta cuando el estado del 'user' cambia (al iniciar sesión).
-  // --- FIN DE LA CORRECCIÓN ---
+  }, [user]);
 
   useEffect(() => {
     setLocalSearchQuery(searchQuery);
@@ -118,7 +119,6 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
     }
   };
 
-  // La lógica de clic ahora puede servir para refrescar las notificaciones si lo deseas.
   const handleBellClick = async () => {
     if (showNotifications) {
       setShowNotifications(false);
@@ -155,22 +155,22 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
         <NavigationMenu.List className="navbar-links desktop-only">
           <NavigationMenu.Item>
             <Link to="/" className={location.pathname === "/" ? "active" : ""}>
-              <HomeIcon /> <span className="nav-link-text">Propiedades</span>
+              <HomeIcon /> Propiedades
             </Link>
           </NavigationMenu.Item>
           <NavigationMenu.Item>
             <Link to="/roomies" className={location.pathname === "/roomies" ? "active" : ""}>
-              <AvatarIcon /> <span className="nav-link-text">Roomies</span>
+              <AvatarIcon /> Roomies
             </Link>
           </NavigationMenu.Item>
           <NavigationMenu.Item>
             {hasPublished ? (
               <Link to="/mis-propiedades" onClick={handlePublishClick} className={location.pathname === "/mis-propiedades" ? "active" : ""}>
-                <PlusCircledIcon /> <span className="nav-link-text">Mis propiedades</span>
+                <PlusCircledIcon /> Mis propiedades
               </Link>
             ) : (
               <Link to="/publicar" onClick={handlePublishClick} className={location.pathname === "/publicar" ? "active" : ""}>
-                <PlusCircledIcon /> <span className="nav-link-text">Publicar</span>
+                <PlusCircledIcon /> Publicar
               </Link>
             )}
           </NavigationMenu.Item>
@@ -189,24 +189,32 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
       <div className="navbar-right">
         {shouldShowSearch() && ( <button className="icon-button mobile-search-toggle mobile-only" onClick={toggleMobileSearch} aria-label="Buscar"><MagnifyingGlassIcon /></button> )}
         <button className="icon-button" onClick={toggleTheme}><SunIcon /></button>
-        <button className="icon-button desktop-only" onClick={() => navigate('/chat')}><ChatBubbleIcon /></button>
-        <div className="notification-wrapper">
-          <button className="icon-button desktop-only" onClick={handleBellClick}>
-            <BellIcon />
-            {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
-          </button>
-          {showNotifications && (
-            <div className="notifications-dropdown">
-              <div className="notifications-header">
-                <h3>Notificaciones</h3>
-                <button onClick={() => alert("Funcionalidad 'Marcar como leído' próximamente")}>Marcar todo como leído</button>
-              </div>
-              <div className="notifications-list">
-                {loadingNotifications ? <div className="notification-item loading">Cargando...</div> : notifications.length === 0 ? <div className="notification-item">No tienes notificaciones.</div> : notifications.map(notif => (<div key={notif.id} className={`notification-item ${!notif.read ? 'unread' : ''}`} onClick={() => { setShowNotifications(false); navigate(notif.link); }}><p>{notif.text}</p><span className="time">{notif.time}</span></div>))}
-              </div>
+        
+        {/* --- INICIO DE LA MODIFICACIÓN (VISTA ESCRITORIO) --- */}
+        {/* Solo muestra los siguientes botones si hay un usuario logueado */}
+        {user && (
+          <>
+            <button className="icon-button desktop-only" onClick={() => navigate('/chat')}><ChatBubbleIcon /></button>
+            <div className="notification-wrapper">
+              <button className="icon-button desktop-only" onClick={handleBellClick}>
+                <BellIcon />
+                {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
+              </button>
+              {showNotifications && (
+                <div className="notifications-dropdown">
+                  <div className="notifications-header">
+                    <h3>Notificaciones</h3>
+                    <button onClick={() => alert("Funcionalidad 'Marcar como leído' próximamente")}>Marcar todo como leído</button>
+                  </div>
+                  <div className="notifications-list">
+                    {loadingNotifications ? <div className="notification-item loading">Cargando...</div> : notifications.length === 0 ? <div className="notification-item">No tienes notificaciones.</div> : notifications.map(notif => (<div key={notif.id} className={`notification-item ${!notif.read ? 'unread' : ''}`} onClick={() => { setShowNotifications(false); navigate(notif.link); }}><p>{notif.text}</p><span className="time">{notif.time}</span></div>))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
+        {/* --- FIN DE LA MODIFICACIÓN --- */}
 
         {user ? (
           <div className="user-menu">
@@ -242,10 +250,20 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
                 {hasPublished ? (<Link to="/mis-propiedades" onClick={handlePublishClick} className={location.pathname === "/mis-propiedades" ? "active" : ""}><PlusCircledIcon /> Mis propiedades</Link>) : (<Link to="/publicar" onClick={handlePublishClick} className={location.pathname === "/publicar" ? "active" : ""}><PlusCircledIcon /> Publicar</Link>)}
               </NavigationMenu.Item>
             </NavigationMenu.List>
-            <div className="mobile-actions">
-              <button className="mobile-action-button" onClick={() => navigate('/chat')}><ChatBubbleIcon /> Chat</button>
-              <button className="mobile-action-button"><BellIcon /> Notificaciones<span className="notification-badge">3</span></button>
-            </div>
+            
+            {/* --- INICIO DE LA MODIFICACIÓN (VISTA MÓVIL) --- */}
+            {/* Muestra estas acciones solo si el usuario está logueado */}
+            {user && (
+              <div className="mobile-actions">
+                <button className="mobile-action-button" onClick={() => navigate('/chat')}><ChatBubbleIcon /> Chat</button>
+                <button className="mobile-action-button" onClick={handleBellClick}>
+                  <BellIcon /> Notificaciones
+                  {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
+                </button>
+              </div>
+            )}
+            {/* --- FIN DE LA MODIFICACIÓN --- */}
+
           </div>
         </div>
       )}

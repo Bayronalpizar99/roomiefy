@@ -218,6 +218,7 @@
 /* Sidebar */
 .roomie-sidebar { position: sticky; top: 2rem; }
 .contact-card {
+  margin-top: 1.2rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
@@ -252,6 +253,7 @@
   .roomie-content-layout { grid-template-columns: 1fr; }
   .roomie-sidebar { position: static; }
   .photo-grid { grid-template-columns: repeat(2, 1fr); }
+  .contact-card { margin-top: 0; }
 }
 
 /* Toast notifications */

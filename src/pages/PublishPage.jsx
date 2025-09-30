@@ -1,13 +1,12 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom'; // <--- CAMBIO: Importamos useNavigate
+import { useNavigate } from 'react-router-dom';
 import './PublishStyles.css';
 import * as Checkbox from '@radix-ui/react-checkbox';
 import { CheckIcon, UploadIcon } from '@radix-ui/react-icons';
 import { createProperty } from '../services/api';
+import placeholderImage from '../assets/placeholder.jpg';
+import { useAuth } from '../context/AuthContext'; 
 
-/* ============================================================================= */
-
-/* ====== UI Helpers ====== */
 const Label = { Root: (props) => <label {...props} /> };
 
 export function CheckboxField({ id, checked, onCheckedChange, children, required = false }) {
@@ -105,10 +104,10 @@ export function FileUploadBox({
   );
 }
 
-/* ====== Página ====== */
-// CAMBIO: Recibimos 'onAddProperty' que viene desde App.jsx
+/* Página */
 const PublishPage = ({ onAddProperty }) => {
-  const navigate = useNavigate(); // <--- CAMBIO: Inicializamos useNavigate
+  const navigate = useNavigate();
+  const { user } = useAuth(); 
   const MIN = 1;
   const MAX = 10;
 
@@ -126,9 +125,6 @@ const PublishPage = ({ onAddProperty }) => {
     laundry: false,
     pool: false,
     centrico: false,
-    allowPhotos: true,
-    allowVideos: true,
-    watermark: false,
     acceptTerms: false,
   });
 
@@ -147,11 +143,31 @@ const PublishPage = ({ onAddProperty }) => {
   const handleFileChange = (uploadedFiles) => {
     setFormData((prev) => ({ ...prev, files: uploadedFiles }));
   };
-
-  // CAMBIO: Toda la lógica de handleSubmit se actualiza
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
+    if (Number(formData.price) < 0 || (formData.area && Number(formData.area) < 0)) {
+      alert('El precio y el área no pueden ser negativos.');
+      return;
+    }
+  
+    setSubmitting(true);
+  
+    let imagePreviewUrl = placeholderImage; 
+    if (formData.files.length > 0) {
+      try {
+        imagePreviewUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(formData.files[0]);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = (error) => reject(error);
+        });
+      } catch (error) {
+        console.error("Error al leer el archivo de imagen:", error);
+      }
+    }
+  
     const payload = {
       title: formData.title,
       location: formData.location,
@@ -169,32 +185,25 @@ const PublishPage = ({ onAddProperty }) => {
       }).filter(([, v]) => v).map(([k]) => k),
       files: formData.files.map((f) => f.name),
     };
-
-    if (payload.price < 0 || (payload.area ?? 0) < 0) {
-      alert('El precio y el área no pueden ser negativos.');
-      return;
-    }
-
+  
     try {
-      setSubmitting(true);
       const apiResponse = await createProperty(payload);
-
-    
+  
       const newPropertyForState = {
         ...payload,
-        id: apiResponse.id || `local-${Date.now()}`, // Usamos ID de la API o uno local
-        property_photo: 'https://via.placeholder.com/400x300.png?text=Mi+Nueva+Propiedad',
+        id: apiResponse.id || `local-${Date.now()}`,
+        property_photo: imagePreviewUrl,
         owner_name: 'Tú (Propietario)',
-        owner_profile_pic: 'https://via.placeholder.com/150',
+        owner_profile_pic: user?.picture || defaultAvatar,
         rating: 0,
         square_meters: payload.area,
         name: payload.title,
       };
-
+  
       onAddProperty(newPropertyForState);
       alert('¡Propiedad publicada! Serás redirigido a tus propiedades.');
       navigate('/mis-propiedades');
-
+  
     } catch (err) {
       console.error(err);
       alert(`Fallo al enviar: ${err.message}`);
@@ -203,16 +212,12 @@ const PublishPage = ({ onAddProperty }) => {
     }
   };
 
-  const fillDemo = () => setFormData(prev => ({
-  }));
-
   return (
     <>
       <h1>Publicar una Propiedad</h1>
       <p>Completa el formulario para añadir tu propiedad a la lista.</p>
 
       <form onSubmit={handleSubmit} className='publish-form' noValidate>
-        {/* ... (todo el JSX del formulario se queda exactamente igual) ... */}
         <div className="form-row">
             <div className="form-field">
               <Label.Root className="form-label">Título de la publicación *</Label.Root>
@@ -256,7 +261,6 @@ const PublishPage = ({ onAddProperty }) => {
               />
             </div>
 
-            {/* Habitaciones */}
             <div className="form-field">
               <Label.Root className="form-label">Habitaciones</Label.Root>
               <input
@@ -271,7 +275,6 @@ const PublishPage = ({ onAddProperty }) => {
               />
             </div>
 
-            {/* Baños */}
             <div className="form-field">
               <Label.Root className="form-label">Baños</Label.Root>
               <input
@@ -313,48 +316,13 @@ const PublishPage = ({ onAddProperty }) => {
             />
           </div>
 
-          {/* Comodidades */}
           <Label.Root className="form-label">Comodidades</Label.Root>
           <div className="checkbox-row">
-            <CheckboxField
-              id="wifi"
-              checked={formData.wifi}
-              onCheckedChange={(val) => handleCheckboxChange('wifi', val)}
-            >
-              WIFI
-            </CheckboxField>
-            <CheckboxField
-              id="garage"
-              checked={formData.garage}
-              onCheckedChange={(val) => handleCheckboxChange('garage', val)}
-            >
-              Garage
-            </CheckboxField>
-          </div>
-          <div className="checkbox-row">
-            <CheckboxField
-              id="laundry"
-              checked={formData.laundry}
-              onCheckedChange={(val) => handleCheckboxChange('laundry', val)}
-            >
-              Cuarto de lavado
-            </CheckboxField>
-            <CheckboxField
-              id="pool"
-              checked={formData.pool}
-              onCheckedChange={(val) => handleCheckboxChange('pool', val)}
-              required
-            >
-              Piscina
-            </CheckboxField>
-            <CheckboxField
-              id="centrico"
-              checked={formData.centrico}
-              onCheckedChange={(val) => handleCheckboxChange('centrico', val)}
-              required
-            >
-              Céntrico
-            </CheckboxField>
+            <CheckboxField id="wifi" checked={formData.wifi} onCheckedChange={(val) => handleCheckboxChange('wifi', val)}>WIFI</CheckboxField>
+            <CheckboxField id="garage" checked={formData.garage} onCheckedChange={(val) => handleCheckboxChange('garage', val)}>Garage</CheckboxField>
+            <CheckboxField id="laundry" checked={formData.laundry} onCheckedChange={(val) => handleCheckboxChange('laundry', val)}>Cuarto de lavado</CheckboxField>
+            <CheckboxField id="pool" checked={formData.pool} onCheckedChange={(val) => handleCheckboxChange('pool', val)}>Piscina</CheckboxField>
+            <CheckboxField id="centrico" checked={formData.centrico} onCheckedChange={(val) => handleCheckboxChange('centrico', val)}>Céntrico</CheckboxField>
           </div>
 
           <FileUploadBox required onFiles={handleFileChange} />
@@ -363,7 +331,7 @@ const PublishPage = ({ onAddProperty }) => {
             <button type="submit" className="form-button" disabled={submitting}>
               {submitting ? 'Enviando…' : 'Publicar propiedad'}
             </button>
-            <button type="button" className="form-button2">
+            <button type="button" className="form-button2" onClick={() => navigate(-1)}>
               Cancelar
             </button>
           </div>

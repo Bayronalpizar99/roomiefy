@@ -1,13 +1,12 @@
 .main-content.chat-main {
-  padding: 0; /* Este page ocupa el ancho completo disponible */
-  /* Compensa el padding horizontal de .main-content-area sin afectar la altura */
+  padding: 0; 
   margin: 0;
   box-sizing: border-box;
-  height: auto; /* evitar imponer altura que cause overflow con contenedores flex padres */
+  height: auto; 
   display: flex;
   flex-direction: column;
-  min-height: 0; /* clave para permitir scroll interno */
-  overflow: visible; /* no recortar el contenido interno */
+  min-height: 0; 
+  overflow: visible; 
   width: 100%;
   max-width: 100%;
 }
@@ -15,25 +14,24 @@
 .chat-page-container {
   padding: 16px;
   width: 100%;
-  /* usar flex en lugar de alturas absolutas */
   flex: 1;
   margin: 0;
   display: flex;
   flex-direction: column;
-  min-height: 0; /* clave para que .chat-layout calcule bien */
+  min-height: 0; 
   max-width: 100%;
-  overflow-x: hidden; /* sin desplazamiento horizontal */
+  overflow-x: hidden; 
 }
 
 .chat-page-container h1 {
   color: var(--color-text);
-  margin: 0 0 8px; /* Reducir margen para no robar altura */
+  margin: 0 0 8px; 
 }
 
 .chat-layout {
   display: flex;
-  flex: 1;           /* ocupar el espacio restante bajo el título */
-  min-height: 0;     /* permitir que los hijos con overflow funcionen */
+  flex: 1;          
+  min-height: 0;    
   border: 1px solid var(--color-border);
   border-radius: 8px;
   overflow: hidden;
@@ -66,7 +64,7 @@
   border-bottom: 1px solid var(--color-border);
   cursor: pointer;
   transition: background-color 0.2s;
-  width: 100%; /* Hace que ocupe todo el ancho disponible */
+  width: 100%; 
   align-items: flex-start;
 }
 
@@ -120,7 +118,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0; /* permite que messages-container maneje el scroll */
+  min-height: 0;
   max-width: 100%;
   overflow-x: hidden;
 }
@@ -167,34 +165,34 @@
 }
 
 .message {
-  max-width: min(52%, 520px); /* +2% más larga */
-  margin-bottom: 26px; /* Un poco más de espacio */
+  max-width: min(52%, 520px); 
+  margin-bottom: 26px; 
   padding: 12px 16px;
   border-radius: 18px;
   position: relative;
-  display: inline-block; /* Hace que la burbuja se ajuste al contenido */
+  display: inline-block; 
   width: -moz-fit-content;
   width: -webkit-fit-content;
-  width: fit-content; /* Respetará el max-width arriba */
-  overflow-wrap: anywhere; /* Evita desbordes por palabras largas */
+  width: fit-content; 
+  overflow-wrap: anywhere; 
   word-break: break-word;
-  white-space: pre-wrap; /* Respeta saltos de línea si los hay */
+  white-space: pre-wrap; 
 }
 
 .message.sent {
-  align-self: flex-end; /* A la derecha como en chats tradicionales */
+  align-self: flex-end; 
   background-color: var(--color-chat-sent-bg);
   color: var(--color-chat-sent-text);
   border-bottom-right-radius: 5px;
-  margin-right: 12px; /* Separación del borde derecho */
+  margin-right: 12px; 
 }
 
 .message.received {
-  align-self: flex-start; /* A la izquierda */
+  align-self: flex-start; 
   background-color: var(--color-chat-received-bg);
   color: var(--color-chat-received-text);
   border-bottom-left-radius: 5px;
-  margin-left: 12px; /* Separación del borde izquierdo */
+  margin-left: 12px; 
 }
 
 .message-content {
@@ -220,36 +218,36 @@
   align-items: center;
   gap: 6px;
   margin-top: 2px;
-  justify-content: flex-end; /* Siempre a la derecha dentro de la burbuja */
+  justify-content: flex-end;
   width: 100%;
 }
 
 .message.sent .message-meta,
 .message.received .message-meta {
-  justify-content: flex-end; /* Forzamos derecha para ambos casos */
+  justify-content: flex-end;
 }
 
 .message-status {
   display: inline-flex;
   align-items: center;
-  color: var(--color-icon); /* color por defecto */
+  color: var(--color-icon);
 }
 
 .message-status.read {
-  color: var(--color-primary); /* color para visto/leído */
+  color: var(--color-primary); 
 }
 
 .message-status.sent {
-  color: var(--color-chat-sent-text); /* visible sobre la burbuja enviada */
+  color: var(--color-chat-sent-text); 
 }
 
 .message-status .check {
-  width: 16px; /* un poco más grande */
+  width: 16px;
   height: 16px;
 }
 
 .message-status .check.two {
-  margin-left: -7px; /* ligera superposición para el doble check */
+  margin-left: -7px; 
 }
 
 .message-input {
@@ -260,7 +258,7 @@
   background-color: var(--color-surface);
   align-items: flex-start;
   min-height: 80px;
-  flex-shrink: 0; /* no se colapsa cuando el contenedor reduce */
+  flex-shrink: 0; 
 }
 
 .message-input .search-bar {
@@ -290,8 +288,8 @@
   width: 100%;
   height: auto;
   line-height: 1.4;
-  resize: none; /* controlado por JS para auto-resize */
-  overflow: hidden; /* evitar scrollbars hasta el max-height */
+  resize: none; 
+  overflow: hidden; 
 }
 
 .message-input .search-bar textarea::placeholder {
@@ -333,7 +331,6 @@
   background-color: var(--color-primary-hover);
 }
 
-/* Responsivo: en pantallas pequeñas permite un ancho mayor */
 @media (max-width: 768px) {
   .message-input {
     padding: 1rem 0.5rem 0.5rem 0.5rem;
@@ -361,14 +358,11 @@
   }
 }
 
-
-/* En pantallas grandes, un poco más estrechas para acercarse al mock */
 @media (min-width: 1280px) {
   .message {
-    max-width: min(46%, 520px); /* +2% */
+    max-width: min(46%, 520px); 
   }
 }
-
 .no-conversation-selected {
   display: flex;
   align-items: center;
@@ -387,5 +381,5 @@
 }
 
 .error-container {
-  color: #f87171; /* fallback error color consistent with ProfileStyles */
+  color: #f87171; 
 }

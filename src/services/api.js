@@ -198,7 +198,7 @@ export const fetchRoommateById = async (roomieId) => {
   }
 
   try {
-    const response = await fetch(`${apiUrl}roomies/${roomieId}`, {
+    let response = await fetch(`${apiUrl}roomies/${roomieId}`, {
       method: 'GET',
       headers: {
         "Content-Type": "application/json",

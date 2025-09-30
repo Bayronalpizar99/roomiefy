@@ -1,74 +1,61 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
-import {
-  Share2,
-  Heart,
-  Bed,
-  Bath,
-  Crop,
-  ArrowLeft,
-  MessageSquare,
-  Phone,
-} from 'lucide-react';
+import { Share2, Heart, Bed, Bath, Crop, ArrowLeft, MessageSquare, Phone } from 'lucide-react';
 import StarRating from '../components/StarRating';
-import { fetchProperties } from '../services/api';
+import { createConversation } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import './PropertyDetailPage.css';
 
-const PropertyDetailPage = () => {
-  const location = useLocation();
+const PropertyDetailPage = ({ allProperties, loading }) => {
   const { propertyId } = useParams();
   const navigate = useNavigate();
+  const { user, requireLogin } = useAuth();
+  const [isContacting, setIsContacting] = useState(false);
 
-  const [property, setProperty] = useState(location.state?.property || null);
-  const [loading, setLoading] = useState(!property);
+  const property = useMemo(() => {
+    return allProperties.find(p => String(p.id) === String(propertyId));
+  }, [propertyId, allProperties]);
+
   const [isFavorited, setIsFavorited] = useState(false);
-
-  useEffect(() => {
-    const findProperty = async () => {
-      if (property) return;
-
-      setLoading(true);
-      try {
-        // --- INICIO DE LA CORRECCIÓN ---
-        const result = await fetchProperties(); // 1. Recibimos el objeto { data, error }
-
-        if (result.error) { // 2. Manejamos el caso de error primero
-          console.error("Error al buscar la propiedad:", result.error);
-          setProperty(null);
-          return;
-        }
-
-        // 3. Extraemos el array del objeto 'data'. Asumimos que está en una clave 'properties'.
-        // Si no está anidado, sería solo 'result.data'
-        const propertiesArray = result.data.properties || result.data || [];
-        
-        // 4. Buscamos la propiedad en el array corregido
-        const foundProperty = propertiesArray.find(p => p.id == propertyId);
-        
-        if (foundProperty) {
-          setProperty(foundProperty);
-        } else {
-          setProperty(null); 
-        }
-        // --- FIN DE LA CORRECCIÓN ---
-
-      } catch (error) {
-        console.error("Error en el componente:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    findProperty();
-  }, [propertyId, property]);
-
-  // ... (El resto del componente sigue igual)
-
+  
   const handleShare = () => {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(() => {
       alert('¡Enlace copiado al portapapeles!');
     });
+  };
+
+  const handleContactOwner = async () => {
+    if (!user) {
+      requireLogin("Para contactar al propietario, necesitas iniciar sesión.");
+      return;
+    }
+
+    // Asegúrate de que tu objeto 'property' tenga un 'ownerId'.
+    // Si no lo tiene, usaremos un ID de ejemplo para que la demo funcione.
+    const ownerId = property?.ownerId || 'user-123'; // CAMBIO: Añadido fallback
+
+    setIsContacting(true);
+    try {
+      const defaultMessage = `¡Hola ${property.owner_name}! Estoy interesado/a en tu propiedad "${property.name}" y me gustaría saber más. ¿Podemos conversar?`;
+      const conversation = await createConversation(ownerId, defaultMessage);
+
+      if (conversation && conversation.id) {
+        navigate('/chat', {
+          state: {
+            selectedConversation: conversation,
+            prefilledMessage: defaultMessage
+          }
+        });
+      } else {
+        navigate('/chat');
+      }
+    } catch (error) {
+      console.error('Error al iniciar la conversación:', error);
+      navigate('/chat');
+    } finally {
+      setIsContacting(false);
+    }
   };
 
   if (loading) {
@@ -171,8 +158,13 @@ const PropertyDetailPage = () => {
             </div>
             
             <div className="action-buttons">
-              <button className="action-btn primary reserve-btn">
-                <MessageSquare size={18} /> Contactar propietario
+              <button 
+                className="action-btn primary reserve-btn" 
+                onClick={handleContactOwner}
+                disabled={isContacting}
+              >
+                <MessageSquare size={18} /> 
+                {isContacting ? 'Iniciando...' : 'Contactar propietario'}
               </button>
               <button className="action-btn share-btn" onClick={handleShare}>
                 <Share2 size={18} /> Compartir
