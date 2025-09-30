@@ -7,17 +7,19 @@ import HomePage from "./pages/HomePage.jsx";
 import RoomiesPage from "./pages/RoomiesPage.jsx";
 import PublishPage from "./pages/PublishPage.jsx";
 import MyPropertiesPage from './pages/MyPropertiesPage.jsx';
+import MyFavoritesPage from './pages/MyFavoritesPage';
 import EditPropertyPage from './pages/EditPropertyPage.jsx';
 import PropertyDetailPage from "./pages/PropertyDetailPage.jsx";
 import RoomieDetailPage from "./pages/RoomieDetailPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import ProfileForm from "./pages/ProfileForm.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
 import { useTheme } from "./hooks/useTheme";
 import LoginModal from './components/LoginModal';
 import { fetchProperties, deleteProperty } from './services/api';
 import "./App.css";
 import Toast from './components/Toast';
-import MyFavoritesPage from './pages/MyFavoritesPage'; // Se importa la nueva página
+import MyFavoritesPage from './pages/MyFavoritesPage';
 import Footer from './components/Footer';
 
 function App() {
@@ -151,8 +153,9 @@ function App() {
             />
             <Route path="/propiedad/:propertyId" element={<PropertyDetailPage allProperties={allProperties} loading={loading} />} />
             <Route path="/roomie/:roomieId" element={<RoomieDetailPage />} />
-            <Route path="perfil" element={<ProfilePage />} />
-            <Route path="chat" element={<ChatPage />} />
+            <Route path="/perfil" element={<ProfilePage />} />
+            <Route path="/perfil/form" element={<ProfileForm />} />
+            <Route path="/chat" element={<ChatPage />} />
           </Routes>
         </ScrollArea.Viewport>
         <ScrollArea.Scrollbar className="scroll-area-scrollbar" orientation="vertical">

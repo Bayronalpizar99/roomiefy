@@ -694,3 +694,143 @@ export const markConversationAsRead = async (conversationId) => {
     return false;
   }
 };
+
+/**
+ * Obtiene el perfil del usuario actual.
+ * @returns {Promise<{data: object|null, error: string|null}>}
+ */
+export const fetchUserProfile = async () => {
+  if (!apiUrl || !apiKey) {
+    console.error("Error: Variables de entorno de API no definidas.");
+    return { data: null, error: 'Configuración de API incompleta.' };
+  }
+
+  try {
+    const response = await fetch(`${apiUrl}profile`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": apiKey,
+        "Accept": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      const errorMsg = `Error al obtener el perfil: ${response.status} ${response.statusText}`;
+      console.error(errorMsg);
+      return { data: null, error: errorMsg };
+    }
+
+    const data = await response.json();
+    return { data, error: null };
+  } catch (error) {
+    console.error(error);
+    return { data: null, error: error?.message || 'Fallo de red al obtener el perfil.' };
+  }
+};
+
+/**
+ * Actualiza el perfil del usuario.
+ * @param {object} profileData - Los nuevos datos del perfil.
+ * @returns {Promise<{data: object|null, error: string|null}>}
+ */
+export const updateUserProfile = async (profileData) => {
+  if (!apiUrl || !apiKey) {
+    console.error("Error: Variables de entorno de API no definidas.");
+    return { data: null, error: 'Configuración de API incompleta.' };
+  }
+
+  try {
+    const response = await fetch(`${apiUrl}profile`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": apiKey,
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(profileData)
+    });
+
+    if (!response.ok) {
+      const errorMsg = `Error al actualizar el perfil: ${response.status} ${response.statusText}`;
+      console.error(errorMsg);
+      return { data: null, error: errorMsg };
+    }
+
+    const data = await response.json();
+    return { data, error: null };
+  } catch (error) {
+    console.error(error);
+    return { data: null, error: error?.message || 'Fallo de red al actualizar el perfil.' };
+  }
+};
+
+/**
+ * Actualiza el estado de búsqueda de roomie del usuario.
+ * @param {boolean} isSearching - True si está buscando roomie, false si no.
+ * @returns {Promise<{data: object|null, error: string|null}>}
+ */
+export const updateSearchingStatus = async (isSearching) => {
+  if (!apiUrl || !apiKey) {
+    console.error("Error: Variables de entorno de API no definidas.");
+    return { data: null, error: 'Configuración de API incompleta.' };
+  }
+
+  try {
+    const response = await fetch(`${apiUrl}profile/searching`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": apiKey,
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({ isSearching })
+    });
+
+    if (!response.ok) {
+      const errorMsg = `Error al actualizar el estado de búsqueda: ${response.status} ${response.statusText}`;
+      console.error(errorMsg);
+      return { data: null, error: errorMsg };
+    }
+
+    const data = await response.json();
+    return { data, error: null };
+  } catch (error) {
+    console.error(error);
+    return { data: null, error: error?.message || 'Fallo de red al actualizar el estado de búsqueda.' };
+  }
+};
+
+/**
+ * Obtiene las propiedades del usuario actual.
+ * @returns {Promise<{data: array, error: string|null}>}
+ */
+export const fetchUserProperties = async () => {
+  if (!apiUrl || !apiKey) {
+    console.error("Error: Variables de entorno de API no definidas.");
+    return { data: [], error: 'Configuración de API incompleta.' };
+  }
+
+  try {
+    const response = await fetch(`${apiUrl}properties/user`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": apiKey,
+        "Accept": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      const errorMsg = `Error al obtener las propiedades del usuario: ${response.status} ${response.statusText}`;
+      console.error(errorMsg);
+      return { data: [], error: errorMsg };
+    }
+
+    const data = await response.json();
+    return { data: Array.isArray(data) ? data : [], error: null };
+  } catch (error) {
+    console.error(error);
+    return { data: [], error: error?.message || 'Fallo de red al obtener las propiedades.' };
+  }
+};

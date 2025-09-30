@@ -36,7 +36,6 @@ const FirstTimeHelp = () => {
           <li>Prueba la barra de búsqueda para encontrar roomies por nombre o ubicación.</li>
           <li>Cambia entre la vista de cuadrícula y lista usando las opciones de vista.</li>
           <li>Haz clic en una tarjeta de roomie para ver su perfil completo.</li>
-
           </ul>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
             <Dialog.Close asChild>

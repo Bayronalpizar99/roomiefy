@@ -20,7 +20,7 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const navigate = useNavigate();
-  
+
   const [view, setView] = useState('grid');
   const [sortOrder, setSortOrder] = useState('recent');
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,7 +34,7 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
   const [maxAge, setMaxAge] = useState(99);
 
   const [filters, setFilters] = useState({
-    location: searchQuery, // Initialize with searchQuery
+    location: searchQuery,
     priceRange: [100, 2000],
     ageRange: [18, 99],
     hasApartment: 'any',
@@ -44,25 +44,34 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
     minSocial: 3,
   });
   
-  // Detectar cambio de viewport para habilitar modo móvil (scroll infinito)
   useEffect(() => {
+    /**
+     * Detecta cambios en el tamaño de la ventana para alternar entre modo móvil y escritorio.
+     * - Activa scroll infinito en móvil (<768px) y paginación en escritorio.
+     */
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  
-  // Update filters when searchQuery changes
+
+  // Sincroniza filtros con cambios en searchQuery (ej. desde navegación).
   useEffect(() => {
     setFilters(prev => ({
       ...prev,
       location: searchQuery
     }));
-    // Reset to first page when search changes
+    // Resetea a la primera página cuando cambia la búsqueda.
     setCurrentPage(1);
   }, [searchQuery]);
 
   useEffect(() => {
+    /**
+     * Carga roommates desde la API basada en filtros, página y orden.
+     * - Maneja scroll infinito en móvil (agrega resultados) y reemplazo en escritorio.
+     * - Incluye fallback para paginación en cliente si la API devuelve más elementos.
+     * - Muestra errores vía Toast y maneja estados de carga.
+     */
     const loadRoommates = async () => {
       const appending = isMobile && currentPage > 1;
       if (appending) {
@@ -95,7 +104,7 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
         });
 
         if (error) {
-          // Si estamos agregando en móvil, no limpiamos resultados previos
+          // En scroll infinito, no limpiamos resultados previos para evitar parpadeo.
           if (!(isMobile && currentPage > 1)) {
             setRoommates([]);
             setTotalCount(null);
@@ -107,14 +116,14 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
           const totalFromMeta = meta?.total;
           let total = Number.isFinite(totalFromMeta) ? Number(totalFromMeta) : null;
 
-          // Fallback: si la API devuelve más elementos de los solicitados, hacemos paginación en cliente
+          // Fallback: paginación en cliente si la API devuelve más de lo solicitado.
           const sliceStart = (currentPage - 1) * roommatesPerPage;
           const needsClientPaging = rawItems.length > roommatesPerPage;
           const pageItems = needsClientPaging
             ? rawItems.slice(sliceStart, sliceStart + roommatesPerPage)
             : rawItems;
 
-          // En móvil (scroll infinito) agregamos; en escritorio reemplazamos siempre.
+          // En móvil, agrega a la lista existente; en escritorio, reemplaza.
           if (isMobile && currentPage > 1) {
             setRoommates(prev => {
               const existingIds = new Set(prev.map((it) => it.id));
@@ -125,9 +134,8 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
             setRoommates(pageItems);
           }
 
-          // Determinar total y hasNextPage
+          // Calcula total y si hay más páginas.
           if (!Number.isFinite(total)) {
-            // Si no hay total del backend y estamos paginando en cliente, usamos el largo del dataset
             if (needsClientPaging) {
               total = rawItems.length;
             }
@@ -138,8 +146,7 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
             const totalPages = Math.ceil(total / roommatesPerPage);
             setHasNextPage(currentPage < totalPages);
           } else {
-            // Fallback cuando no hay total: si recibimos al menos pageSize, podríamos tener más
-            // y si estamos rebanando en cliente, verificamos contra el dataset crudo
+            // Fallback para determinar si hay más resultados.
             if (needsClientPaging) {
               setHasNextPage(sliceStart + pageItems.length < rawItems.length);
             } else {
@@ -166,24 +173,27 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
     loadRoommates();
   }, [currentPage, filters, sortOrder, isMobile]);
 
-  // Paginación basada en servidor
+  // Calcula páginas totales basado en totalCount del servidor.
   const totalPages = Number.isFinite(totalCount) ? Math.ceil(totalCount / roommatesPerPage) : null;
 
+  /**
+   * Maneja cambios de página con scroll al inicio de la lista.
+   */
   const handlePageChange = (page) => {
     setCurrentPage(page);
     document.querySelector('.scroll-area-viewport')?.scrollTo(0, 0);
   };
 
-  // Reiniciar a la primera página cuando cambian filtros/orden o cambia el modo (móvil/desktop)
+  // Resetea lista y página cuando cambian filtros, orden o modo (móvil/desktop).
   useEffect(() => {
     setRoommates([]);
     setCurrentPage(1);
   }, [filters, sortOrder, isMobile]);
 
-  // Scroll infinito en móvil usando IntersectionObserver
+  // Scroll infinito en móvil usando IntersectionObserver.
   const loadMoreRef = useRef(null);
   useEffect(() => {
-    if (!isMobile) return; // Solo en móvil
+    if (!isMobile) return; // Solo activo en móvil.
     const target = loadMoreRef.current;
     if (!target) return;
     const observer = new IntersectionObserver((entries) => {
@@ -200,7 +210,7 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
     <div className="roomies-page">
       <FirstTimeHelp />
       <div className="roomies-container">
-        {/* Filtros en móvil */}
+        {/* Filtros responsivos: botón en móvil con modal, sidebar en escritorio */}
         <Dialog.Root>
           <Dialog.Trigger asChild>
             <Button 
@@ -264,7 +274,7 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
           </Dialog.Portal>
         </Dialog.Root>
 
-        {/* Filtros en escritorio */}
+        {/* Filtros en escritorio: sidebar sticky para filtros avanzados */}
         <div className="desktop-filters">
           <RoomieFilters 
             filters={filters} 
@@ -277,6 +287,7 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
         </div>
 
         <div className="roomies-results">
+          {/* Header: muestra conteo de resultados o mensaje de carga */}
           <div className="roomies-header">
             <Text size="2" color="gray">
               {Number.isFinite(totalCount)
@@ -285,6 +296,7 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
             </Text>
           </div>
 
+          {/* Controles: opciones de vista y ordenamiento */}
           <div className="roomies-controls">
             <ViewOptions 
               view={view} 
@@ -302,6 +314,7 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
             </div>
           ) : (
             <>
+              {/* Lista de roommates: grid o list según vista seleccionada */}
               <div className={view === 'grid' ? 'roomies-grid' : 'roomies-list'}>
                 {roommates.map((roommate) => (
                   <RoommateCard 
@@ -318,11 +331,12 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
                   {loadingMore && (
                     <div className="infinite-loader">Cargando más...</div>
                   )}
-                  {/* Sentinel: cuando entra en viewport, pedimos más */}
+                  {/* Sentinel: activa carga automática cuando entra en viewport */}
                   <div ref={loadMoreRef} className="infinite-sentinel" aria-hidden="true" />
                 </>
               )}
               
+              {/* Paginación en escritorio: condicional según totalPages o hasNextPage */}
               {!isMobile && (Number.isFinite(totalPages) ? totalPages > 1 : (currentPage > 1 || hasNextPage)) && (
                 <div className="pagination-container desktop-only">
                   {Number.isFinite(totalPages) ? (
