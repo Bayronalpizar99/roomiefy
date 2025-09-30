@@ -62,6 +62,10 @@
   gap: 1.5rem;
   color: var(--color-text);
   margin-top: 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: var(--color-surface);
 }
 .stat-item {
   display: flex;
@@ -74,13 +78,22 @@
   margin: 2rem 0;
 }
 
-.property-description-full h2, .amenities-section h2 {
+.detail-section-card {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: var(--color-surface);
+}
+
+.detail-section-card h2 {
   font-size: 1.5rem;
+  margin-top: 0;
   margin-bottom: 1rem;
   color: var(--color-text);
 }
 
-.property-description-full p, .amenities-grid li {
+.detail-section-card p, .amenities-grid li {
   line-height: 1.6;
   color: var(--color-text-secondary);
   text-align: justify; 
@@ -98,9 +111,7 @@
 .property-sidebar {
   position: sticky;
   top: 2rem;
-  /* --- INICIO DEL CAMBIO --- */
-  margin-top: 4.5rem; /* Ajustado para alinear con la primera línea divisora */
-  /* --- FIN DEL CAMBIO --- */
+  margin-top: 1.5rem;
 }
 
 .actions-box {
@@ -188,20 +199,11 @@
   font-size: 0.85rem;
 }
 
-.property-owner-section h2 {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  color: var(--color-text);
-}
-
 .owner-card-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  background-color: var(--color-surface);
+  /* Se eliminaron los estilos de tarjeta (borde, padding, etc.) */
 }
 
 .owner-info-left {

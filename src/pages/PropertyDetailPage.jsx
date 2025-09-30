@@ -30,10 +30,8 @@ const PropertyDetailPage = ({ allProperties, loading }) => {
       requireLogin("Para contactar al propietario, necesitas iniciar sesión.");
       return;
     }
-
-    // Asegúrate de que tu objeto 'property' tenga un 'ownerId'.
-    // Si no lo tiene, usaremos un ID de ejemplo para que la demo funcione.
-    const ownerId = property?.ownerId || 'user-123'; // CAMBIO: Añadido fallback
+    
+    const ownerId = property?.ownerId || 'user-123';
 
     setIsContacting(true);
     try {
@@ -105,16 +103,12 @@ const PropertyDetailPage = ({ allProperties, loading }) => {
             </span>
           </div>
 
-          <div className="section-divider"></div>
-
-          <div className="property-description-full">
+          <div className="detail-section-card">
             <h2>Descripción</h2>
             <p>{property.description}</p>
           </div>
 
-          <div className="section-divider"></div>
-
-          <div className="amenities-section">
+          <div className="detail-section-card">
             <h2>Comodidades</h2>
             <ul className="amenities-grid">
               {property.amenities.map((amenity, index) => (
@@ -122,10 +116,8 @@ const PropertyDetailPage = ({ allProperties, loading }) => {
               ))}
             </ul>
           </div>
-
-          <div className="section-divider"></div>
-
-          <div className="property-owner-section">
+          
+          <div className="detail-section-card">
             <h2>Propietario</h2>
             <div className="owner-card-main">
               <div className="owner-info-left">
