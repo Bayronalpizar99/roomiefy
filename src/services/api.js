@@ -696,7 +696,7 @@ export const markConversationAsRead = async (conversationId) => {
 };
 
 /**
- * Obtiene el perfil del usuario actual.
+ * Obtiene el Perfíl del usuario actual.
  * @returns {Promise<{data: object|null, error: string|null}>}
  */
 export const fetchUserProfile = async () => {
@@ -704,6 +704,36 @@ export const fetchUserProfile = async () => {
     console.error("Error: Variables de entorno de API no definidas.");
     return { data: null, error: 'Configuración de API incompleta.' };
   }
+
+  // ===========================================================================================
+  // 🔴 DATOS SIMULADOS PARA PRUEBA - ELIMINAR DESPUÉS 🔴
+  // Estos datos simulan un perfil completado al 100% para visualizar cómo se vería el perfil
+  // ===========================================================================================
+  const MOCK_COMPLETED_PROFILE = {
+    nombre: "Juan Carlos Pérez",
+    edad: 25,
+    email: "juan.perez@example.com",
+    ubicacion: "San José, Costa Rica",
+    ocupacion: "Ingeniero de Software",
+    descripcion: "Soy una persona tranquila y responsable. Me gusta mantener el espacio limpio y respetar la privacidad de los demás. Disfruto de la música, el deporte y pasar tiempo con amigos.",
+    foto: "https://randomuser.me/api/portraits/men/32.jpg",
+    tieneApartamento: "no",
+    presupuesto: 450, 
+    nivelSocial: 7,
+    nivelLimpieza: 8,
+    aceptaFumadores: "no",
+    aceptaMascotas: "si",
+    aceptaInvitados: "si",
+    intereses: ["Deportes", "Música", "Tecnología", "Cine", "Cocinar"],
+    idiomas: ["Español", "Inglés"],
+    isSearching: false
+  };
+
+  // Descomentar esta línea para usar los datos simulados
+  return { data: MOCK_COMPLETED_PROFILE, error: null };
+  // ===========================================================================================
+  // 🔴 FIN DE DATOS SIMULADOS 🔴
+  // ===========================================================================================
 
   try {
     const response = await fetch(`${apiUrl}profile`, {
@@ -716,7 +746,7 @@ export const fetchUserProfile = async () => {
     });
 
     if (!response.ok) {
-      const errorMsg = `Error al obtener el perfil: ${response.status} ${response.statusText}`;
+      const errorMsg = `Error al obtener el Perfíl: ${response.status} ${response.statusText}`;
       console.error(errorMsg);
       return { data: null, error: errorMsg };
     }
@@ -725,14 +755,14 @@ export const fetchUserProfile = async () => {
     return { data, error: null };
   } catch (error) {
     console.error(error);
-    return { data: null, error: error?.message || 'Fallo de red al obtener el perfil.' };
+    return { data: null, error: error?.message || 'Fallo de red al obtener el Perfíl.' };
   }
 };
 
 /**
- * Actualiza el perfil del usuario.
- * @param {object} profileData - Los nuevos datos del perfil.
- * @returns {Promise<{data: object|null, error: string|null}>}
+ * Actualiza el Perfíl del usuario.
+ * @param {object} profileData - Los nuevos datos del Perfíl.
+{{ ... }}
  */
 export const updateUserProfile = async (profileData) => {
   if (!apiUrl || !apiKey) {
@@ -810,6 +840,35 @@ export const fetchUserProperties = async () => {
     console.error("Error: Variables de entorno de API no definidas.");
     return { data: [], error: 'Configuración de API incompleta.' };
   }
+
+  // ===========================================================================================
+  // 🔴 DATOS SIMULADOS PARA PRUEBA - ELIMINAR DESPUÉS 🔴
+  // Estas propiedades simuladas acompañan al perfil completado para una vista completa
+  // ===========================================================================================
+  const MOCK_USER_PROPERTIES = [
+    {
+      id: "mock-prop-1",
+      title: "Apartamento Céntrico en Sabana",
+      location: "San José, Sabana",
+      price: 420,
+      images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800"],
+      description: "Apartamento moderno de 2 habitaciones cerca del Parque La Sabana"
+    },
+    {
+      id: "mock-prop-2",
+      title: "Casa Compartida en Escazú",
+      location: "San José, Escazú",
+      price: 380,
+      images: ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800"],
+      description: "Casa amplia con 3 habitaciones disponibles, zona tranquila"
+    }
+  ];
+
+  // Descomentar esta línea para usar las propiedades simuladas
+  return { data: MOCK_USER_PROPERTIES, error: null };
+  // ===========================================================================================
+  // 🔴 FIN DE DATOS SIMULADOS 🔴
+  // ===========================================================================================
 
   try {
     const response = await fetch(`${apiUrl}properties/user`, {
