@@ -1,13 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import StarRating from './StarRating';
-import { Bed, Bath, Crop, Trash2, Edit } from 'lucide-react'; // 1. Importamos los nuevos iconos
+import { Bed, Bath, Crop, Trash2, Edit, Heart } from 'lucide-react'; 
 import './PropertyCard.css';
 
-// 2. Añadimos showActions y los handlers a las props
-const PropertyCard = ({ property, view = 'grid', showActions = false, onDelete, onEdit }) => {
+const PropertyCard = ({ property, view = 'grid', showActions = false, onDelete, onEdit, isFavorite, onToggleFavorite }) => {
   const {
-    property_photo, name, location, price, amenities, owner_name,
+    id, property_photo, name, location, price, amenities, owner_name,
     owner_profile_pic, rating, bedrooms, bathrooms, square_meters,
   } = property;
 
@@ -16,6 +15,23 @@ const PropertyCard = ({ property, view = 'grid', showActions = false, onDelete, 
 
   const cardContent = (
     <div className="property-card">
+      {}
+      {}
+      {typeof isFavorite !== 'undefined' && (
+        <button
+          className={`favorite-icon-button ${isFavorite ? 'favorited' : ''}`}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleFavorite(id);
+          }}
+          aria-label={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+        >
+          <Heart />
+        </button>
+      )}
+      {}
+
       <img src={property_photo} alt={name} className="property-image" />
       <div className="property-info">
         <h3>{name}</h3>
@@ -43,8 +59,6 @@ const PropertyCard = ({ property, view = 'grid', showActions = false, onDelete, 
           <StarRating rating={rating} />
         </div>
         
-        {/* --- INICIO DE CAMBIOS --- */}
-        {/* 3. Mostramos los botones solo si showActions es true */}
         {showActions && (
           <div className="card-actions">
             <button onClick={(e) => { e.preventDefault(); onEdit(); }} className="action-button edit-button">
@@ -55,12 +69,10 @@ const PropertyCard = ({ property, view = 'grid', showActions = false, onDelete, 
             </button>
           </div>
         )}
-        {/* --- FIN DE CAMBIOS --- */}
       </div>
     </div>
   );
 
-  // 4. Si se muestran las acciones, no envolvemos la tarjeta en un Link para que los botones funcionen
   return showActions ? (
     <div className="property-card-link">{cardContent}</div>
   ) : (

@@ -225,6 +225,7 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
             {isDropdownOpen && (
               <div className="user-dropdown open" role="menu">
                 <button onClick={(e) => { e.stopPropagation(); setIsDropdownOpen(false); navigate('/perfil'); }} className="dropdown-item" role="menuitem">Mi perfil</button>
+                <button onClick={(e) => { e.stopPropagation(); setIsDropdownOpen(false); navigate('/favoritos'); }} className="dropdown-item" role="menuitem">Mis Favoritos</button>
                 <button onClick={(e) => { e.stopPropagation(); setIsDropdownOpen(false); logout(); }} className="dropdown-item" role="menuitem">Cerrar sesión</button>
               </div>
             )}

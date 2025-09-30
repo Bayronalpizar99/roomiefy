@@ -17,6 +17,7 @@ import LoginModal from './components/LoginModal';
 import { fetchProperties, deleteProperty } from './services/api';
 import "./App.css";
 import Toast from './components/Toast';
+import MyFavoritesPage from './pages/MyFavoritesPage'; // Se importa la nueva página
 
 function App() {
   const { toggleTheme } = useTheme();
@@ -141,6 +142,11 @@ function App() {
             <Route
               path="/propiedad/editar/:propertyId"
               element={<EditPropertyPage myProperties={myProperties} onUpdateProperty={handleUpdateProperty} />}
+            />
+            {/* Se añade la nueva ruta para Favoritos */}
+            <Route 
+              path="/favoritos" 
+              element={<MyFavoritesPage allProperties={allProperties} />} 
             />
             <Route path="/propiedad/:propertyId" element={<PropertyDetailPage allProperties={allProperties} loading={loading} />} />
             <Route path="/roomie/:roomieId" element={<RoomieDetailPage />} />

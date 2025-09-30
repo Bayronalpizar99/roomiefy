@@ -9,14 +9,15 @@ import './PropertyDetailPage.css';
 const PropertyDetailPage = ({ allProperties, loading }) => {
   const { propertyId } = useParams();
   const navigate = useNavigate();
-  const { user, requireLogin } = useAuth();
+  const { user, requireLogin, favoriteIds, toggleFavorite } = useAuth(); // Se añaden favoriteIds y toggleFavorite
   const [isContacting, setIsContacting] = useState(false);
 
   const property = useMemo(() => {
     return allProperties.find(p => String(p.id) === String(propertyId));
   }, [propertyId, allProperties]);
 
-  const [isFavorited, setIsFavorited] = useState(false);
+  // isFavorited ahora se deriva del contexto
+  const isFavorited = property ? favoriteIds.has(property.id) : false;
   
   const handleShare = () => {
     const url = window.location.href;
@@ -165,7 +166,8 @@ const PropertyDetailPage = ({ allProperties, loading }) => {
                 className={`action-btn favorite-btn ${
                   isFavorited ? 'favorited' : ''
                 }`}
-                onClick={() => setIsFavorited(!isFavorited)}
+                // El onClick ahora llama a la función del contexto
+                onClick={() => toggleFavorite(property.id)}
               >
                 <Heart size={18} /> {isFavorited ? 'Guardado' : 'Guardar'}
               </button>

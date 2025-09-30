@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext(null);
@@ -8,6 +8,43 @@ export const AuthProvider = ({ children }) => {
   const [idToken, setIdToken] = useState(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("Para continuar, por favor inicia sesión.");
+  
+  // --- LÓGICA DE FAVORITOS INTEGRADA ---
+  const [favoriteIds, setFavoriteIds] = useState(new Set());
+
+  // Cargar favoritos desde localStorage cuando el usuario cambia
+  useEffect(() => {
+    if (user) {
+      const storedFavorites = localStorage.getItem(`roomify_favorites_${user.email}`);
+      if (storedFavorites) {
+        setFavoriteIds(new Set(JSON.parse(storedFavorites)));
+      }
+    } else {
+      setFavoriteIds(new Set()); // Limpiar favoritos si no hay usuario
+    }
+  }, [user]);
+
+  // Función para añadir/quitar de favoritos
+  const toggleFavorite = useCallback((propertyId) => {
+    if (!user) {
+      requireLogin("Debes iniciar sesión para guardar favoritos.");
+      return;
+    }
+    
+    setFavoriteIds(prevIds => {
+      const newIds = new Set(prevIds);
+      if (newIds.has(propertyId)) {
+        newIds.delete(propertyId);
+      } else {
+        newIds.add(propertyId);
+      }
+      // Guardar en localStorage
+      localStorage.setItem(`roomify_favorites_${user.email}`, JSON.stringify(Array.from(newIds)));
+      return newIds;
+    });
+  }, [user]);
+  // --- FIN DE LÓGICA DE FAVORITOS ---
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -23,7 +60,7 @@ export const AuthProvider = ({ children }) => {
 
   // Efecto para proteger rutas
   useEffect(() => {
-    const protectedPaths = ['/chat', '/perfil', '/mis-propiedades', '/publicar'];
+    const protectedPaths = ['/chat', '/perfil', '/mis-propiedades', '/publicar', '/favoritos'];
     const pathIsProtected = protectedPaths.some(path => location.pathname.startsWith(path));
 
     if (!user && pathIsProtected) {
@@ -36,6 +73,8 @@ export const AuthProvider = ({ children }) => {
         message = 'Inicia sesión para ver tus propiedades.';
       } else if (location.pathname === '/publicar') {
         message = 'Inicia sesión para poder publicar.';
+      } else if (location.pathname === '/favoritos') {
+        message = 'Inicia sesión para ver tus propiedades favoritas.';
       }
 
       requireLogin(message);
@@ -51,8 +90,6 @@ export const AuthProvider = ({ children }) => {
     setIsLoginModalOpen(false);
   };
 
-  // --- MODIFICACIÓN CLAVE ---
-  // La función logout ahora solo limpia las credenciales, sin recargar la página.
   const logout = () => {
     localStorage.removeItem('roomify_user');
     localStorage.removeItem('roomify_token');
@@ -77,6 +114,8 @@ export const AuthProvider = ({ children }) => {
     isLoginModalOpen,
     modalMessage,
     requireLogin,
+    favoriteIds,
+    toggleFavorite,
   };
 
   return (
