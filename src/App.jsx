@@ -18,6 +18,7 @@ import { fetchProperties, deleteProperty } from './services/api';
 import "./App.css";
 import Toast from './components/Toast';
 import MyFavoritesPage from './pages/MyFavoritesPage'; // Se importa la nueva página
+import Footer from './components/Footer';
 
 function App() {
   const { toggleTheme } = useTheme();
@@ -166,6 +167,7 @@ function App() {
         onClose={() => setToast(prev => ({ ...prev, visible: false }))}
         position="bottom-right"
       />
+      <Footer />
     </div>
   );
 }
