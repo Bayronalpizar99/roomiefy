@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [idToken, setIdToken] = useState(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("Para continuar, por favor inicia sesión.");
+  const [isInitializing, setIsInitializing] = useState(true);
   
   // --- LÓGICA DE FAVORITOS INTEGRADA ---
   const [favoriteIds, setFavoriteIds] = useState(new Set());
@@ -56,10 +57,26 @@ export const AuthProvider = ({ children }) => {
       setUser(JSON.parse(storedUser));
       setIdToken(storedToken);
     }
+    
+    // Marcar la inicialización como completa después de un breve delay
+    // para asegurar que el usuario se haya cargado desde localStorage
+    setTimeout(() => {
+      setIsInitializing(false);
+    }, 100);
   }, []);
+
+  // Cerrar el modal automáticamente cuando el usuario inicia sesión
+  useEffect(() => {
+    if (user && isLoginModalOpen) {
+      setIsLoginModalOpen(false);
+    }
+  }, [user, isLoginModalOpen]);
 
   // Efecto para proteger rutas
   useEffect(() => {
+    // No ejecutar protección hasta que la inicialización haya terminado
+    if (isInitializing) return;
+
     const protectedPaths = ['/chat', '/perfil', '/mis-propiedades', '/publicar', '/favoritos'];
     const pathIsProtected = protectedPaths.some(path => location.pathname.startsWith(path));
 
@@ -80,7 +97,7 @@ export const AuthProvider = ({ children }) => {
       requireLogin(message);
       navigate('/', { replace: true });
     }
-  }, [user, location, navigate]);
+  }, [user, location, navigate, isInitializing]);
 
   const login = (userData, token) => {
     localStorage.setItem('roomify_user', JSON.stringify(userData));
@@ -114,6 +131,7 @@ export const AuthProvider = ({ children }) => {
     isLoginModalOpen,
     modalMessage,
     requireLogin,
+    closeLoginModal,
     favoriteIds,
     toggleFavorite,
   };
