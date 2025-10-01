@@ -46,7 +46,8 @@
 /* El contenedor de las tarjetas en VISTA DE GRID */
 .properties-container.grid-view {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 340px);
+  /* Responsive: se adapta desde móvil hasta desktop */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
   gap: 1.5rem;
   padding: 1rem;
   width: 100%;
@@ -55,6 +56,14 @@
   overflow-y: auto;
   align-items: stretch;
   justify-content: start;
+}
+
+/* En pantallas pequeñas, usar una sola columna */
+@media (max-width: 767px) {
+  .properties-container.grid-view {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 }
 
 /* El contenedor de las tarjetas en VISTA DE LISTA */

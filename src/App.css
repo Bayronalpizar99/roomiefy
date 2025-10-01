@@ -3,21 +3,44 @@
   flex-direction: column;
   height: 100vh;
 }
+
 .main-content-area {
   flex: 1;
   overflow-y: auto; 
   display: flex;
   flex-direction: column;
 }
+
 .scroll-area-viewport {
   height: 100%;
   width: 100%;
 }
 
-/* Wrapper para el contenido de las páginas (Routes) con padding */
+/* Wrapper para el contenido de las páginas (Routes) - SIN PADDING en móvil */
 .content-wrapper {
-  padding: 1rem 2rem 2rem;
+  padding: 0;
   flex: 1;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Padding solo en tablet y desktop */
+@media (min-width: 768px) {
+  .content-wrapper {
+    padding: 0.5rem 1rem 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .content-wrapper {
+    padding: 1rem 1.5rem 1.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .content-wrapper {
+    padding: 1rem 2rem 2rem;
+  }
 }
 
 /* Footer ocupa ancho completo, ignorando padding del viewport */

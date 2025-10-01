@@ -2,7 +2,9 @@
 
 /* Estilos base para la tarjeta de propiedad */
 .property-card {
-  width: 340px;
+  /* Responsive: ancho flexible con máximo de 340px */
+  width: 100%;
+  max-width: 340px;
   /* CAMBIO 1: Reducimos la altura total para que sea más compacta */
   height: 440px; 
   background-color: var(--color-surface);
@@ -14,6 +16,13 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   will-change: transform;
   flex-shrink: 0;
+}
+
+/* En móvil, permitir que ocupe todo el ancho disponible */
+@media (max-width: 767px) {
+  .property-card {
+    max-width: 100%;
+  }
 }
 
 .property-card:hover {
@@ -151,6 +160,7 @@
   flex-direction: row;
   align-items: stretch;
   width: 100%;
+  max-width: 100%;
   height: auto;
   min-height: 220px;
 }
@@ -159,6 +169,24 @@
   width: 280px;
   height: auto;
   flex-shrink: 0;
+}
+
+/* Vista de lista responsive en móvil */
+@media (max-width: 767px) {
+  .list-view-card .property-card {
+    flex-direction: column;
+    min-height: auto;
+  }
+  
+  .list-view-card .property-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+  }
+  
+  .list-view-card .property-info {
+    padding: 1rem;
+  }
 }
 
 .list-view-card .property-info {

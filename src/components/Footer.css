@@ -118,3 +118,22 @@
     justify-content: space-between;
   }
 }
+
+/* --- INICIO DE LAS MEJORAS RESPONSIVE --- */
+@media (max-width: 480px) {
+  .footer-container {
+    /* Reducimos el padding en pantallas muy pequeñas */
+    padding: 2rem 1rem 1rem;
+  }
+
+  .footer-main {
+    /* Hacemos que el texto de las columnas se centre en móvil */
+    text-align: center;
+  }
+
+  .social-icons {
+    /* Centramos los iconos de redes sociales */
+    justify-content: center;
+  }
+}
+/* --- FIN DE LAS MEJORAS RESPONSIVE --- */
