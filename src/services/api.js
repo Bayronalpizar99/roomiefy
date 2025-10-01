@@ -313,7 +313,7 @@ export const createProperty = async (propertyData) => {
   }
 
   try {
-    const response = await fetch(`${apiUrl}/properties`, {
+    const response = await fetch(`${apiUrl}properties`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
