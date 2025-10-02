@@ -31,8 +31,8 @@ const ProfileDashboard = () => {
       setLoading(true);
       try {
         const [profileResponse, propertiesResponse] = await Promise.all([
-          fetchUserProfile(),
-          fetchUserProperties()
+          fetchUserProfile(user?.email),
+          fetchUserProperties(user?.email)
         ]);
 
         if (profileResponse.data) {
@@ -96,7 +96,7 @@ const ProfileDashboard = () => {
 
     setUpdatingStatus(true);
     try {
-      const response = await updateSearchingStatus(checked);
+      const response = await updateSearchingStatus(checked, user?.email);
       if (response.data) {
         setIsSearching(checked);
       } else {

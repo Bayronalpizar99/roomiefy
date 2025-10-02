@@ -394,7 +394,7 @@ export const createRoomieProfile = async (profileData) => {
   });
   if (profileData.foto) formData.append("foto", profileData.foto, profileData.foto.name);
 
-  const response = await fetch(apiUrl + 'roomies', {
+  const response = await fetch(apiUrl + 'profile', {
     method: "POST",
     headers: {
       "Ocp-Apim-Subscription-Key": apiKey,
@@ -736,22 +736,23 @@ export const markConversationAsRead = async (conversationId) => {
     return true;
   } catch (error) {
     console.error("Error de red o excepción al marcar como leída la conversación:", error);
-    return false;
+    return { data: null, error: error?.message || 'Fallo de red al marcar como leída la conversación.' };
   }
 };
 
 /**
  * Obtiene el Perfíl del usuario actual.
+ * @param {string} userid - ID único del usuario (email)
  * @returns {Promise<{data: object|null, error: string|null}>}
  */
-export const fetchUserProfile = async () => {
+export const fetchUserProfile = async (userid) => {
   if (!apiUrl || !apiKey) {
     console.error("Error: Variables de entorno de API no definidas.");
     return { data: null, error: 'Configuración de API incompleta.' };
   }
 
   try {
-    const response = await fetch(`${apiUrl}profile`, {
+    const response = await fetch(`${apiUrl}profile/${userid}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -779,14 +780,14 @@ export const fetchUserProfile = async () => {
  * @param {object} profileData - Los nuevos datos del Perfíl.
 {{ ... }}
  */
-export const updateUserProfile = async (profileData) => {
+export const updateUserProfile = async (profileData, userid) => {
   if (!apiUrl || !apiKey) {
     console.error("Error: Variables de entorno de API no definidas.");
     return { data: null, error: 'Configuración de API incompleta.' };
   }
 
   try {
-    const response = await fetch(`${apiUrl}profile`, {
+    const response = await fetch(`${apiUrl}profile/${userid}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -813,16 +814,17 @@ export const updateUserProfile = async (profileData) => {
 /**
  * Actualiza el estado de búsqueda de roomie del usuario.
  * @param {boolean} isSearching - True si está buscando roomie, false si no.
+ * @param {string} userid - ID único del usuario (email)
  * @returns {Promise<{data: object|null, error: string|null}>}
  */
-export const updateSearchingStatus = async (isSearching) => {
+export const updateSearchingStatus = async (isSearching, userid) => {
   if (!apiUrl || !apiKey) {
     console.error("Error: Variables de entorno de API no definidas.");
     return { data: null, error: 'Configuración de API incompleta.' };
   }
 
   try {
-    const response = await fetch(`${apiUrl}profile/searching`, {
+    const response = await fetch(`${apiUrl}profile/searching/${userid}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -850,14 +852,14 @@ export const updateSearchingStatus = async (isSearching) => {
  * Obtiene las propiedades del usuario actual.
  * @returns {Promise<{data: array, error: string|null}>}
  */
-export const fetchUserProperties = async () => {
+export const fetchUserProperties = async (userid) => {
   if (!apiUrl || !apiKey) {
     console.error("Error: Variables de entorno de API no definidas.");
     return { data: [], error: 'Configuración de API incompleta.' };
   }
   console.log("El valor de apiUrl es:", apiUrl); 
   try {
-    const response = await fetch(`${apiUrl}properties/user`, {
+    const response = await fetch(`${apiUrl}properties/${userid}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -879,3 +881,8 @@ export const fetchUserProperties = async () => {
     return { data: [], error: error?.message || 'Fallo de red al obtener las propiedades.' };
   }
 };
+
+//TO DO: asegurarse de que las apis que lo necesiten envien el id del usuario
+//ejemplo: fetchUserProperties(userid); 
+
+//TO DO: Reviasar las apis en azure 

@@ -154,8 +154,11 @@ const ProfileForm = () => {
         }
       });
 
+      // Establecer isSearching en false por defecto cuando se complete el formulario
+      data.append("isSearching", "false");
+
       if (isEditMode) {
-        await updateUserProfile(data);
+        await updateUserProfile(data, user?.email);
         alert("Perfil actualizado con éxito");
       } else {
         await createRoomieProfile(data);
