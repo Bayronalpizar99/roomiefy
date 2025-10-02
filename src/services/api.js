@@ -885,36 +885,7 @@ export const fetchUserProperties = async () => {
     console.error("Error: Variables de entorno de API no definidas.");
     return { data: [], error: 'Configuración de API incompleta.' };
   }
-
-  // ===========================================================================================
-  // 🔴 DATOS SIMULADOS PARA PRUEBA - ELIMINAR DESPUÉS 🔴
-  // Estas propiedades simuladas acompañan al perfil completado para una vista completa
-  // ===========================================================================================
-  const MOCK_USER_PROPERTIES = [
-    {
-      id: "mock-prop-1",
-      title: "Apartamento Céntrico en Sabana",
-      location: "San José, Sabana",
-      price: 420,
-      images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800"],
-      description: "Apartamento moderno de 2 habitaciones cerca del Parque La Sabana"
-    },
-    {
-      id: "mock-prop-2",
-      title: "Casa Compartida en Escazú",
-      location: "San José, Escazú",
-      price: 380,
-      images: ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800"],
-      description: "Casa amplia con 3 habitaciones disponibles, zona tranquila"
-    }
-  ];
-
-  // Descomentar esta línea para usar las propiedades simuladas
-  return { data: MOCK_USER_PROPERTIES, error: null };
-  // ===========================================================================================
-  // 🔴 FIN DE DATOS SIMULADOS 🔴
-  // ===========================================================================================
-
+  console.log("El valor de apiUrl es:", apiUrl); 
   try {
     const response = await fetch(`${apiUrl}properties/user`, {
       method: "GET",
