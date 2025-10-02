@@ -750,36 +750,6 @@ export const fetchUserProfile = async () => {
     return { data: null, error: 'Configuración de API incompleta.' };
   }
 
-  // ===========================================================================================
-  // 🔴 DATOS SIMULADOS PARA PRUEBA - ELIMINAR DESPUÉS 🔴
-  // Estos datos simulan un perfil completado al 100% para visualizar cómo se vería el perfil
-  // ===========================================================================================
-  const MOCK_COMPLETED_PROFILE = {
-    nombre: "Juan Carlos Pérez",
-    edad: 25,
-    email: "juan.perez@example.com",
-    ubicacion: "San José, Costa Rica",
-    ocupacion: "Ingeniero de Software",
-    descripcion: "Soy una persona tranquila y responsable. Me gusta mantener el espacio limpio y respetar la privacidad de los demás. Disfruto de la música, el deporte y pasar tiempo con amigos.",
-    foto: "https://randomuser.me/api/portraits/men/32.jpg",
-    tieneApartamento: "no",
-    presupuesto: 450, 
-    nivelSocial: 7,
-    nivelLimpieza: 8,
-    aceptaFumadores: "no",
-    aceptaMascotas: "si",
-    aceptaInvitados: "si",
-    intereses: ["Deportes", "Música", "Tecnología", "Cine", "Cocinar"],
-    idiomas: ["Español", "Inglés"],
-    isSearching: false
-  };
-
-  // Descomentar esta línea para usar los datos simulados
-  return { data: MOCK_COMPLETED_PROFILE, error: null };
-  // ===========================================================================================
-  // 🔴 FIN DE DATOS SIMULADOS 🔴
-  // ===========================================================================================
-
   try {
     const response = await fetch(`${apiUrl}profile`, {
       method: "GET",
