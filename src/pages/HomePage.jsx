@@ -9,23 +9,13 @@ import { Button } from '@radix-ui/themes';
 import './HomePage.css';
 import WelcomeTourDialog from '../components/WelcomeTourDialog';
 
-
-// CAMBIO 1: Recibimos 'properties' y 'loading' como props desde App.jsx
-const HomePage = ({ searchQuery = '', properties: allProperties, loading }) => {
+const HomePage = ({ properties, loading, filters, setFilters }) => {
   const [view, setView] = useState('grid');
   const [sortOrder, setSortOrder] = useState('recent');
   const [currentPage, setCurrentPage] = useState(1);
   const propertiesPerPage = 12;
   const [tourOpen, setTourOpen] = useState(false);
   
-  const [filters, setFilters] = useState({
-    location: searchQuery,
-    price: 500,
-    bedrooms: 'any',
-    amenities: new Set(),
-  });
-  
-  // Mostrar tour solo la primera vez que el usuario entra al HomePage
   useEffect(() => {
     try {
       const done = localStorage.getItem('roomiefy_welcome_tour_done');
@@ -42,76 +32,31 @@ const HomePage = ({ searchQuery = '', properties: allProperties, loading }) => {
     setTourOpen(false);
   };
 
-  useEffect(() => {
-    if (searchQuery !== undefined) {
-      setFilters(prev => ({
-        ...prev,
-        location: searchQuery
-      }));
-      setCurrentPage(1);
-    }
-  }, [searchQuery]);
+  // La lógica de filtrado del lado del cliente se ha eliminado
+  // Ahora las propiedades ya vienen filtradas desde App.jsx
 
-  const filteredProperties = useMemo(() => {
-    let properties = [...allProperties];
-
-    if (filters.location && filters.location.trim() !== '') {
-      const searchTerm = filters.location.toLowerCase().trim();
-      if (searchTerm) {
-        properties = properties.filter(property => {
-          const searchIn = [
-            property.title || '',
-            property.location || '',
-            property.description || '',
-            ...(property.amenities || [])
-          ].join(' ').toLowerCase();
-          
-          return searchIn.includes(searchTerm);
-        });
-      }
-    }
-
-    properties = properties.filter(p => p.price <= filters.price);
-
-    if (filters.bedrooms !== 'any') {
-      properties = properties.filter(p => {
-        const bedroomCount = p.bedrooms;
-        const filterValue = filters.bedrooms;
-
-        if (filterValue === 'studio') {
-          return bedroomCount === 1;
-        }
-        if (filterValue === '4+') {
-          return bedroomCount >= 4;
-        }
-        return bedroomCount === parseInt(filterValue);
-      });
-    }
-
-    if (filters.amenities.size > 0) {
-      properties = properties.filter(p => 
-        [...filters.amenities].every(amenity => p.amenities.includes(amenity))
-      );
-    }
-
+  const sortedProperties = useMemo(() => {
+    let sorted = [...properties];
     switch (sortOrder) {
       case 'price-asc':
-        return properties.sort((a, b) => a.price - b.price);
+        return sorted.sort((a, b) => a.price - b.price);
       case 'price-desc':
-        return properties.sort((a, b) => b.price - a.price);
+        return sorted.sort((a, b) => b.price - a.price);
       case 'rated':
-        return properties.sort((a, b) => b.rating - a.rating);
+        return sorted.sort((a, b) => b.rating - a.rating);
       case 'recent':
       default:
-        return properties.sort((a, b) => (b.id || 0) - (a.id || 0));
+        // Asumiendo que la API ya los devuelve ordenados por defecto
+        return sorted;
     }
-  }, [allProperties, filters, sortOrder]);
+  }, [properties, sortOrder]);
 
-  const totalPages = Math.ceil(filteredProperties.length / propertiesPerPage);
+
+  const totalPages = Math.ceil(sortedProperties.length / propertiesPerPage);
   const currentProperties = useMemo(() => {
     const startIndex = (currentPage - 1) * propertiesPerPage;
-    return filteredProperties.slice(startIndex, startIndex + propertiesPerPage);
-  }, [filteredProperties, currentPage]);
+    return sortedProperties.slice(startIndex, startIndex + propertiesPerPage);
+  }, [sortedProperties, currentPage]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -124,13 +69,11 @@ const HomePage = ({ searchQuery = '', properties: allProperties, loading }) => {
 
   return (
     <div className="homepage-layout"> 
-       {/* <-- 2. Componente añadido */}
       <WelcomeTourDialog 
         isOpen={tourOpen} 
         setIsOpen={setTourOpen} 
         handleClose={handleTourClose} 
       />
-      {/* Filtros en móvil */}
       <Dialog.Root>
         <Dialog.Trigger asChild>
           <Button 
@@ -162,7 +105,6 @@ const HomePage = ({ searchQuery = '', properties: allProperties, loading }) => {
         </Dialog.Portal>
       </Dialog.Root>
 
-      {/* Filtros en escritorio */}
       <div className="desktop-filters">
         <Filters filters={filters} setFilters={setFilters} />
       </div>

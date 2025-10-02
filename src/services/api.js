@@ -1,11 +1,12 @@
 /**
  * Obtiene los datos de las propiedades desde la API de Azure.
+ * AHORA SOPORTA FILTROS DEL LADO DEL SERVIDOR.
  */
 
 const apiUrl = import.meta.env.VITE_API_URL;
 const apiKey = import.meta.env.VITE_API_KEY;
 
-export const fetchProperties = async () => {
+export const fetchProperties = async (options = {}) => {
   // Verificación para asegurar que las variables de entorno están cargadas
   if (!apiUrl) {
     console.error("Error: La variable de entorno VITE_API_URL no está definida.");
@@ -17,7 +18,41 @@ export const fetchProperties = async () => {
   }
 
   try {
-    const response = await fetch(apiUrl + 'properties', {
+    const {
+      search,
+      price,
+      bedrooms,
+      amenities,
+      sort,
+      page,
+      pageSize
+    } = options;
+
+    const params = new URLSearchParams();
+    const appendIfDefined = (key, value) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value));
+      }
+    };
+
+    appendIfDefined('search', search);
+    appendIfDefined('priceMax', price);
+    
+    if (bedrooms && bedrooms !== 'any') {
+      appendIfDefined('bedrooms', bedrooms);
+    }
+
+    if (amenities && amenities.size > 0) {
+      params.append('amenities', Array.from(amenities).join(','));
+    }
+    
+    appendIfDefined('sort', sort);
+    appendIfDefined('page', page);
+    appendIfDefined('pageSize', pageSize);
+
+    const url = apiUrl + 'properties' + (params.toString() ? `?${params.toString()}` : '');
+
+    const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -34,18 +69,28 @@ export const fetchProperties = async () => {
         errorMsg = "Error: La URL de la API no es válida o el recurso no existe.";
       }
       console.error(errorMsg);
-      return { data: [], error: errorMsg };
+      return { data: [], meta: null, error: errorMsg };
     }
 
-    const data = await response.json();
-    // --- CAMBIO CLAVE ---
-    // Ahora la función devuelve un objeto con la data y el error
-    return { data, error: null }; 
+    const body = await response.json();
+    const items = Array.isArray(body)
+      ? body
+      : (body?.data ?? body?.items ?? body?.properties ?? []);
+
+    const totalHeader = response.headers.get('X-Total-Count');
+    const total = totalHeader != null
+      ? Number(totalHeader)
+      : (body?.total ?? body?.meta?.total ?? null);
+
+    const meta = { total, page, pageSize };
+
+    return { data: items, meta, error: null };
   } catch (error) {
     console.error("Error de red o excepción:", error);
-    return { data: [], error: error?.message || 'Fallo de red al obtener propiedades.' };
+    return { data: [], meta: null, error: error?.message || 'Fallo de red al obtener propiedades.' };
   }
 };
+
 
 /**
  * Obtiene las conversaciones del usuario desde la API.

@@ -33,40 +33,56 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
 
+  // Estado para los filtros de propiedades, ahora en App.jsx
+  const [filters, setFilters] = useState({
+    location: '',
+    price: 500,
+    bedrooms: 'any',
+    amenities: new Set(),
+  });
+
+  // useEffect para cargar propiedades cuando los filtros o el usuario cambian
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      const basePropertiesKey = 'roomify_base_properties';
+      
       const userPropertiesKey = user ? `roomify_properties_${user.email}` : null;
-
-      let baseProperties = JSON.parse(localStorage.getItem(basePropertiesKey) || '[]');
-      if (baseProperties.length === 0) {
-        const { data, error } = await fetchProperties();
-        if (!error && Array.isArray(data)) {
-          baseProperties = data;
-          localStorage.setItem(basePropertiesKey, JSON.stringify(baseProperties));
-        }
-      }
-
+      let localUserProperties = [];
       if (user && userPropertiesKey) {
-        const userProperties = JSON.parse(localStorage.getItem(userPropertiesKey) || '[]');
-        setAllProperties([...userProperties, ...baseProperties]);
+        localUserProperties = JSON.parse(localStorage.getItem(userPropertiesKey) || '[]');
+      }
+      
+      // Pasar los filtros a la API
+      const { data: apiProperties, error } = await fetchProperties({
+        search: filters.location || searchQuery,
+        price: filters.price,
+        bedrooms: filters.bedrooms,
+        amenities: filters.amenities,
+      });
+
+      if (error) {
+        setToast({ visible: true, type: 'error', message: `No se pudieron cargar las propiedades: ${error}` });
+        setAllProperties(localUserProperties);
       } else {
-        setAllProperties(baseProperties);
+        // Combinar propiedades de la API con las locales del usuario
+        const combined = [...localUserProperties, ...apiProperties];
+        // Eliminar duplicados si los hubiera
+        const uniqueProperties = Array.from(new Map(combined.map(p => [p.id, p])).values());
+        setAllProperties(uniqueProperties);
       }
 
       setLoading(false);
     };
 
     loadData();
-  }, [user]);
+  }, [user, filters, searchQuery]);
 
   useEffect(() => {
     const userProperties = allProperties.filter(p => p.owner_name === 'Tú (Propietario)');
     setMyProperties(userProperties);
     setHasPublished(userProperties.length > 0);
   }, [allProperties]);
-
+  
   const saveUserProperties = (updatedProperties) => {
     if (user) {
       const userPropertiesKey = `roomify_properties_${user.email}`;
@@ -138,7 +154,17 @@ function App() {
         <ScrollArea.Viewport className="scroll-area-viewport">
           <div className="content-wrapper">
             <Routes>
-              <Route path="/" element={<HomePage searchQuery={searchQuery} properties={allProperties} loading={loading} />} />
+              <Route 
+                path="/" 
+                element={
+                  <HomePage 
+                    properties={allProperties} 
+                    loading={loading}
+                    filters={filters}
+                    setFilters={setFilters}
+                  />
+                } 
+              />
               <Route path="roomies" element={<RoomiesPage searchQuery={searchQuery} onSearchQueryChange={handleSearch} />} />
               <Route path="publicar" element={<PublishPage onAddProperty={handleAddProperty} />} />
               <Route path="/mis-propiedades" element={<MyPropertiesPage myProperties={myProperties} onDeleteProperty={handleDeleteProperty} />} />
@@ -146,7 +172,6 @@ function App() {
                 path="/propiedad/editar/:propertyId"
                 element={<EditPropertyPage myProperties={myProperties} onUpdateProperty={handleUpdateProperty} />}
               />
-              {/* Se añade la nueva ruta para Favoritos */}
               <Route 
                 path="/favoritos" 
                 element={<MyFavoritesPage allProperties={allProperties} />} 
