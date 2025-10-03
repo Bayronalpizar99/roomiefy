@@ -45,13 +45,13 @@ function App() {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      
+
       const userPropertiesKey = user ? `roomify_properties_${user.email}` : null;
       let localUserProperties = [];
       if (user && userPropertiesKey) {
         localUserProperties = JSON.parse(localStorage.getItem(userPropertiesKey) || '[]');
       }
-      
+
       // Pasar los filtros a la API
       const { data: apiProperties, error } = await fetchProperties({
         search: filters.location || searchQuery,
@@ -82,7 +82,7 @@ function App() {
     setMyProperties(userProperties);
     setHasPublished(userProperties.length > 0);
   }, [allProperties]);
-  
+
   const saveUserProperties = (updatedProperties) => {
     if (user) {
       const userPropertiesKey = `roomify_properties_${user.email}`;
@@ -150,45 +150,39 @@ function App() {
         searchQuery={searchQuery}
         hasPublished={hasPublished}
       />
-      <ScrollArea.Root className="main-content-area">
-        <ScrollArea.Viewport className="scroll-area-viewport">
-          <div className="content-wrapper">
-            <Routes>
-              <Route 
-                path="/" 
-                element={
-                  <HomePage 
-                    properties={allProperties} 
-                    loading={loading}
-                    filters={filters}
-                    setFilters={setFilters}
-                  />
-                } 
+      <div className="content-wrapper">
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <HomePage
+                properties={allProperties}
+                loading={loading}
+                filters={filters}
+                setFilters={setFilters}
               />
-              <Route path="roomies" element={<RoomiesPage searchQuery={searchQuery} onSearchQueryChange={handleSearch} />} />
-              <Route path="publicar" element={<PublishPage onAddProperty={handleAddProperty} />} />
-              <Route path="/mis-propiedades" element={<MyPropertiesPage myProperties={myProperties} onDeleteProperty={handleDeleteProperty} />} />
-              <Route
-                path="/propiedad/editar/:propertyId"
-                element={<EditPropertyPage myProperties={myProperties} onUpdateProperty={handleUpdateProperty} />}
-              />
-              <Route 
-                path="/favoritos" 
-                element={<MyFavoritesPage allProperties={allProperties} />} 
-              />
-              <Route path="/propiedad/:propertyId" element={<PropertyDetailPage allProperties={allProperties} loading={loading} />} />
-              <Route path="/roomie/:roomieId" element={<RoomieDetailPage />} />
-              <Route path="/perfil" element={<ProfilePage />} />
-              <Route path="/perfil/form" element={<ProfileForm />} />
-              <Route path="/chat" element={<ChatPage />} />
-            </Routes>
-          </div>
-          <Footer />
-        </ScrollArea.Viewport>
-        <ScrollArea.Scrollbar className="scroll-area-scrollbar" orientation="vertical">
-          <ScrollArea.Thumb className="scroll-area-thumb" />
-        </ScrollArea.Scrollbar>
-      </ScrollArea.Root>
+            }
+          />
+          <Route path="roomies" element={<RoomiesPage searchQuery={searchQuery} onSearchQueryChange={handleSearch} />} />
+          <Route path="publicar" element={<PublishPage onAddProperty={handleAddProperty} />} />
+          <Route path="/mis-propiedades" element={<MyPropertiesPage myProperties={myProperties} onDeleteProperty={handleDeleteProperty} />} />
+          <Route
+            path="/propiedad/editar/:propertyId"
+            element={<EditPropertyPage myProperties={myProperties} onUpdateProperty={handleUpdateProperty} />}
+          />
+          <Route
+            path="/favoritos"
+            element={<MyFavoritesPage allProperties={allProperties} />}
+          />
+          <Route path="/propiedad/:propertyId" element={<PropertyDetailPage allProperties={allProperties} loading={loading} />} />
+          <Route path="/roomie/:roomieId" element={<RoomieDetailPage />} />
+          <Route path="/perfil" element={<ProfilePage />} />
+          <Route path="/perfil/form" element={<ProfileForm />} />
+          <Route path="/chat" element={<ChatPage />} />
+        </Routes>
+      </div>
+      <Footer />
+
       <LoginModal />
       <Toast
         visible={toast.visible}
