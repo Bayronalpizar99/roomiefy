@@ -11,6 +11,7 @@ import RoomieFilters from '../components/RoomieFilters';
 import './RoomiesPage.css';
 import FirstTimeHelp from '../components/FirstTimeHelp';
 import Toast from '../components/Toast';
+import * as ScrollArea from '@radix-ui/react-scroll-area';
 
 const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
   const [roommates, setRoommates] = useState([]);
@@ -24,7 +25,7 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
   const [view, setView] = useState('grid');
   const [sortOrder, setSortOrder] = useState('recent');
   const [currentPage, setCurrentPage] = useState(1);
-  const roommatesPerPage = 16;
+  const roommatesPerPage = 8;
   const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
 
   // Límites fijos solicitados
@@ -207,60 +208,78 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
   }, [isMobile, hasNextPage, loading, loadingMore]);
 
   return (
-    <div className="roomies-page">
-      <FirstTimeHelp />
-      <div className="roomies-container">
-        {/* Filtros responsivos: botón en móvil con modal, sidebar en escritorio */}
-        <Dialog.Root>
-          <Dialog.Trigger asChild>
-            <Button 
-              variant="soft" 
-              color="purple"
-              className="mobile-filters-button"
-              size="2"
-            >
-              <MixerHorizontalIcon /> Filtros
-            </Button>
-          </Dialog.Trigger>
-          <Dialog.Portal>
-            <Dialog.Overlay className="dialog-overlay" />
-            <Dialog.Content className="dialog-content mobile-filters-dialog" style={{
-              zIndex: 100,
-              width: '90vw',
-              maxWidth: '500px',
-              maxHeight: '85vh'
-            }}>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                marginBottom: '1.5rem'
-              }}>
-                <Dialog.Title style={{ margin: 0 }}>Filtros</Dialog.Title>
-                <Dialog.Close asChild>
-                  <button 
-                    className="icon-button" 
-                    aria-label="Cerrar"
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      padding: '0.5rem',
-                      borderRadius: '50%',
-                      display: 'flex',
+    <ScrollArea.Root className="main-content-area">
+      <ScrollArea.Viewport className="scroll-area-viewport">
+        <div className="roomies-page">
+          <FirstTimeHelp />
+          <div className="roomies-container">
+            {/* Filtros responsivos: botón en móvil con modal, sidebar en escritorio */}
+            <Dialog.Root>
+              <Dialog.Trigger asChild>
+                <Button 
+                  variant="soft" 
+                  color="purple"
+                  className="mobile-filters-button"
+                  size="2"
+                  aria-label="Abrir filtros"
+                >
+                  <MixerHorizontalIcon /> Filtros
+                </Button>
+                </Dialog.Trigger>
+                <Dialog.Portal>
+                  <Dialog.Overlay className="dialog-overlay" />
+                  <Dialog.Content className="dialog-content mobile-filters-dialog" style={{
+                    zIndex: 100,
+                    width: '90vw',
+                    maxWidth: '500px',
+                    maxHeight: '85vh'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--color-text)',
-                      '&:hover': {
-                        backgroundColor: 'var(--color-border)'
-                      }
-                    }}
-                  >
-                    <Cross2Icon />
-                  </button>
-                </Dialog.Close>
-              </div>
-              <div className="dialog-body">
+                      marginBottom: '1.5rem'
+                    }}>
+                      <Dialog.Title style={{ margin: 0 }}>Filtros</Dialog.Title>
+                      <Dialog.Close asChild>
+                        <button 
+                          className="icon-button" 
+                          aria-label="Cerrar"
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '0.5rem',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'var(--color-text)',
+                            '&:hover': {
+                              backgroundColor: 'var(--color-border)'
+                            }
+                          }}
+                        >
+                          <Cross2Icon />
+                        </button>
+                      </Dialog.Close>
+                    </div>
+                    <div className="dialog-body">
+                      <RoomieFilters 
+                        filters={filters} 
+                        setFilters={setFilters} 
+                        minBudget={minBudget}
+                        maxBudget={maxBudget}
+                        minAge={minAge}
+                        maxAge={maxAge}
+                      />
+                    </div>
+                  </Dialog.Content>
+                </Dialog.Portal>
+              </Dialog.Root>
+
+              {/* Filtros en escritorio: sidebar sticky para filtros avanzados */}
+              <div className="desktop-filters">
                 <RoomieFilters 
                   filters={filters} 
                   setFilters={setFilters} 
@@ -270,111 +289,104 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
                   maxAge={maxAge}
                 />
               </div>
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog.Root>
 
-        {/* Filtros en escritorio: sidebar sticky para filtros avanzados */}
-        <div className="desktop-filters">
-          <RoomieFilters 
-            filters={filters} 
-            setFilters={setFilters} 
-            minBudget={minBudget}
-            maxBudget={maxBudget}
-            minAge={minAge}
-            maxAge={maxAge}
-          />
-        </div>
+              <div className="roomies-results">
+                {/* Header: muestra conteo de resultados o mensaje de carga */}
+                <div className="roomies-header">
+                  <Text size="2" color="gray">
+                    {Number.isFinite(totalCount)
+                      ? `${totalCount} ${totalCount === 1 ? 'roomie encontrado' : 'roomies encontrados'}`
+                      : `Mostrando ${roommates.length} resultados`}
+                  </Text>
+                </div>
 
-        <div className="roomies-results">
-          {/* Header: muestra conteo de resultados o mensaje de carga */}
-          <div className="roomies-header">
-            <Text size="2" color="gray">
-              {Number.isFinite(totalCount)
-                ? `${totalCount} ${totalCount === 1 ? 'roomie encontrado' : 'roomies encontrados'}`
-                : `Mostrando ${roommates.length} resultados`}
-            </Text>
-          </div>
+                {/* Controles: opciones de vista y ordenamiento */}
+                <div className="roomies-controls">
+                  <ViewOptions 
+                    view={view} 
+                    onViewChange={setView} 
+                    sortOrder={sortOrder}
+                    onSortChange={setSortOrder}
+                  />
+                </div>
 
-          {/* Controles: opciones de vista y ordenamiento */}
-          <div className="roomies-controls">
-            <ViewOptions 
-              view={view} 
-              onViewChange={setView} 
-              sortOrder={sortOrder}
-              onSortChange={setSortOrder}
+                {loading ? (
+                  <div className="loading-message">Cargando roomies...</div>
+                ) : roommates.length === 0 ? (
+                  <div className="no-results">
+                    <Text as="p" mb="3">No se encontraron roomies que coincidan con tu búsqueda.</Text>
+                  </div>
+                ) : (
+                  <>
+                    {/* Lista de roommates: grid o list según vista seleccionada */}
+                    <div className={view === 'grid' ? 'roomies-grid' : 'roomies-list'}>
+                      {roommates.map((roommate) => (
+                        <RoommateCard 
+                          key={roommate.id} 
+                          roommate={roommate} 
+                          view={view}
+                          onClick={() => navigate(`/roomie/${roommate.id}`)}
+                        />
+                      ))}
+                    </div>
+                    {/* Indicador y sentinel para scroll infinito en móvil */}
+                    {isMobile && (
+                      <>
+                        {loadingMore && (
+                          <div className="infinite-loader">Cargando más...</div>
+                        )}
+                        {/* Sentinel: activa carga automática cuando entra en viewport */}
+                        <div ref={loadMoreRef} className="infinite-sentinel" aria-hidden="true" />
+                      </>
+                    )}
+                    
+                    {/* Paginación en escritorio: condicional según totalPages o hasNextPage */}
+                    {!isMobile && (Number.isFinite(totalPages) ? totalPages > 1 : (currentPage > 1 || hasNextPage)) && (
+                      <div className="pagination-container desktop-only">
+                        {Number.isFinite(totalPages) ? (
+                          <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={(page) => {
+                              setCurrentPage(page);
+                              document.querySelector('.scroll-area-viewport')?.scrollTo(0, 0);
+                            }}
+                          />
+                        ) : (
+                          <Pagination
+                            currentPage={currentPage}
+                            totalPages={0}
+                            hasPrev={currentPage > 1}
+                            hasNext={hasNextPage}
+                            hideNumbers
+                            onPageChange={(page) => {
+                              setCurrentPage(page);
+                              document.querySelector('.scroll-area-viewport')?.scrollTo(0, 0);
+                            }}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+            <Toast
+              visible={toast.visible}
+              type={toast.type}
+              message={toast.message}
+              onClose={() => setToast(prev => ({ ...prev, visible: false }))}
+              position="bottom-right"
             />
           </div>
-
-          {loading ? (
-            <div className="loading-message">Cargando roomies...</div>
-          ) : roommates.length === 0 ? (
-            <div className="no-results">
-              <Text as="p" mb="3">No se encontraron roomies que coincidan con tu búsqueda.</Text>
-            </div>
-          ) : (
-            <>
-              {/* Lista de roommates: grid o list según vista seleccionada */}
-              <div className={view === 'grid' ? 'roomies-grid' : 'roomies-list'}>
-                {roommates.map((roommate) => (
-                  <RoommateCard 
-                    key={roommate.id} 
-                    roommate={roommate} 
-                    view={view}
-                    onClick={() => navigate(`/roomie/${roommate.id}`)}
-                  />
-                ))}
-              </div>
-              {/* Indicador y sentinel para scroll infinito en móvil */}
-              {isMobile && (
-                <>
-                  {loadingMore && (
-                    <div className="infinite-loader">Cargando más...</div>
-                  )}
-                  {/* Sentinel: activa carga automática cuando entra en viewport */}
-                  <div ref={loadMoreRef} className="infinite-sentinel" aria-hidden="true" />
-                </>
-              )}
-              
-              {/* Paginación en escritorio: condicional según totalPages o hasNextPage */}
-              {!isMobile && (Number.isFinite(totalPages) ? totalPages > 1 : (currentPage > 1 || hasNextPage)) && (
-                <div className="pagination-container desktop-only">
-                  {Number.isFinite(totalPages) ? (
-                    <Pagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={(page) => {
-                        setCurrentPage(page);
-                        document.querySelector('.scroll-area-viewport')?.scrollTo(0, 0);
-                      }}
-                    />
-                  ) : (
-                    <Pagination
-                      currentPage={currentPage}
-                      totalPages={0}
-                      hasPrev={currentPage > 1}
-                      hasNext={hasNextPage}
-                      hideNumbers
-                      onPageChange={(page) => {
-                        setCurrentPage(page);
-                        document.querySelector('.scroll-area-viewport')?.scrollTo(0, 0);
-                      }}
-                    />
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-      <Toast
-        visible={toast.visible}
-        type={toast.type}
-        message={toast.message}
-        onClose={() => setToast(prev => ({ ...prev, visible: false }))}
-        position="bottom-right"
-      />
-    </div>
+        </ScrollArea.Viewport>
+        <ScrollArea.Scrollbar orientation="vertical">
+          <ScrollArea.Thumb />
+        </ScrollArea.Scrollbar>
+        <ScrollArea.Scrollbar orientation="horizontal">
+          <ScrollArea.Thumb />
+        </ScrollArea.Scrollbar>
+      </ScrollArea.Root>
   );
 };
 
