@@ -115,7 +115,6 @@ function App() {
     const updatedProperties = allProperties.map(p =>
       String(p.id) === String(propertyId) ? updatedProperty : p
     );
-    setAllProperties(updatedProperties);
     saveUserProperties(updatedProperties);
   };
 
@@ -123,33 +122,16 @@ function App() {
 
   useEffect(() => {
     const isRoomies = location.pathname === '/roomies';
-    const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
-    const lockScroll = isRoomies && !isMobile;
-    if (lockScroll) {
-      document.body.classList.add('lock-scroll');
-    } else {
-      document.body.classList.remove('lock-scroll');
-    }
-    const onResize = () => {
-      const nowMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
-      if (isRoomies && !nowMobile) document.body.classList.add('lock-scroll');
-      else document.body.classList.remove('lock-scroll');
-    };
-    window.addEventListener('resize', onResize);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      document.body.classList.remove('lock-scroll');
-    };
   }, [location.pathname]);
 
   return (
     <div className="app-layout">
       <Navbar
-        toggleTheme={toggleTheme}
         onSearch={handleSearch}
         searchQuery={searchQuery}
         hasPublished={hasPublished}
       />
+
       <div className="content-wrapper">
         <Routes>
           <Route
