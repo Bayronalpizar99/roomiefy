@@ -16,6 +16,25 @@ import { fetchRoommateById, createConversation } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import './RoomieDetailPage.css';
 
+/**
+ * RoomieDetailPage: Página de detalle para un roommate específico.
+ *
+ * - Muestra información completa del roommate (perfil, presupuesto, fotos, intereses, etc.).
+ * - Maneja carga de datos desde la API con soporte para datos pre-cargados desde navegación.
+ * - Incluye funcionalidad para iniciar conversación vía chat.
+ * - Usa estados para manejar loading y errores de forma robusta.
+ *
+ * Dependencias clave:
+ * - `fetchRoommateById`: Carga datos del roommate por ID.
+ * - `createConversation`: Crea una nueva conversación en el chat.
+ * - `useAuth`: Para verificar autenticación y requerir login si es necesario.
+ *
+ * Flujo típico:
+ * 1. Inicializa estados con datos opcionales de navegación (roommateFromState).
+ * 2. Carga datos frescos de la API en useEffect para asegurar sincronización.
+ * 3. Renderiza perfil con secciones condicionales basadas en datos disponibles.
+ * 4. Maneja interacciones como contacto, con navegación a chat.
+ */
 const RoomieDetailPage = () => {
   const location = useLocation();
   const { roommate: roommateFromState } = location.state || {};
@@ -23,14 +42,18 @@ const RoomieDetailPage = () => {
   const navigate = useNavigate();
   const { user, requireLogin } = useAuth();
 
-  // --- INICIO DE LA CORRECCIÓN ---
-  // 1. Se inicializa el estado 'roommate' con los datos de roommateFromState si existen.
+  // Estados principales para manejar datos, carga y acciones.
+  // roommateFromState permite renderizado inmediato si venimos de una lista.
   const [roommate, setRoommate] = useState(roommateFromState || null);
-  // 2. El estado de 'loading' ahora depende de si los datos ya llegaron.
-  const [loading, setLoading] = useState(!roommateFromState);
-  const [contacting, setContacting] = useState(false);
-  // --- FIN DE LA CORRECCIÓN ---
+  const [loading, setLoading] = useState(!roommateFromState); // Evita spinner si ya hay datos.
+  const [contacting, setContacting] = useState(false); // Para deshabilitar botón durante contacto.
 
+  /**
+   * Maneja el contacto con el roommate creando una conversación en el chat.
+   * - Verifica autenticación y requiere login si no está logueado.
+   * - Crea conversación con mensaje predeterminado.
+   * - Navega al chat con detalles de la conversación o fallback general.
+   */
   const handleContact = async () => {
     // Si no está logueado, pedir login
     if (!user) {
@@ -67,28 +90,38 @@ const RoomieDetailPage = () => {
   };
 
   useEffect(() => {
+    /**
+     * Carga los datos del roommate desde la API de forma asíncrona.
+     * - Siempre refresca datos por ID para sincronizar con el servidor.
+     * - Soporta datos iniciales (roommateFromState) para evitar loading innecesario.
+     * - Maneja errores y establece estados en consecuencia.
+     */
     const load = async () => {
-      // Siempre refrescamos desde la API por ID; si venimos con state, renderizamos al instante sin spinner.
-      if (!roomieId) return;
-      if (!roommateFromState && !roommate) setLoading(true);
+      if (!roomieId) return; // No cargar si no hay ID.
+      if (!roommateFromState && !roommate) setLoading(true); // Solo mostrar loading si no hay datos previos.
       try {
         const { data, error } = await fetchRoommateById(roomieId);
         if (error) {
           console.error(error);
-          if (!roommateFromState && !roommate) setRoommate(null);
+          if (!roommateFromState && !roommate) setRoommate(null); // Fallback solo si no hay datos iniciales.
         } else {
           setRoommate(data || null);
         }
       } catch (e) {
         console.error(e);
-        if (!roommateFromState && !roommate) setRoommate(null);
+        if (!roommateFromState && !roommate) setRoommate(null); // Manejo de errores solo sin datos previos.
       } finally {
-        if (!roommateFromState && !roommate) setLoading(false);
+        if (!roommateFromState && !roommate) setLoading(false); // Finalizar loading solo si empezó aquí.
       }
     };
     load();
   }, [roomieId]);
 
+  /**
+   * Genera el texto formateado para el presupuesto del roommate.
+   * - Maneja rangos (min-max) o valores individuales desde roommate.budget.
+   * - Usa formateo de moneda en español (MXN) para legibilidad.
+   */
   const budgetText = useMemo(() => {
     const fmt = (n) => `$${new Intl.NumberFormat('es-MX').format(Number(n))}`;
     const min = roommate?.budget?.min ?? roommate?.budget ?? null;
@@ -174,9 +207,18 @@ const RoomieDetailPage = () => {
     return items;
   }, [roommate]);
 
-  // Idiomas
+  /**
+   * Genera una lista normalizada y deduplicada de idiomas del roommate.
+   * - Recolecta idiomas de múltiples campos posibles (ej. languages, idiomas, profile.languages).
+   * - Maneja arrays, objetos mapa y tipos mixtos para robustez contra datos inconsistentes.
+   * - Usa helpers internos para procesar y normalizar valores.
+   */
   const languageList = useMemo(() => {
     const acc = [];
+    /**
+     * Normaliza un valor a string, manejando tipos variados (string, number, object).
+     * - Extrae propiedades comunes de objetos (ej. name, label) o serializa si es necesario.
+     */
     const norm = (v) => {
       if (v == null) return null;
       if (typeof v === 'string') return v.trim();
@@ -188,6 +230,9 @@ const RoomieDetailPage = () => {
       }
       return String(v);
     };
+    /**
+     * Añade idiomas desde un array, aplicando normalización y filtrando válidos.
+     */
     const addArr = (arr) => {
       if (Array.isArray(arr)) {
         for (const it of arr) {
@@ -196,14 +241,9 @@ const RoomieDetailPage = () => {
         }
       }
     };
-    const addStr = (str) => {
-      if (typeof str === 'string') {
-        for (const part of str.split(',')) {
-          const n = norm(part);
-          if (n) acc.push(n);
-        }
-      }
-    };
+    /**
+     * Añade idiomas desde un objeto mapa, extrayendo valores y normalizándolos.
+     */
     const addObjMap = (obj) => {
       if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
         for (const v of Object.values(obj)) {
@@ -213,25 +253,19 @@ const RoomieDetailPage = () => {
       }
     };
 
-    // Planos
+    // Recolectar idiomas de campos planos y anidados.
     addArr(roommate?.languages);
     addArr(roommate?.idiomas);
     addArr(roommate?.spokenLanguages);
     addArr(roommate?.langs);
-    addStr(roommate?.languages);
-    addStr(roommate?.idiomas);
-    addStr(roommate?.language);
-    addStr(roommate?.idioma);
     addObjMap(roommate?.languages);
 
-    // Anidados en profile
+    // Anidados en profile.
     addArr(roommate?.profile?.languages);
     addArr(roommate?.profile?.idiomas);
-    addStr(roommate?.profile?.languages);
-    addStr(roommate?.profile?.idiomas);
     addObjMap(roommate?.profile?.languages);
 
-    // Normalizar y deduplicar
+    // Normalizar y deduplicar.
     return Array.from(new Set(acc.map(s => String(s).trim()).filter(Boolean)));
   }, [roommate]);
 
@@ -264,7 +298,7 @@ const RoomieDetailPage = () => {
               <ArrowLeft size={18} /> Volver
             </button>
           </div>
-          {/* Header */}
+          {/* Header: Información básica del roommate (nombre, edad, ocupación, rating, ubicación) */}
           <div className="roomie-header card-surface">
             <div className="roomie-header-top">
               <div className="roomie-avatar-wrap">
@@ -308,7 +342,7 @@ const RoomieDetailPage = () => {
             )}
           </div>
 
-          {/* Presupuesto */}
+          {/* Presupuesto: Muestra el rango o valor dispuesto a pagar */}
           <section className="section card-surface">
             <div className="section-title">
               <DollarSign size={18} />

@@ -3,7 +3,7 @@ Roomiefy es una aplicación web diseñada para ayudar a los usuarios a encontrar
 
 ## Instrucciones de Despliegue Local
 Para ejecutar Roomiefy localmente, siga estos pasos:
-1. Clone el repositorio usando `git clone https://github.com/Bayronalpizar99/roomiefy.git` (reemplace con la URL de su repositorio si es diferente).
+1. Clone el repositorio usando `git clone https://github.com/Bayronalpizar99/roomiefy`
 2. Navegue al directorio del proyecto.
 3. Instale las dependencias con `npm install`.
 4. Inicie el servidor de desarrollo con `npm run dev`.

@@ -16,7 +16,16 @@ const LoginModal = () => {
   return (
     <div className="modal-overlay" onClick={closeLoginModal}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close-btn" onClick={closeLoginModal}>
+        <button 
+          type="button"
+          className="modal-close-btn" 
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closeLoginModal();
+          }}
+          aria-label="Cerrar modal"
+        >
           <Cross1Icon />
         </button>
         <h3>Iniciar Sesión</h3>

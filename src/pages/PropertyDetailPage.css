@@ -1,6 +1,7 @@
 .property-detail-container {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 1rem; /* Añadido padding para móvil */
 }
 
 .back-btn-detail {
@@ -36,10 +37,11 @@
   margin-bottom: 0;
 }
 
+/* Layout principal - responsive */
 .property-content-layout {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 3rem;
+  grid-template-columns: 1fr; /* Una columna en móvil */
+  gap: 2rem;
   align-items: flex-start;
 }
 
@@ -59,10 +61,16 @@
 
 .property-stats-detail {
   display: flex;
+  flex-wrap: wrap; /* Permite que se envuelvan en móvil */
   gap: 1.5rem;
   color: var(--color-text);
   margin-top: 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: var(--color-surface);
 }
+
 .stat-item {
   display: flex;
   align-items: center;
@@ -74,13 +82,22 @@
   margin: 2rem 0;
 }
 
-.property-description-full h2, .amenities-section h2 {
+.detail-section-card {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: var(--color-surface);
+}
+
+.detail-section-card h2 {
   font-size: 1.5rem;
+  margin-top: 0;
   margin-bottom: 1rem;
   color: var(--color-text);
 }
 
-.property-description-full p, .amenities-grid li {
+.detail-section-card p, .amenities-grid li {
   line-height: 1.6;
   color: var(--color-text-secondary);
   text-align: justify; 
@@ -94,13 +111,12 @@
   padding: 0;
 }
 
-/* Sidebar */
+/* Sidebar - ya no sticky en móvil */
 .property-sidebar {
-  position: sticky;
-  top: 2rem;
-  /* --- INICIO DEL CAMBIO --- */
-  margin-top: 4.5rem; /* Ajustado para alinear con la primera línea divisora */
-  /* --- FIN DEL CAMBIO --- */
+  position: relative; /* Cambiado de sticky a relative en móvil */
+  top: 0;
+  margin-top: 1.5rem;
+  width: 100%;
 }
 
 .actions-box {
@@ -118,6 +134,7 @@
   font-weight: bold;
   color: var(--color-primary);
 }
+
 .price-label {
   color: var(--color-text-secondary);
 }
@@ -138,6 +155,12 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background-color: var(--color-input-bg);
 }
 
 .favorite-btn.favorited {
@@ -145,6 +168,7 @@
   color: #ef4444;
   border-color: #ef4444;
 }
+
 .favorite-btn.favorited svg {
   fill: #ef4444;
 }
@@ -164,6 +188,10 @@
   background-color: var(--color-primary);
   color: #fff;
   font-weight: bold;
+}
+
+.action-btn.primary.reserve-btn:hover {
+  opacity: 0.9;
 }
 
 .calendar-header {
@@ -188,20 +216,12 @@
   font-size: 0.85rem;
 }
 
-.property-owner-section h2 {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  color: var(--color-text);
-}
-
 .owner-card-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  background-color: var(--color-surface);
+  flex-wrap: wrap; /* Permite que se envuelva en móvil */
+  gap: 1rem;
 }
 
 .owner-info-left {
@@ -251,4 +271,169 @@
   color: white;
   border-color: var(--color-primary);
   transform: translateY(-2px);
+}
+
+/* ============================================
+   MEDIA QUERIES PARA RESPONSIVE
+   ============================================ */
+
+/* Móvil pequeño */
+@media (max-width: 480px) {
+  .property-detail-container {
+    padding: 0 0.5rem;
+  }
+
+  .back-btn-detail {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  .property-title {
+    font-size: 1.75rem;
+    line-height: 1.2;
+  }
+
+  .property-location-detail {
+    font-size: 0.95rem;
+  }
+
+  .property-main-image img {
+    height: 250px;
+    border-radius: 8px;
+  }
+
+  .property-stats-detail {
+    gap: 1rem;
+    padding: 1rem;
+    justify-content: space-around;
+  }
+
+  .stat-item {
+    font-size: 0.9rem;
+  }
+
+  .detail-section-card {
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+
+  .detail-section-card h2 {
+    font-size: 1.25rem;
+  }
+
+  .amenities-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .price-amount {
+    font-size: 1.75rem;
+  }
+
+  .action-btn {
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .owner-card-main {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .owner-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .owner-action-btn {
+    width: 50px;
+    height: 50px;
+  }
+
+  .actions-box {
+    padding: 1rem;
+  }
+}
+
+/* Móvil estándar */
+@media (min-width: 481px) and (max-width: 767px) {
+  .property-detail-container {
+    padding: 0 0.75rem;
+  }
+
+  .property-title {
+    font-size: 2rem;
+  }
+
+  .property-main-image img {
+    height: 300px;
+  }
+
+  .property-stats-detail {
+    gap: 1.25rem;
+  }
+
+  .amenities-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Tablet */
+@media (min-width: 768px) {
+  .property-detail-container {
+    padding: 0 1.5rem;
+  }
+
+  .property-content-layout {
+    grid-template-columns: 2fr 1fr; /* 2 columnas en tablet+ */
+    gap: 3rem;
+  }
+
+  .property-sidebar {
+    position: sticky; /* Sticky solo en desktop */
+    top: 2rem;
+  }
+
+  .property-main-image img {
+    height: 400px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .property-detail-container {
+    padding: 0 2rem;
+  }
+
+  .property-main-image img {
+    height: 450px;
+  }
+}
+
+/* Ajustes para pantallas muy pequeñas */
+@media (max-width: 360px) {
+  .property-title {
+    font-size: 1.5rem;
+  }
+
+  .property-main-image img {
+    height: 220px;
+  }
+
+  .property-stats-detail {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .stat-item {
+    font-size: 0.85rem;
+  }
+
+  .price-amount {
+    font-size: 1.5rem;
+  }
+
+  .detail-section-card h2 {
+    font-size: 1.1rem;
+  }
 }

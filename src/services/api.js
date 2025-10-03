@@ -1,11 +1,12 @@
 /**
  * Obtiene los datos de las propiedades desde la API de Azure.
+ * AHORA SOPORTA FILTROS DEL LADO DEL SERVIDOR.
  */
 
 const apiUrl = import.meta.env.VITE_API_URL;
 const apiKey = import.meta.env.VITE_API_KEY;
 
-export const fetchProperties = async () => {
+export const fetchProperties = async (options = {}) => {
   // Verificación para asegurar que las variables de entorno están cargadas
   if (!apiUrl) {
     console.error("Error: La variable de entorno VITE_API_URL no está definida.");
@@ -17,7 +18,41 @@ export const fetchProperties = async () => {
   }
 
   try {
-    const response = await fetch(apiUrl + 'properties', {
+    const {
+      search,
+      price,
+      bedrooms,
+      amenities,
+      sort,
+      page,
+      pageSize
+    } = options;
+
+    const params = new URLSearchParams();
+    const appendIfDefined = (key, value) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value));
+      }
+    };
+
+    appendIfDefined('search', search);
+    appendIfDefined('priceMax', price);
+    
+    if (bedrooms && bedrooms !== 'any') {
+      appendIfDefined('bedrooms', bedrooms);
+    }
+
+    if (amenities && amenities.size > 0) {
+      params.append('amenities', Array.from(amenities).join(','));
+    }
+    
+    appendIfDefined('sort', sort);
+    appendIfDefined('page', page);
+    appendIfDefined('pageSize', pageSize);
+
+    const url = apiUrl + 'properties' + (params.toString() ? `?${params.toString()}` : '');
+
+    const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -34,18 +69,28 @@ export const fetchProperties = async () => {
         errorMsg = "Error: La URL de la API no es válida o el recurso no existe.";
       }
       console.error(errorMsg);
-      return { data: [], error: errorMsg };
+      return { data: [], meta: null, error: errorMsg };
     }
 
-    const data = await response.json();
-    // --- CAMBIO CLAVE ---
-    // Ahora la función devuelve un objeto con la data y el error
-    return { data, error: null }; 
+    const body = await response.json();
+    const items = Array.isArray(body)
+      ? body
+      : (body?.data ?? body?.items ?? body?.properties ?? []);
+
+    const totalHeader = response.headers.get('X-Total-Count');
+    const total = totalHeader != null
+      ? Number(totalHeader)
+      : (body?.total ?? body?.meta?.total ?? null);
+
+    const meta = { total, page, pageSize };
+
+    return { data: items, meta, error: null };
   } catch (error) {
     console.error("Error de red o excepción:", error);
-    return { data: [], error: error?.message || 'Fallo de red al obtener propiedades.' };
+    return { data: [], meta: null, error: error?.message || 'Fallo de red al obtener propiedades.' };
   }
 };
+
 
 /**
  * Obtiene las conversaciones del usuario desde la API.
@@ -313,7 +358,7 @@ export const createProperty = async (propertyData) => {
   }
 
   try {
-    const response = await fetch(`${apiUrl}/properties`, {
+    const response = await fetch(`${apiUrl}properties`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -349,7 +394,7 @@ export const createRoomieProfile = async (profileData) => {
   });
   if (profileData.foto) formData.append("foto", profileData.foto, profileData.foto.name);
 
-  const response = await fetch(apiUrl + 'roomies', {
+  const response = await fetch(apiUrl + 'profile', {
     method: "POST",
     headers: {
       "Ocp-Apim-Subscription-Key": apiKey,
@@ -691,6 +736,153 @@ export const markConversationAsRead = async (conversationId) => {
     return true;
   } catch (error) {
     console.error("Error de red o excepción al marcar como leída la conversación:", error);
-    return false;
+    return { data: null, error: error?.message || 'Fallo de red al marcar como leída la conversación.' };
   }
 };
+
+/**
+ * Obtiene el Perfíl del usuario actual.
+ * @param {string} userid - ID único del usuario (email)
+ * @returns {Promise<{data: object|null, error: string|null}>}
+ */
+export const fetchUserProfile = async (userid) => {
+  if (!apiUrl || !apiKey) {
+    console.error("Error: Variables de entorno de API no definidas.");
+    return { data: null, error: 'Configuración de API incompleta.' };
+  }
+
+  try {
+    const response = await fetch(`${apiUrl}profile/${userid}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": apiKey,
+        "Accept": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      const errorMsg = `Error al obtener el Perfíl: ${response.status} ${response.statusText}`;
+      console.error(errorMsg);
+      return { data: null, error: errorMsg };
+    }
+
+    const data = await response.json();
+    return { data, error: null };
+  } catch (error) {
+    console.error(error);
+    return { data: null, error: error?.message || 'Fallo de red al obtener el Perfíl.' };
+  }
+};
+
+/**
+ * Actualiza el Perfíl del usuario.
+ * @param {object} profileData - Los nuevos datos del Perfíl.
+{{ ... }}
+ */
+export const updateUserProfile = async (profileData, userid) => {
+  if (!apiUrl || !apiKey) {
+    console.error("Error: Variables de entorno de API no definidas.");
+    return { data: null, error: 'Configuración de API incompleta.' };
+  }
+
+  try {
+    const response = await fetch(`${apiUrl}profile/${userid}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": apiKey,
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(profileData)
+    });
+
+    if (!response.ok) {
+      const errorMsg = `Error al actualizar el perfil: ${response.status} ${response.statusText}`;
+      console.error(errorMsg);
+      return { data: null, error: errorMsg };
+    }
+
+    const data = await response.json();
+    return { data, error: null };
+  } catch (error) {
+    console.error(error);
+    return { data: null, error: error?.message || 'Fallo de red al actualizar el perfil.' };
+  }
+};
+
+/**
+ * Actualiza el estado de búsqueda de roomie del usuario.
+ * @param {boolean} isSearching - True si está buscando roomie, false si no.
+ * @param {string} userid - ID único del usuario (email)
+ * @returns {Promise<{data: object|null, error: string|null}>}
+ */
+export const updateSearchingStatus = async (isSearching, userid) => {
+  if (!apiUrl || !apiKey) {
+    console.error("Error: Variables de entorno de API no definidas.");
+    return { data: null, error: 'Configuración de API incompleta.' };
+  }
+
+  try {
+    const response = await fetch(`${apiUrl}profile/searching/${userid}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": apiKey,
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({ isSearching })
+    });
+
+    if (!response.ok) {
+      const errorMsg = `Error al actualizar el estado de búsqueda: ${response.status} ${response.statusText}`;
+      console.error(errorMsg);
+      return { data: null, error: errorMsg };
+    }
+
+    const data = await response.json();
+    return { data, error: null };
+  } catch (error) {
+    console.error(error);
+    return { data: null, error: error?.message || 'Fallo de red al actualizar el estado de búsqueda.' };
+  }
+};
+
+/**
+ * Obtiene las propiedades del usuario actual.
+ * @returns {Promise<{data: array, error: string|null}>}
+ */
+export const fetchUserProperties = async (userid) => {
+  if (!apiUrl || !apiKey) {
+    console.error("Error: Variables de entorno de API no definidas.");
+    return { data: [], error: 'Configuración de API incompleta.' };
+  }
+  console.log("El valor de apiUrl es:", apiUrl); 
+  try {
+    const response = await fetch(`${apiUrl}properties/${userid}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": apiKey,
+        "Accept": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      const errorMsg = `Error al obtener las propiedades del usuario: ${response.status} ${response.statusText}`;
+      console.error(errorMsg);
+      return { data: [], error: errorMsg };
+    }
+
+    const data = await response.json();
+    return { data: Array.isArray(data) ? data : [], error: null };
+  } catch (error) {
+    console.error(error);
+    return { data: [], error: error?.message || 'Fallo de red al obtener las propiedades.' };
+  }
+};
+
+//TO DO: asegurarse de que las apis que lo necesiten envien el id del usuario
+//ejemplo: fetchUserProperties(userid); 
+
+//TO DO: Reviasar las apis en azure 
