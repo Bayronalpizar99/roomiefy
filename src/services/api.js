@@ -859,7 +859,7 @@ export const fetchUserProperties = async (userid) => {
   }
   console.log("El valor de apiUrl es:", apiUrl); 
   try {
-    const response = await fetch(`${apiUrl}properties/${userid}`, {
+    const response = await fetch(`${apiUrl}properties/my-properties/${userid}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -886,3 +886,22 @@ export const fetchUserProperties = async (userid) => {
 //ejemplo: fetchUserProperties(userid); 
 
 //TO DO: Reviasar las apis en azure 
+// src/services/api.js
+
+export const loginWithGoogle = async (idToken) => {
+  const response = await fetch(`${apiUrl}auth/google/login`, { 
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      "Ocp-Apim-Subscription-Key": apiKey
+    },
+    body: JSON.stringify({ idToken: idToken }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error en el inicio de sesión');
+  }
+
+  return await response.json(); // Devuelve { accessToken, user }
+};
