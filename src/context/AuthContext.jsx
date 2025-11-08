@@ -26,15 +26,19 @@ export const AuthProvider = ({ children }) => {
   }, [user]);
 
   // Función para añadir/quitar de favoritos
-  const toggleFavorite = useCallback((propertyId) => {
+  const toggleFavorite = useCallback(async (propertyId, propertyData = null) => {
     if (!user) {
       requireLogin("Debes iniciar sesión para guardar favoritos.");
       return;
     }
     
+    const wasFavorited = favoriteIds.has(propertyId);
+    const isAdding = !wasFavorited;
+    
+    // Actualizar estado local primero (optimistic update)
     setFavoriteIds(prevIds => {
       const newIds = new Set(prevIds);
-      if (newIds.has(propertyId)) {
+      if (wasFavorited) {
         newIds.delete(propertyId);
       } else {
         newIds.add(propertyId);
@@ -43,7 +47,58 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem(`roomify_favorites_${user.email}`, JSON.stringify(Array.from(newIds)));
       return newIds;
     });
-  }, [user]);
+
+    // Si estamos agregando un favorito Y tenemos datos de la propiedad, enviar notificación
+    if (isAdding && propertyData) {
+      console.log('❤️ Agregando favorito, enviando notificación...', {
+        propertyId,
+        propertyData,
+        user
+      });
+      
+      try {
+        const { sendFavoriteNotification } = await import('../services/notifications.js');
+        
+        // Intentar obtener datos del propietario de varias formas
+        const ownerId = propertyData.ownerId || 
+                       propertyData.owner_id || 
+                       (propertyData.owner_name === 'Tú (Propietario)' ? user.email : 'unknown');
+        
+        const ownerEmail = propertyData.ownerEmail || 
+                          propertyData.owner_email || 
+                          (propertyData.owner_name === 'Tú (Propietario)' && user.email ? user.email : 'no-email@example.com');
+        
+        const notificationData = {
+          propertyId: String(propertyData.id || propertyId),
+          propertyTitle: propertyData.name || propertyData.title || 'Propiedad',
+          propertyOwnerId: ownerId,
+          propertyOwnerEmail: ownerEmail,
+          favoritedBy: user.name || user.displayName || user.email?.split('@')[0] || 'Usuario',
+          favoritedByEmail: user.email || ''
+        };
+        
+        console.log('📨 Datos de notificación preparados:', notificationData);
+        
+        const result = await sendFavoriteNotification(notificationData);
+        
+        if (result.success) {
+          console.log('✅ Notificación enviada correctamente');
+        } else {
+          console.warn('⚠️ No se pudo enviar notificación:', result.error);
+        }
+      } catch (error) {
+        // No bloqueamos la acción si falla la notificación
+        console.error('❌ Error al enviar notificación de favorito:', error);
+      }
+    } else {
+      if (!isAdding) {
+        console.log('🗑️ Quitando favorito - no se envía notificación');
+      }
+      if (!propertyData) {
+        console.warn('⚠️ No hay datos de propiedad - no se puede enviar notificación', { propertyId });
+      }
+    }
+  }, [user, favoriteIds]);
   // --- FIN DE LÓGICA DE FAVORITOS ---
 
   const location = useLocation();

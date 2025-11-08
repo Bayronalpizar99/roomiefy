@@ -6,10 +6,12 @@ import Pagination from '../components/Pagination';
 import * as Dialog from '@radix-ui/react-dialog';
 import { MixerHorizontalIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { Button } from '@radix-ui/themes';
+import { useAuth } from '../context/AuthContext';
 import './HomePage.css';
 import WelcomeTourDialog from '../components/WelcomeTourDialog';
 
 const HomePage = ({ properties, loading, filters, setFilters }) => {
+  const { favoriteIds, toggleFavorite } = useAuth();
   const [view, setView] = useState('grid');
   const [sortOrder, setSortOrder] = useState('recent');
   const [currentPage, setCurrentPage] = useState(1);
@@ -128,6 +130,8 @@ const HomePage = ({ properties, loading, filters, setFilters }) => {
                     key={property.id} 
                     property={property} 
                     view={view}
+                    isFavorite={favoriteIds.has(property.id)}
+                    onToggleFavorite={toggleFavorite}
                   />
                 ))
               ) : (

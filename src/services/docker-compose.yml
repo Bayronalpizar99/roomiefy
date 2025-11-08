@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  # --- AQUÍ ESTÁ EL CAMBIO ---
+  postgres:
+    image: postgres:latest
+    container_name: postgres_db
+    ports:
+      - "5432:5432" # Puerto estándar de PostgreSQL
+    environment:
+      # Define tu usuario, contraseña y base de datos
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_DB=notificacionesDB
+    volumes:
+      - postgres-data:/var/lib/postgresql/data # Persistencia
+
+volumes:
+  postgres-data:
