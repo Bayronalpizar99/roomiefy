@@ -55,18 +55,37 @@ const RoomieDetailPage = () => {
    * - Navega al chat con detalles de la conversación o fallback general.
    */
   const handleContact = async () => {
+    console.log('[handleContact] Iniciando...');
+    
     // Si no está logueado, pedir login
     if (!user) {
+      console.log('[handleContact] Usuario no autenticado, solicitando login...');
       requireLogin("Para contactar a este roomie, necesitas iniciar sesión.");
       return;
     }
 
+    console.log('[handleContact] Usuario autenticado:', { userId: user?.id });
+    console.log('[handleContact] Roommate ID:', roommate?.id);
+    
+    if (!roommate?.id) {
+      console.error('[handleContact] Error: No se encontró el ID del roomie');
+      return;
+    }
+
     setContacting(true);
+    console.log('[handleContact] Estado contacting establecido a true');
 
     try {
       // Crear conversación con mensaje predeterminado
       const defaultMessage = `¡Hola ${roommate?.name}! 👋 Me interesa compartir apartamento contigo. ¿Podemos conversar sobre los detalles?`;
-      const conversation = await createConversation(roommate.id, defaultMessage);
+      console.log('[handleContact] Llamando a createConversation con:', {
+        userId: roommate.id,
+        currentUserId: user?.id,
+        message: defaultMessage
+      });
+      
+      const conversation = await createConversation(roommate.id, user?.id, defaultMessage);
+      console.log('[handleContact] Respuesta de createConversation:', conversation);
 
       if (conversation && conversation.id) {
         // Navegar al chat con la conversación seleccionada

@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -109,13 +109,24 @@ export const AuthProvider = ({ children }) => {
     const storedToken = localStorage.getItem('roomify_token');
 
     if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);
+      
+      // Asegurarse de que el usuario tenga un ID
+      if (!parsedUser.id) {
+        const userId = parsedUser.sub || parsedUser.userId || parsedUser.email || Date.now().toString();
+        parsedUser.id = userId;
+        // Actualizar el usuario en localStorage
+        localStorage.setItem('roomify_user', JSON.stringify(parsedUser));
+      }
+      
+      console.log('[Auth] Usuario cargado desde localStorage:', parsedUser);
+      setUser(parsedUser);
       setIdToken(storedToken);
     }
     
     // Marcar la inicialización como completa después de un breve delay
-    // para asegurar que el usuario se haya cargado desde localStorage
     setTimeout(() => {
+      console.log('[Auth] Inicialización completada');
       setIsInitializing(false);
     }, 100);
   }, []);
@@ -155,9 +166,24 @@ export const AuthProvider = ({ children }) => {
   }, [user, location, navigate, isInitializing]);
 
   const login = (userData, token) => {
-    localStorage.setItem('roomify_user', JSON.stringify(userData));
+    // Asegurarse de que el ID del usuario esté disponible
+    const userWithId = {
+      ...userData,
+      // Usar el ID de la fuente más confiable disponible
+      id: userData?.id || userData?.sub || userData?.userId || userData?.email || Date.now().toString()
+    };
+    
+    console.log('[Auth] Iniciando sesión con usuario:', userWithId);
+    
+    localStorage.setItem('roomify_user', JSON.stringify(userWithId));
     localStorage.setItem('roomify_token', token);
-    setUser(userData);
+    
+    // Guardar el ID por separado para fácil acceso
+    if (userWithId.id) {
+      localStorage.setItem('roomiefy_user_id', String(userWithId.id));
+    }
+    
+    setUser(userWithId);
     setIdToken(token);
     setIsLoginModalOpen(false);
   };
@@ -165,6 +191,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('roomify_user');
     localStorage.removeItem('roomify_token');
+    try { localStorage.removeItem('roomiefy_user_id'); } catch (e) { /* noop */ }
     setUser(null);
     setIdToken(null);
   };
@@ -198,6 +225,10 @@ export const AuthProvider = ({ children }) => {
   );
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth debe ser usado dentro de un AuthProvider');
+  }
+  return context;
+};

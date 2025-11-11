@@ -37,7 +37,7 @@ const PropertyDetailPage = ({ allProperties, loading }) => {
     setIsContacting(true);
     try {
       const defaultMessage = `¡Hola ${property.owner_name}! Estoy interesado/a en tu propiedad "${property.name}" y me gustaría saber más. ¿Podemos conversar?`;
-      const conversation = await createConversation(ownerId, defaultMessage);
+      const conversation = await createConversation(ownerId, user.id, defaultMessage);
 
       if (conversation && conversation.id) {
         navigate('/chat', {

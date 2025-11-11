@@ -1,4 +1,4 @@
-const apiUrl = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const apiUrl = import.meta.env.VITE_API_URL;
 
 /**
  * Función genérica para realizar llamadas a endpoints protegidos.
@@ -28,7 +28,7 @@ export const callProtectedApi = async (endpoint, idToken, options = {}) => {
   };
 
   try {
-    const response = await fetch(`${apiUrl}/${endpoint}`, config);
+    const response = await fetch(`${apiUrl}${endpoint}`, config);
 
     if (!response.ok) {
       throw new Error(`Error de API: ${response.status} ${response.statusText}`);

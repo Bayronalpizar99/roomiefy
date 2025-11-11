@@ -1,19 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import { useLocation } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import './PageStyles.css';
 import './ChatPage.css';
 import { fetchConversations, sendMessage, fetchConversation, markConversationAsRead } from '../services/api';
 import { PaperPlaneIcon, CheckIcon } from '@radix-ui/react-icons';
-import { useLocation } from 'react-router-dom';
 
 const ChatPage = () => {
   const location = useLocation();
   const [conversations, setConversations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const messageInputRef = useRef(null);
+  const hasSetPrefilledMessage = useRef(false);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     const getConversations = async () => {
@@ -26,31 +29,44 @@ const ChatPage = () => {
         } else {
           const list = Array.isArray(data) ? data : [];
           setConversations(list);
-        }
 
-        // Si hay una conversación preseleccionada desde la navegación
-        if (location.state?.selectedConversation) {
-          setSelectedConversation(location.state.selectedConversation);
-          setNewMessage(location.state.prefilledMessage || '');
+          // Si hay una conversación preseleccionada desde la navegación
+          if (location.state?.selectedConversation) {
+            setSelectedConversation(location.state.selectedConversation);
+            // No establecer el mensaje prefijado aquí, lo manejaremos en otro efecto
+          }
         }
       } catch (err) {
         setError('Error al cargar las conversaciones');
-        console.error('Error al cargar las conversaciones:', err);
+        // Error al cargar conversaciones
       } finally {
         setLoading(false);
       }
     };
 
     getConversations();
-  }, [location.state]);
+  }, []); // Eliminamos location.state de las dependencias
+  
+  // Efecto separado para manejar el mensaje prefijado
+  useEffect(() => {
+    if (location.state?.prefilledMessage && !hasSetPrefilledMessage.current) {
+      setNewMessage(location.state.prefilledMessage);
+      hasSetPrefilledMessage.current = true;
+      
+      // Opcional: hacer foco en el campo de mensaje
+      if (messageInputRef.current) {
+        messageInputRef.current.focus();
+      }
+    }
+  }, [location.state?.prefilledMessage]);
 
   const handleSelectConversation = async (conversation) => {
     setSelectedConversation(conversation);
     setNewMessage('');
     
     // Marcar conversación como leída
-    if (conversation.id) {
-      await markConversationAsRead(conversation.id);
+    if (conversation.id && user?.id) {
+      await markConversationAsRead(conversation.id, user.id);
 
       // Cargar conversación con sus mensajes desde la API de conversación/{id}
       try {
@@ -63,14 +79,42 @@ const ChatPage = () => {
             messages = Array.isArray(found?.messages) ? found.messages : [];
           } else if (Array.isArray(convData?.messages)) {
             messages = convData.messages;
+          } else if (convData && convData.messages) {
+            messages = Array.isArray(convData.messages) ? convData.messages : [];
           }
+          
+          // Obtener el ID del usuario actual
+          let currentUserId = '';
+          try { 
+            currentUserId = localStorage.getItem('roomiefy_user_id') || '';
+          } catch (e) {
+            console.error('Error al obtener el ID del usuario:', e);
+          }
+          
+          // Asegurarse de que los mensajes tengan el formato correcto
+          messages = messages.map(msg => {
+            // Determinar el remitente del mensaje
+            const senderId = String(msg.sender || msg.sender_id || '');
+            const isCurrentUser = currentUserId && senderId === String(currentUserId);
+            
+            return {
+              ...msg,
+              // Si el remitente es el usuario actual, asegurarse de que el ID coincida exactamente
+              sender: isCurrentUser ? currentUserId : senderId,
+              sender_id: isCurrentUser ? currentUserId : senderId,
+              // Asegurar que el formato de tiempo sea consistente
+              time: msg.time || (msg.timestamp 
+                ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+            };
+          });
           setSelectedConversation(prev => ({
             ...prev,
             messages
           }));
         }
       } catch (error) {
-        console.error('Error al cargar la conversación:', error);
+        // Error al cargar la conversación
       }
     }
   };
@@ -82,7 +126,26 @@ const ChatPage = () => {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const tempId = `temp-${Date.now()}`;
 
-    const optimisticMessage = { id: tempId, sender: 'me', content, time, status: 'sent' };
+    // Obtener el ID del usuario actual de forma segura
+    let currentUserId = '';
+    try { 
+      currentUserId = localStorage.getItem('roomiefy_user_id') || ''; 
+    } catch (e) {
+      console.error('Error al obtener el ID del usuario:', e);
+    }
+
+    // Crear mensaje optimista con el ID del remitente
+    const optimisticMessage = { 
+      id: tempId, 
+      sender: currentUserId, 
+      sender_id: currentUserId,
+      content, 
+      time, 
+      status: 'sent',
+      timestamp: new Date().toISOString()
+    };
+
+    // Actualizar la UI de forma optimista
     const updatedSelected = {
       ...selectedConversation,
       messages: [...(selectedConversation.messages || []), optimisticMessage],
@@ -96,12 +159,15 @@ const ChatPage = () => {
     setSending(true);
 
     try {
-      const created = await sendMessage(selectedConversation.id, content);
+      // Enviar el mensaje al servidor con el sender_id
+      const created = await sendMessage(selectedConversation.id, content, currentUserId);
       if (created && created.id) {
         const isRead = (created.status === 'read') || created.isRead || created.seen || created.responded;
+        const serverSenderRaw = created.sender || created.sender_id;
+        const normalizedSender = !serverSenderRaw || serverSenderRaw === 'unknown' ? currentUserId : serverSenderRaw;
         const serverMessage = {
           id: created.id,
-          sender: created.sender || 'me',
+          sender: normalizedSender,
           content: created.content ?? content,
           time: created.time || time,
           status: isRead ? 'read' : 'sent',
@@ -130,7 +196,7 @@ const ChatPage = () => {
         }));
       }
     } catch (e) {
-      console.error('Error al enviar el mensaje:', e);
+      // Error al enviar el mensaje
     } finally {
       setSending(false);
     }
@@ -196,25 +262,45 @@ const ChatPage = () => {
                   <h2>{selectedConversation.name}</h2>
                 </div>
                 <div className="messages-container">
-                  {selectedConversation.messages?.map((message) => (
-                    <div 
-                      key={message.id} 
-                      className={`message ${message.sender === 'me' ? 'sent' : 'received'}`}
-                    >
-                      <div className="message-content">{message.content}</div>
-                      <div className="message-meta">
-                        <span className="message-time">{message.time}</span>
-                        {message.sender === 'me' && (
-                          <span className={`message-status ${(
-                            message.status === 'read' || message.isRead || message.seen || message.responded
-                          ) ? 'read' : 'sent'}`}>
-                            <CheckIcon className="check one" />
-                            <CheckIcon className="check two" />
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )) || <p>No hay mensajes en esta conversación.</p>}
+                  {selectedConversation.messages && selectedConversation.messages.length > 0 ? (
+                    selectedConversation.messages.map((message) => {
+                      // Obtener el ID del usuario actual de forma segura
+                      let currentUserId = '';
+                      try {
+                        currentUserId = localStorage.getItem('roomiefy_user_id') || '';
+                      } catch (e) {
+                        console.error('Error al obtener el ID del usuario:', e);
+                      }
+                      
+                      // Determinar el remitente del mensaje
+                      const senderId = String(message.sender || message.sender_id || '');
+                      const isCurrentUser = currentUserId && senderId === String(currentUserId);
+                      
+                      return (
+                        <div 
+                          key={message.id}
+                          className={`message ${isCurrentUser ? 'sent' : 'received'}`}
+                        >
+                          <div className="message-content">{message.content}</div>
+                          <div className="message-meta">
+                            <span className="message-time">{message.time}</span>
+                            {isCurrentUser && (
+                              <span className={`message-status ${
+                                (message.status === 'read' || message.isRead || message.seen || message.responded) 
+                                  ? 'read' 
+                                  : 'sent'
+                              }`}>
+                                <CheckIcon className="check one" />
+                                <CheckIcon className="check two" />
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p>No hay mensajes en esta conversación.</p>
+                  )}
                 </div>
                 <div className="message-input">
                   <div className="search-bar">

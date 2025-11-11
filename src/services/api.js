@@ -9,11 +9,11 @@ const apiKey = import.meta.env.VITE_API_KEY;
 export const fetchProperties = async (options = {}) => {
   // Verificación para asegurar que las variables de entorno están cargadas
   if (!apiUrl) {
-    console.error("Error: La variable de entorno VITE_API_URL no está definida.");
+    // Variable de entorno VITE_API_URL no definida
     return { data: [], error: 'Configuración de API incompleta (VITE_API_URL).' };
   }
   if (!apiKey) {
-    console.error("Error: La variable de entorno VITE_API_KEY no está definida.");
+    // Variable de entorno VITE_API_KEY no definida
     return { data: [], error: 'Configuración de API incompleta (VITE_API_KEY).' };
   }
 
@@ -68,7 +68,7 @@ export const fetchProperties = async (options = {}) => {
       } else if (response.status === 404) {
         errorMsg = "Error: La URL de la API no es válida o el recurso no existe.";
       }
-      console.error(errorMsg);
+      // Error en la respuesta de la API
       return { data: [], meta: null, error: errorMsg };
     }
 
@@ -86,7 +86,7 @@ export const fetchProperties = async (options = {}) => {
 
     return { data: items, meta, error: null };
   } catch (error) {
-    console.error("Error de red o excepción:", error);
+    // Error de red o excepción
     return { data: [], meta: null, error: error?.message || 'Fallo de red al obtener propiedades.' };
   }
 };
@@ -97,16 +97,19 @@ export const fetchProperties = async (options = {}) => {
  */
 export const fetchConversations = async () => {
   if (!apiUrl) {
-    console.error("Error: La variable de entorno VITE_API_URL no está definida.");
+    // Variable de entorno VITE_API_URL no definida
     return { data: [], error: 'Configuración de API incompleta (VITE_API_URL).' };
   }
   if (!apiKey) {
-    console.error("Error: La variable de entorno VITE_API_KEY no está definida.");
+    // Variable de entorno VITE_API_KEY no definida
     return { data: [], error: 'Configuración de API incompleta (VITE_API_KEY).' };
   }
 
   try {
-    const response = await fetch(apiUrl + 'conversations', {
+    let userId = null;
+    try { userId = localStorage.getItem('roomiefy_user_id'); } catch (e) { /* noop */ }
+    const qs = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+    const response = await fetch("http://127.0.0.1:8000/" + 'conversations' + qs, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -122,7 +125,7 @@ export const fetchConversations = async () => {
       } else if (response.status === 404) {
         errorMsg = "Error: La URL de la API no es válida o el recurso no existe.";
       }
-      console.error(errorMsg);
+      // Error en la respuesta de la API
       return { data: [], error: errorMsg };
     }
 
@@ -203,7 +206,7 @@ export const fetchRoommates = async (options = {}) => {
 
     if (!response.ok) {
       const errorMsg = `Error al obtener los roommates: ${response.status} ${response.statusText}`;
-      console.error(errorMsg);
+      // Error en la respuesta de la API
       return { data: [], error: errorMsg };
     }
 
@@ -254,7 +257,7 @@ export const fetchRoommateById = async (roomieId) => {
 
     if (!response.ok) {
       const errorMsg = `Error al obtener el roomie: ${response.status} ${response.statusText}`;
-      console.error(errorMsg);
+      // Error en la respuesta de la API
       return { data: null, error: errorMsg };
     }
 
@@ -273,34 +276,49 @@ export const fetchRoommateById = async (roomieId) => {
  * @param {string} content
  * @returns {Promise<object|null>} El mensaje creado por el servidor o null si falla
  */
-export const sendMessage = async (conversationId, content) => {
+export const sendMessage = async (conversationId, content, senderId = null) => {
   if (!apiUrl) {
-    console.error("Error: La variable de entorno VITE_API_URL no está definida.");
+    // Variable de entorno VITE_API_URL no definida
     return null;
   }
   if (!apiKey) {
-    console.error("Error: La variable de entorno VITE_API_KEY no está definida.");
+    // Variable de entorno VITE_API_KEY no definida
     return null;
   }
 
   try {
-    const response = await fetch(`${apiUrl}conversations/${conversationId}/messages`, {
+    // Obtener el ID del usuario actual si no se proporciona
+    let currentUserId = senderId;
+    if (!currentUserId) {
+      try {
+        currentUserId = localStorage.getItem('roomiefy_user_id');
+      } catch (e) {
+        // Error al obtener el ID del usuario
+      }
+    }
+
+    const payload = { 
+      content,
+      sender_id: currentUserId || 'unknown'
+    };
+
+    const response = await fetch(`http://127.0.0.1:8000/conversations/${conversationId}/messages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Ocp-Apim-Subscription-Key": apiKey,
         "Accept": "application/json"
       },
-      body: JSON.stringify({ content })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
-        console.error("Error de autenticación: La API KEY es incorrecta o no tiene permisos.");
+        // Error de autenticación
       } else if (response.status === 404) {
-        console.error("Error: La URL de la API no es válida o el recurso no existe.");
+        // Recurso no encontrado
       } else {
-        console.error(`Error al enviar el mensaje: ${response.status} ${response.statusText}`);
+        // Error al enviar mensaje
       }
       throw new Error(`Error al enviar el mensaje: ${response.status} ${response.statusText}`);
     }
@@ -308,7 +326,7 @@ export const sendMessage = async (conversationId, content) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("Error de red o excepción al enviar el mensaje:", error);
+    // Error de red al enviar mensaje
     return null;
   }
 };
@@ -504,52 +522,89 @@ export const fetchNotifications = async () => {
  * Crea una nueva conversación con un usuario específico.
  * @param {string|number} userId - El ID del usuario con el que crear la conversación.
  * @param {string} initialMessage - El mensaje inicial para la conversación.
- * @returns {Promise<object|null>} La conversación creada o null si falla
+ * @returns {Promise<object>} Objeto con la respuesta o información de error
  */
-export const createConversation = async (userId, initialMessage = '') => {
+/**
+ * Crea una nueva conversación con un usuario específico.
+ * @param {string|number} userId - El ID del usuario con el que crear la conversación.
+ * @param {string} currentUserId - El ID del usuario actual.
+ * @param {string} initialMessage - El mensaje inicial para la conversación.
+ * @returns {Promise<object>} Objeto con la respuesta o información de error
+ */
+export const createConversation = async (userId, currentUserId, initialMessage = '') => {
+  console.log('[createConversation] Iniciando con parámetros:', { userId, currentUserId, initialMessage });
+  
   if (!apiUrl) {
-    console.error("Error: La variable de entorno VITE_API_URL no está definida.");
-    return null;
+    const errorMsg = "Error: La variable de entorno VITE_API_URL no está definida.";
+    console.error(errorMsg);
+    return { error: errorMsg };
   }
-  if (!apiKey) {
-    console.error("Error: La variable de entorno VITE_API_KEY no está definida.");
-    return null;
+
+  if (!currentUserId) {
+    const errorMsg = "Error: No se proporcionó el ID del usuario actual.";
+    console.error(errorMsg);
+    return { error: errorMsg };
   }
+
+  // Formato correcto que espera el backend
+  const payload = {
+    participantId: String(userId),
+    currentUserId: String(currentUserId),
+    initialMessage: initialMessage
+  };
 
   try {
-    const conversationData = {
-      participantId: userId,
-      initialMessage: initialMessage
-    };
-
-    const response = await fetch(`${apiUrl}conversations`, {
-      method: "POST",
+    console.log('[createConversation] Enviando payload al servidor:', payload);
+    
+    const apiUrl = 'http://127.0.0.1:8000/conversations';
+    console.log('[createConversation] URL de la API:', apiUrl);
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      mode: 'cors',
+      credentials: 'include',
       headers: {
-        "Content-Type": "application/json",
-        "Ocp-Apim-Subscription-Key": apiKey,
-        "Accept": "application/json"
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
-      body: JSON.stringify(conversationData)
+      body: JSON.stringify(payload)
     });
+    
+    console.log('[createConversation] Estado de la respuesta:', response.status);
+    
+    console.log('[createConversation] Respuesta recibida, estado:', response.status);
 
+    const responseData = await response.json().catch(() => ({}));
+    
     if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        console.error("Error de autenticación: La API KEY es incorrecta o no tiene permisos.");
-      } else if (response.status === 404) {
-        console.error("Error: La URL de la API no es válida o el recurso no existe.");
-      } else {
-        console.error(`Error al crear la conversación: ${response.status} ${response.statusText}`);
-      }
-      throw new Error(`Error al crear la conversación: ${response.status} ${response.statusText}`);
+      console.error('Error al crear la conversación:', {
+        status: response.status,
+        statusText: response.statusText,
+        response: responseData
+      });
+      return { 
+        error: 'Error al crear la conversación',
+        status: response.status,
+        details: responseData
+      };
     }
-
-    const data = await response.json();
-    return data;
+    
+    // Forzar una recarga de las conversaciones después de crear una nueva
+    if (responseData && responseData.id) {
+      // Opcional: puedes forzar una recarga de las conversaciones aquí
+      // o manejar la actualización en el componente que llama a esta función
+      console.log('Conversación creada exitosamente:', responseData);
+    }
+    
+    return responseData;
   } catch (error) {
-    console.error("Error de red o excepción al crear la conversación:", error);
-    return null;
+    console.error('Excepción al crear la conversación:', error);
+    return { 
+      error: 'Error de conexión',
+      message: error.message 
+    };
   }
-};
+};  
 /**
  * Obtiene los mensajes de una conversación específica.
  * @param {string|number} conversationId - El ID de la conversación.
@@ -557,16 +612,16 @@ export const createConversation = async (userId, initialMessage = '') => {
  */
 export const fetchMessages = async (conversationId) => {
   if (!apiUrl) {
-    console.error("Error: La variable de entorno VITE_API_URL no está definida.");
+    // Variable de entorno VITE_API_URL no definida
     return { data: null, error: 'Configuración de API incompleta (VITE_API_URL).' };
   }
   if (!apiKey) {
-    console.error("Error: La variable de entorno VITE_API_KEY no está definida.");
+    // Variable de entorno VITE_API_KEY no definida
     return { data: null, error: 'Configuración de API incompleta (VITE_API_KEY).' };
   }
 
   try {
-    const response = await fetch(`${apiUrl}conversations/${conversationId}/messages`, {
+    const response = await fetch(`http://127.0.0.1:8000/conversations/${conversationId}/messages`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -582,7 +637,7 @@ export const fetchMessages = async (conversationId) => {
       } else if (response.status === 404) {
         errorMsg = "Error: La conversación no existe o no se puede acceder.";
       }
-      console.error(errorMsg);
+      // Error en la respuesta de la API
       return { data: null, error: errorMsg };
     }
 
@@ -601,17 +656,17 @@ export const fetchMessages = async (conversationId) => {
  */
 export const fetchConversation = async (conversationId) => {
   if (!apiUrl) {
-    console.error("Error: La variable de entorno VITE_API_URL no está definida.");
+    // Variable de entorno VITE_API_URL no definida
     return { data: null, error: 'Configuración de API incompleta (VITE_API_URL).' };
   }
   if (!apiKey) {
-    console.error("Error: La variable de entorno VITE_API_KEY no está definida.");
+    // Variable de entorno VITE_API_KEY no definida
     return { data: null, error: 'Configuración de API incompleta (VITE_API_KEY).' };
   }
 
   try {
     // Primer intento: endpoint plural
-    let response = await fetch(`${apiUrl}conversations/${conversationId}`, {
+    let response = await fetch(`http://127.0.0.1:8000/conversations/${conversationId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -639,7 +694,7 @@ export const fetchConversation = async (conversationId) => {
       } else if (response.status === 404) {
         errorMsg = "Error: La conversación no existe.";
       }
-      console.error(errorMsg);
+      // Error en la respuesta de la API
       return { data: null, error: errorMsg };
     }
 
@@ -659,11 +714,11 @@ export const fetchConversation = async (conversationId) => {
  */
 export const updateMessageStatus = async (messageId, status) => {
   if (!apiUrl) {
-    console.error("Error: La variable de entorno VITE_API_URL no está definida.");
+    // Variable de entorno VITE_API_URL no definida
     return null;
   }
   if (!apiKey) {
-    console.error("Error: La variable de entorno VITE_API_KEY no está definida.");
+    // Variable de entorno VITE_API_KEY no definida
     return null;
   }
 
@@ -680,7 +735,7 @@ export const updateMessageStatus = async (messageId, status) => {
 
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
-        console.error("Error de autenticación: La API KEY es incorrecta o no tiene permisos.");
+        // Error de autenticación
       } else if (response.status === 404) {
         console.error("Error: El mensaje no existe.");
       } else {
@@ -702,18 +757,28 @@ export const updateMessageStatus = async (messageId, status) => {
  * @param {string|number} conversationId - El ID de la conversación.
  * @returns {Promise<boolean>} True si se actualizó correctamente, false si falla
  */
-export const markConversationAsRead = async (conversationId) => {
+/**
+ * Marca los mensajes de una conversación como leídos
+ * @param {string|number} conversationId - ID de la conversación
+ * @param {string} userId - ID del usuario actual
+ * @returns {Promise<{ok: boolean, updated_count?: number, error?: string}>}
+ */
+export const markConversationAsRead = async (conversationId, userId) => {
   if (!apiUrl) {
-    console.error("Error: La variable de entorno VITE_API_URL no está definida.");
-    return false;
+    // Variable de entorno VITE_API_URL no definida
+    return { ok: false, error: "Error de configuración: URL de API no definida" };
   }
   if (!apiKey) {
-    console.error("Error: La variable de entorno VITE_API_KEY no está definida.");
-    return false;
+    // Variable de entorno VITE_API_KEY no definida
+    return { ok: false, error: "Error de configuración: API KEY no definida" };
+  }
+  if (!userId) {
+    console.error("Error: Se requiere el ID del usuario");
+    return { ok: false, error: "Se requiere el ID del usuario" };
   }
 
   try {
-    const response = await fetch(`${apiUrl}conversations/${conversationId}/read`, {
+    const response = await fetch(`http://127.0.0.1:8000/conversations/${conversationId}/read?user_id=${encodeURIComponent(userId)}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -722,18 +787,24 @@ export const markConversationAsRead = async (conversationId) => {
       }
     });
 
+    const data = await response.json().catch(() => ({}));
+
     if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        console.error("Error de autenticación: La API KEY es incorrecta o no tiene permisos.");
+      let errorMessage = `Error al marcar como leída la conversación: ${response.status} ${response.statusText}`;
+      
+      if (response.status === 400) {
+        errorMessage = data.detail || 'Faltan parámetros requeridos';
+      } else if (response.status === 401 || response.status === 403) {
+        errorMessage = 'No tienes permiso para realizar esta acción';
       } else if (response.status === 404) {
-        console.error("Error: La conversación no existe.");
-      } else {
-        console.error(`Error al marcar como leída la conversación: ${response.status} ${response.statusText}`);
+        errorMessage = 'La conversación no existe';
       }
-      throw new Error(`Error al marcar como leída la conversación: ${response.status} ${response.statusText}`);
+      
+      console.error(errorMessage);
+      return { ok: false, error: errorMessage };
     }
 
-    return true;
+    return { ok: true, ...data };
   } catch (error) {
     console.error("Error de red o excepción al marcar como leída la conversación:", error);
     return { data: null, error: error?.message || 'Fallo de red al marcar como leída la conversación.' };
@@ -763,7 +834,7 @@ export const fetchUserProfile = async (userid) => {
 
     if (!response.ok) {
       const errorMsg = `Error al obtener el Perfíl: ${response.status} ${response.statusText}`;
-      console.error(errorMsg);
+      // Error en la respuesta de la API
       return { data: null, error: errorMsg };
     }
 
@@ -799,7 +870,7 @@ export const updateUserProfile = async (profileData, userid) => {
 
     if (!response.ok) {
       const errorMsg = `Error al actualizar el perfil: ${response.status} ${response.statusText}`;
-      console.error(errorMsg);
+      // Error en la respuesta de la API
       return { data: null, error: errorMsg };
     }
 
@@ -836,7 +907,7 @@ export const updateSearchingStatus = async (isSearching, userid) => {
 
     if (!response.ok) {
       const errorMsg = `Error al actualizar el estado de búsqueda: ${response.status} ${response.statusText}`;
-      console.error(errorMsg);
+      // Error en la respuesta de la API
       return { data: null, error: errorMsg };
     }
 
@@ -870,7 +941,7 @@ export const fetchUserProperties = async (userid) => {
 
     if (!response.ok) {
       const errorMsg = `Error al obtener las propiedades del usuario: ${response.status} ${response.statusText}`;
-      console.error(errorMsg);
+      // Error en la respuesta de la API
       return { data: [], error: errorMsg };
     }
 
