@@ -5,6 +5,7 @@
 
 const apiUrl = import.meta.env.VITE_API_URL;
 const apiKey = import.meta.env.VITE_API_KEY;
+const roomiesApiUrl = import.meta.env.VITE_ROOMIES_API_URL;
 
 export const fetchProperties = async (options = {}) => {
   // Verificación para asegurar que las variables de entorno están cargadas
@@ -134,9 +135,18 @@ export const fetchConversations = async () => {
 };
 
 export const fetchRoommates = async (options = {}) => {
-  if (!apiUrl || !apiKey) {
-    console.error("Error: Las variables de entorno VITE_API_URL o VITE_API_KEY no están definidas.");
-    return { data: [], error: 'Configuración de API incompleta (VITE_API_URL o VITE_API_KEY).' };
+  const baseUrl = roomiesApiUrl || apiUrl;
+  if (!baseUrl) {
+    console.error("Error: No se definió la URL base para roomies (VITE_ROOMIES_API_URL o VITE_API_URL).");
+    return { data: [], error: 'Configuración de API incompleta (VITE_ROOMIES_API_URL o VITE_API_URL).' };
+  }
+
+  const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+  const usingAzureBackend = !roomiesApiUrl;
+
+  if (usingAzureBackend && !apiKey) {
+    console.error("Error: La variable de entorno VITE_API_KEY no está definida para consumir el backend de Azure.");
+    return { data: [], error: 'Configuración de API incompleta (VITE_API_KEY).' };
   }
 
   try {
@@ -145,33 +155,45 @@ export const fetchRoommates = async (options = {}) => {
       page,
       pageSize,
       search,
-      priceMin,
-      priceMax,
-      ageMin,
-      ageMax,
-      hasApartment, // booleano o 'yes' | 'no' | 'any'
-      verifiedOnly,
+      minBudget,
+      maxBudget,
+      minAge,
+      maxAge,
+      hasApartment,
+      verified,
       minCleanliness,
       minSocial,
-      interests, // Array o Set
-      sort, // 'recent' | 'rated_desc' | 'price_asc' | 'price_desc', etc.
+      interests,
+      sort, // 'recent' | 'rating' | 'age' | 'budget'
     } = options || {};
 
     const params = new URLSearchParams();
     const appendIfDefined = (key, value) => {
       if (value === undefined || value === null || value === '') return;
+      if ((key === 'minCleanliness' || key === 'minSocial') && value === 0) return;
       params.append(key, String(value));
     };
 
     appendIfDefined('page', page);
     appendIfDefined('pageSize', pageSize);
     appendIfDefined('search', search);
-    appendIfDefined('minBudget', priceMin);
-    appendIfDefined('maxBudget', priceMax);
-    appendIfDefined('minAge', ageMin);
-    appendIfDefined('maxAge', ageMax);
-
-    // Normalizar hasApartment
+    // Solo enviar filtros de presupuesto y edad si NO son los valores por defecto
+    // Valores por defecto: minBudget=100, maxBudget=2000, minAge=18, maxAge=99
+    if (minBudget !== undefined && minBudget !== null && minBudget !== 100) {
+      appendIfDefined('minBudget', minBudget);
+    }
+    if (maxBudget !== undefined && maxBudget !== null && maxBudget !== 2000) {
+      appendIfDefined('maxBudget', maxBudget);
+    }
+    // No enviar minAge si es 18 (el valor mínimo por defecto)
+    if (minAge !== undefined && minAge !== null && minAge !== 18) {
+      appendIfDefined('minAge', minAge);
+    }
+    // No enviar maxAge si es 99 (el valor máximo por defecto)
+    if (maxAge !== undefined && maxAge !== null && maxAge !== 99) {
+      appendIfDefined('maxAge', maxAge);
+    }
+    // Solo enviar hasApartment si NO es 'any'
     if (hasApartment !== undefined && hasApartment !== null && hasApartment !== 'any') {
       const value = typeof hasApartment === 'string'
         ? (hasApartment === 'yes' ? 'true' : hasApartment === 'no' ? 'false' : '')
@@ -179,26 +201,40 @@ export const fetchRoommates = async (options = {}) => {
       if (value) params.append('hasApartment', value);
     }
 
-    if (verifiedOnly !== undefined) appendIfDefined('verified', verifiedOnly ? 'true' : 'false');
+    // Solo enviar verified si es true (no enviar false que es el default)
+    if (verified === true) {
+      params.append('verified', 'true');
+    }
+    
+    // Solo enviar si son mayores a 0
     appendIfDefined('minCleanliness', minCleanliness);
     appendIfDefined('minSocial', minSocial);
-
+    
+    // Solo enviar intereses si hay alguno seleccionado
     if (interests && (Array.isArray(interests) || interests instanceof Set)) {
       const list = Array.from(interests);
       if (list.length > 0) params.append('interests', list.join(','));
     }
 
-    appendIfDefined('sort', sort);
+    // Solo enviar sort si no es 'recent' (el default)
+    if (sort && sort !== 'recent') {
+      appendIfDefined('sort', sort);
+    }
 
     const url = apiUrl + 'roomies' + (params.toString() ? `?${params.toString()}` : '');
 
+    const headers = {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    };
+
+    if (usingAzureBackend && apiKey) {
+      headers["Ocp-Apim-Subscription-Key"] = apiKey;
+    }
+
     const response = await fetch(url, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "Ocp-Apim-Subscription-Key": apiKey,
-        "Accept": "application/json"
-      }
+      headers,
     });
 
     if (!response.ok) {
@@ -211,18 +247,45 @@ export const fetchRoommates = async (options = {}) => {
     const totalHeader = response.headers.get('X-Total-Count') || response.headers.get('x-total-count');
     const body = await response.json();
 
-    // Tolerancia a diferentes formas de respuesta
-    const items = Array.isArray(body)
-      ? body
-      : (body?.data ?? body?.items ?? body?.roomies ?? []);
+    // Adaptación a la nueva estructura de respuesta del backend real
+    // La respuesta tiene formato: { status: 200, body: { roomies: [...], total: X, page: Y, pageSize: Z, totalPages: W } }
+    let items = [];
+    let total = null;
+    let currentPage = page;
+    let currentPageSize = pageSize;
+    let totalPages = null;
 
-    const total = totalHeader != null
-      ? Number(totalHeader)
-      : (body?.total ?? body?.totalCount ?? body?.meta?.total ?? null);
+    if (body.status && body.body) {
+      // Nuevo formato del backend real con wrapper
+      items = body.body.roomies || [];
+      total = body.body.total ?? null;
+      currentPage = body.body.page ?? page;
+      currentPageSize = body.body.pageSize ?? pageSize;
+      totalPages = body.body.totalPages ?? null;
+    } else if (body.roomies) {
+      // Formato directo sin wrapper de status
+      items = body.roomies || [];
+      total = body.total ?? null;
+      currentPage = body.page ?? page;
+      currentPageSize = body.pageSize ?? pageSize;
+      totalPages = body.totalPages ?? null;
+    } else {
+      // Fallback para otros formatos de respuesta
+      items = Array.isArray(body)
+        ? body
+        : (body?.data ?? body?.items ?? []);
 
-    const meta = (total != null || page != null || pageSize != null)
-      ? { total: total ?? null, page: page ?? null, pageSize: pageSize ?? null }
-      : undefined;
+      total = totalHeader != null
+        ? Number(totalHeader)
+        : (body?.total ?? body?.totalCount ?? body?.meta?.total ?? null);
+    }
+
+    const meta = {
+      total: total ?? null,
+      page: currentPage ?? null,
+      pageSize: currentPageSize ?? null,
+      totalPages: totalPages ?? null
+    };
 
     return { data: items, meta, error: null };
   } catch (error) {
@@ -237,19 +300,33 @@ export const fetchRoommates = async (options = {}) => {
  * @returns {Promise<{data: object|null, error: string|null}>}
  */
 export const fetchRoommateById = async (roomieId) => {
-  if (!apiUrl || !apiKey) {
-    console.error("Error: Las variables de entorno VITE_API_URL o VITE_API_KEY no están definidas.");
-    return { data: null, error: 'Configuración de API incompleta (VITE_API_URL o VITE_API_KEY).' };
+  const baseUrl = roomiesApiUrl || apiUrl;
+  if (!baseUrl) {
+    console.error("Error: No se definió la URL base para roomies (VITE_ROOMIES_API_URL o VITE_API_URL).");
+    return { data: null, error: 'Configuración de API incompleta (VITE_ROOMIES_API_URL o VITE_API_URL).' };
+  }
+
+  const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+  const usingAzureBackend = !roomiesApiUrl;
+
+  if (usingAzureBackend && !apiKey) {
+    console.error("Error: La variable de entorno VITE_API_KEY no está definida para consumir el backend de Azure.");
+    return { data: null, error: 'Configuración de API incompleta (VITE_API_KEY).' };
   }
 
   try {
-    let response = await fetch(`${apiUrl}roomies/${roomieId}`, {
+    const headers = {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    };
+
+    if (usingAzureBackend && apiKey) {
+      headers["Ocp-Apim-Subscription-Key"] = apiKey;
+    }
+
+    const response = await fetch(`${normalizedBaseUrl}profile/${roomieId}`, {
       method: 'GET',
-      headers: {
-        "Content-Type": "application/json",
-        "Ocp-Apim-Subscription-Key": apiKey,
-        "Accept": "application/json"
-      }
+      headers,
     });
 
     if (!response.ok) {
@@ -259,8 +336,83 @@ export const fetchRoommateById = async (roomieId) => {
     }
 
     const body = await response.json();
-    const item = Array.isArray(body) ? (body[0] ?? null) : (body?.data ?? body ?? null);
-    return { data: item, error: null };
+
+    const extractProfile = (payload) => {
+      if (!payload) return null;
+      if (payload.status && payload.body) {
+        return payload.body.roomie || payload.body.profile || payload.body;
+      }
+      if (payload.data) return payload.data;
+      return payload;
+    };
+
+    const profile = extractProfile(body);
+
+    if (!profile) {
+      return { data: null, error: 'Perfil vacío en la respuesta.' };
+    }
+
+    const toBoolean = (value) => {
+      if (value === undefined || value === null) return undefined;
+      if (typeof value === 'boolean') return value;
+      const normalized = String(value).trim().toLowerCase();
+      if (['si', 'sí', 'yes', 'true', '1'].includes(normalized)) return true;
+      if (['no', 'false', '0'].includes(normalized)) return false;
+      return undefined;
+    };
+
+    const toNumber = (value) => {
+      if (value === undefined || value === null || value === '') return null;
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    };
+
+    const toArray = (value) => {
+      if (!value) return [];
+      if (Array.isArray(value)) return value.filter(Boolean);
+      return [value].filter(Boolean);
+    };
+
+    const presupuesto = toNumber(profile.presupuesto ?? profile.profileBudget);
+    const rawBudget = profile.budget || {};
+    const budgetMin = toNumber(rawBudget.min ?? presupuesto);
+    const budgetMax = toNumber(rawBudget.max ?? rawBudget.min ?? presupuesto);
+    const budget = budgetMin != null || budgetMax != null
+      ? {
+          min: budgetMin ?? budgetMax ?? null,
+          max: budgetMax ?? budgetMin ?? null,
+        }
+      : null;
+
+    const normalized = {
+      id: profile.profileId || profile.user_id || profile.userId || roomieId,
+      profileId: profile.profileId ?? null,
+      userId: profile.user_id ?? profile.userId ?? null,
+      name: profile.nombre ?? profile.name ?? '',
+      age: toNumber(profile.edad ?? profile.age),
+      avatar: profile.foto ?? profile.avatar ?? '',
+      verified: profile.verified ?? false,
+      reviews: profile.reviews ?? 0,
+      rating: profile.rating ?? 0,
+      hasApartment: toBoolean(profile.tieneApartamento ?? profile.hasApartment) ?? false,
+      budget: budget ?? { min: presupuesto, max: presupuesto },
+      profileBudget: presupuesto,
+      bio: profile.descripcion ?? profile.bio ?? '',
+      interests: toArray(profile.intereses ?? profile.interests),
+      location: profile.ubicacion ?? profile.location ?? '',
+      email: profile.email ?? '',
+      occupation: profile.ocupacion ?? profile.occupation ?? '',
+      socialLevel: toNumber(profile.nivelSocial ?? profile.socialLevel),
+      cleanlinessLevel: toNumber(profile.nivelLimpieza ?? profile.cleanlinessLevel),
+      acceptsSmokers: toBoolean(profile.aceptaFumadores ?? profile.acceptsSmokers) ?? false,
+      acceptsPets: toBoolean(profile.aceptaMascotas ?? profile.acceptsPets) ?? false,
+      acceptsGuests: toBoolean(profile.aceptaInvitados ?? profile.acceptsGuests) ?? false,
+      languages: toArray(profile.idiomas ?? profile.languages),
+      isSearching: toBoolean(profile.isSearching) ?? false,
+      raw: profile,
+    };
+
+    return { data: normalized, error: null };
   } catch (error) {
     console.error(error);
     return { data: null, error: error?.message || 'Fallo de red al obtener el roomie.' };
@@ -387,19 +539,42 @@ export const createProperty = async (propertyData) => {
 };
 
 /* Realiza un Post para crear un nuevo perfil de roomie con los datos de ProfilePage */
-export const createRoomieProfile = async (profileData) => {
-  const formData = new FormData();
-  Object.keys(profileData).forEach((key) => {
-    if (key !== "foto" && key !== "fotoPreview") formData.append(key, profileData[key]);
-  });
-  if (profileData.foto) formData.append("foto", profileData.foto, profileData.foto.name);
+export const createRoomieProfile = async (formData, userId) => {
+  // Crear un objeto con los datos del perfil
+  const profileData = {};
+  
+  // Si es un FormData, convertirlo a objeto
+  if (formData instanceof FormData) {
+    formData.forEach((value, key) => {
+      // Manejar los campos que son JSON stringified
+      if (key === 'intereses' || key === 'idiomas') {
+        try {
+          profileData[key] = JSON.parse(value);
+        } catch (e) {
+          profileData[key] = value;
+        }
+      } else {
+        profileData[key] = value;
+      }
+    });
+  } else {
+    // Si ya es un objeto, copiarlo directamente
+    Object.assign(profileData, formData);
+  }
+  
+  // Asegurarse de que el user_id esté incluido
+  if (userId) {
+    profileData.user_id = userId;
+  }
 
   const response = await fetch(apiUrl + 'profile', {
     method: "POST",
     headers: {
+      "Content-Type": "application/json",
       "Ocp-Apim-Subscription-Key": apiKey,
+      "Accept": "application/json"
     },
-    body: formData,
+    body: JSON.stringify(profileData),
   });
 
   if (!response.ok) {
@@ -429,7 +604,7 @@ export const createRoomieProfile = async (profileData) => {
 export const deleteProperty = async (propertyId) => {
   if (!apiUrl || !apiKey) throw new Error("Configuración de API incompleta.");
   try {
-    const response = await fetch(`${apiUrl}properties/${propertyId}`, { // URL corregida
+    const response = await fetch(`${apiUrl}properties/${propertyId}`, {
       method: 'DELETE',
       headers: { 'Ocp-Apim-Subscription-Key': apiKey },
     });
@@ -742,17 +917,30 @@ export const markConversationAsRead = async (conversationId) => {
 
 /**
  * Obtiene el Perfíl del usuario actual.
- * @param {string} userid - ID único del usuario (email)
+ * @param {string} userId - ID único del usuario (opcional, si no se proporciona, se obtendrá del contexto de autenticación)
  * @returns {Promise<{data: object|null, error: string|null}>}
  */
-export const fetchUserProfile = async (userid) => {
+export const fetchUserProfile = async (userId = null) => {
   if (!apiUrl || !apiKey) {
     console.error("Error: Variables de entorno de API no definidas.");
     return { data: null, error: 'Configuración de API incompleta.' };
   }
 
+  // Si no se proporciona un userId, intentamos obtenerlo del contexto de autenticación
+  if (!userId && typeof window !== 'undefined' && window._authContext) {
+    const { user } = window._authContext;
+    if (user && user.id) {
+      userId = user.id;
+    }
+  }
+
+  if (!userId) {
+    console.error("Error: No se proporcionó un ID de usuario y no se pudo obtener del contexto de autenticación.");
+    return { data: null, error: 'ID de usuario no disponible.' };
+  }
+
   try {
-    const response = await fetch(`${apiUrl}profile/${userid}`, {
+    const response = await fetch(`http://localhost:3000/profile/${userId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -778,16 +966,17 @@ export const fetchUserProfile = async (userid) => {
 /**
  * Actualiza el Perfíl del usuario.
  * @param {object} profileData - Los nuevos datos del Perfíl.
-{{ ... }}
+ * @param {string} userId - ID único del usuario (Google ID)
+ * @returns {Promise<{data: object|null, error: string|null}>}
  */
-export const updateUserProfile = async (profileData, userid) => {
+export const updateUserProfile = async (profileData, userId) => {
   if (!apiUrl || !apiKey) {
     console.error("Error: Variables de entorno de API no definidas.");
     return { data: null, error: 'Configuración de API incompleta.' };
   }
 
   try {
-    const response = await fetch(`${apiUrl}profile/${userid}`, {
+    const response = await fetch(`http://localhost:3000/profile/${userId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -814,17 +1003,17 @@ export const updateUserProfile = async (profileData, userid) => {
 /**
  * Actualiza el estado de búsqueda de roomie del usuario.
  * @param {boolean} isSearching - True si está buscando roomie, false si no.
- * @param {string} userid - ID único del usuario (email)
+ * @param {string} userId - ID único del usuario (Google ID)
  * @returns {Promise<{data: object|null, error: string|null}>}
  */
-export const updateSearchingStatus = async (isSearching, userid) => {
+export const updateSearchingStatus = async (isSearching, userId) => {
   if (!apiUrl || !apiKey) {
     console.error("Error: Variables de entorno de API no definidas.");
     return { data: null, error: 'Configuración de API incompleta.' };
   }
 
   try {
-    const response = await fetch(`${apiUrl}profile/searching/${userid}`, {
+    const response = await fetch(`http://localhost:3000/profile/searching/${userId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -881,12 +1070,6 @@ export const fetchUserProperties = async (userid) => {
     return { data: [], error: error?.message || 'Fallo de red al obtener las propiedades.' };
   }
 };
-
-//TO DO: asegurarse de que las apis que lo necesiten envien el id del usuario
-//ejemplo: fetchUserProperties(userid); 
-
-//TO DO: Reviasar las apis en azure 
-// src/services/api.js
 
 export const loginWithGoogle = async (idToken) => {
   const response = await fetch(`${apiUrl}auth/google/login`, { 

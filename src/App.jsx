@@ -127,6 +127,7 @@ function App() {
   return (
     <div className="app-layout">
       <Navbar
+        toggleTheme={toggleTheme}
         onSearch={handleSearch}
         searchQuery={searchQuery}
         hasPublished={hasPublished}
