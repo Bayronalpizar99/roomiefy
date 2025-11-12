@@ -1,20 +1,21 @@
 /**
- * Obtiene los datos de las propiedades desde la API de Azure.
- * AHORA SOPORTA FILTROS DEL LADO DEL SERVIDOR.
+ * Obtiene los datos de las propiedades.
+ * MODIFICADO: Esta función ahora apunta a Azure API Management.
  */
 
+// --- URLs Y CLAVES ---
+// Apunta al backend local de Spring Boot (ya no se usa en esta función)
+// Apunta a Azure API Management para todas las demás funciones
 const apiUrl = import.meta.env.VITE_API_URL;
 const apiKey = import.meta.env.VITE_API_KEY;
 
+// --- FIN URLs Y CLAVES ---
+
 export const fetchProperties = async (options = {}) => {
-  // Verificación para asegurar que las variables de entorno están cargadas
-  if (!apiUrl) {
-    console.error("Error: La variable de entorno VITE_API_URL no está definida.");
-    return { data: [], error: 'Configuración de API incompleta (VITE_API_URL).' };
-  }
-  if (!apiKey) {
-    console.error("Error: La variable de entorno VITE_API_KEY no está definida.");
-    return { data: [], error: 'Configuración de API incompleta (VITE_API_KEY).' };
+  // 1. Verificación: ¡Asegúrate de que apunte a las variables de AZURE!
+  if (!apiUrl || !apiKey) {
+    console.error("Error: VITE_API_URL o VITE_API_KEY no están definidas.");
+    return { data: [], error: 'Configuración de API incompleta (VITE_API_URL o VITE_API_KEY).' };
   }
 
   try {
@@ -35,6 +36,7 @@ export const fetchProperties = async (options = {}) => {
       }
     };
 
+    // (Toda esta lógica de parámetros se queda igual)
     appendIfDefined('search', search);
     appendIfDefined('priceMax', price);
     
@@ -50,12 +52,15 @@ export const fetchProperties = async (options = {}) => {
     appendIfDefined('page', page);
     appendIfDefined('pageSize', pageSize);
 
-    const url = apiUrl + 'properties' + (params.toString() ? `?${params.toString()}` : '');
+    // 2. URL CORREGIDA: Usa apiUrl (APIM) en lugar de localApiUrl.
+    // Asumimos que VITE_API_URL ya incluye /api/v1
+    const url = apiUrl + '/properties' + (params.toString() ? `?${params.toString()}` : '');
 
     const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        // 3. AÑADIMOS LA API KEY para Azure API Management
         "Ocp-Apim-Subscription-Key": apiKey,
         "Accept": "application/json"
       }
@@ -63,10 +68,8 @@ export const fetchProperties = async (options = {}) => {
 
     if (!response.ok) {
       let errorMsg = `Error al obtener las propiedades: ${response.status} ${response.statusText}`;
-      if (response.status === 401 || response.status === 403) {
-        errorMsg = "Error de autenticación: La API KEY es incorrecta o no tiene permisos.";
-      } else if (response.status === 404) {
-        errorMsg = "Error: La URL de la API no es válida o el recurso no existe.";
+      if (response.status === 404) {
+        errorMsg = "Error: La URL de la API no es válida o el recurso no existe. (Revisa la URL)";
       }
       console.error(errorMsg);
       return { data: [], meta: null, error: errorMsg };
@@ -84,7 +87,15 @@ export const fetchProperties = async (options = {}) => {
 
     const meta = { total, page, pageSize };
 
-    return { data: items, meta, error: null };
+    // (La lógica de procesamiento de amenities se queda igual)
+    const processedItems = items.map(item => ({
+      ...item,
+      amenities: typeof item.amenities === 'string' 
+        ? item.amenities.split(',').map(a => a.trim()) 
+        : (item.amenities || [])
+    }));
+
+    return { data: processedItems, meta, error: null };
   } catch (error) {
     console.error("Error de red o excepción:", error);
     return { data: [], meta: null, error: error?.message || 'Fallo de red al obtener propiedades.' };
@@ -344,45 +355,52 @@ export const fetchProfileOptions = async () => {
   }
 };
 
-// --- CÓDIGO NUEVO INTEGRADO ---
-
 /**
  * Crea una nueva propiedad enviando los datos a la API.
+ * MODIFICADO: Esta función ahora apunta a Azure API Management (apiUrl)
+ * y requiere un token de autenticación.
  * @param {object} propertyData - Los datos de la propiedad a crear.
- * @returns {Promise<object>} La respuesta de la API.
+ * @param {string} accessToken - El token JWT del usuario (de useAuth).
+ * @returns {Promise<object>} La propiedad creada (respuesta del backend).
  */
-export const createProperty = async (propertyData) => {
+export const createProperty = async (propertyData, accessToken) => {
+  // 1. Verificamos la URL de APIM, la API Key y el Token
   if (!apiUrl || !apiKey) {
     console.error("Error: VITE_API_URL o VITE_API_KEY no están definidas.");
     throw new Error("La configuración de la API no está completa.");
   }
+  if (!accessToken) {
+    console.error("Error: Se requiere un token de acceso para crear una propiedad.");
+    throw new Error("Autenticación requerida.");
+  }
 
   try {
-    const response = await fetch(`${apiUrl}properties`, {
+    // 2. Usamos la URL de APIM
+    // Asumimos que la operación POST es /properties
+    const response = await fetch(`${apiUrl}/properties`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        // 3. AÑADIMOS la API Key de APIM
         'Ocp-Apim-Subscription-Key': apiKey,
+        // 4. AÑADIMOS el token de autorización para el backend
+        'Authorization': `Bearer ${accessToken}`,
       },
       body: JSON.stringify(propertyData),
     });
 
-    // El mock service responde con 201 Created y puede no tener un cuerpo JSON.
-    // Si la respuesta es exitosa (como 201), no intentamos leerla como JSON.
-    if (response.status === 201) {
-      return { success: true, status: 201 };
-    }
-
     if (!response.ok) {
+      // Si la respuesta no es 2xx (ej. 401, 403, 500)
       const errorText = await response.text();
       throw new Error(`Error al crear la propiedad: ${response.status} ${errorText}`);
     }
 
-    // Para un backend real, probablemente querrías devolver el JSON.
+    // Si la respuesta es 201 (Created) o 200 (OK)
     return await response.json();
+
   } catch (error) {
     console.error("Excepción al crear la propiedad:", error);
-    throw error; // Re-lanzamos el error para que el componente lo pueda manejar.
+    throw error; // Re-lanzamos el error
   }
 };
 
@@ -422,54 +440,98 @@ export const createRoomieProfile = async (profileData) => {
 };
 
 /**
- * Elimina una propiedad por su ID llamando a la API.
- * @param {string|number} propertyId - El ID de la propiedad a eliminar.
- * @returns {Promise<object>} Un objeto indicando el éxito de la operación.
+ * Elimina una propiedad por su ID.
+ * MODIFICADO: Esta función ahora apunta a Azure API Management (apiUrl)
+ * y requiere un token de autenticación.
+ * @param {string | number} propertyId - El ID de la propiedad a eliminar.
+ * @param {string} accessToken - El token JWT del usuario (de useAuth).
  */
-export const deleteProperty = async (propertyId) => {
-  if (!apiUrl || !apiKey) throw new Error("Configuración de API incompleta.");
+export const deleteProperty = async (propertyId, accessToken) => {
+  // 1. Verificamos la URL de APIM, la API Key y el Token
+  if (!apiUrl || !apiKey) {
+    console.error("Error: VITE_API_URL o VITE_API_KEY no están definidas.");
+    throw new Error("La configuración de la API no está completa.");
+  }
+  if (!accessToken) {
+    console.error("Error: Se requiere un token de acceso para eliminar una propiedad.");
+    throw new Error("Autenticación requerida.");
+  }
+
   try {
-    const response = await fetch(`${apiUrl}properties/${propertyId}`, { // URL corregida
-      method: 'DELETE',
-      headers: { 'Ocp-Apim-Subscription-Key': apiKey },
+    // 2. Usamos la URL de APIM y el ID
+    const response = await fetch(`${apiUrl}/properties/${propertyId}`, {
+      method: 'DELETE', // 👈 3. Usamos el método DELETE
+      headers: {
+        // 4. AÑADIMOS la API Key de APIM
+        'Ocp-Apim-Subscription-Key': apiKey,
+        // 5. AÑADIMOS el token de autorización para el backend
+        'Authorization': `Bearer ${accessToken}`,
+      },
     });
-    if (response.status === 204) return { success: true, status: 204 };
+
+    // 6. Un 'DELETE' exitoso usualmente devuelve 204 No Content
     if (!response.ok) {
+      // Si la respuesta no es 2xx (ej. 401, 403, 404)
       const errorText = await response.text();
       throw new Error(`Error al eliminar la propiedad: ${response.status} ${errorText}`);
     }
-    return response;
+
+    // Si la respuesta es 204 (No Content) o 200 (OK)
+    return { success: true };
+
   } catch (error) {
-    console.error("Excepción en deleteProperty:", error);
-    throw error;
+    console.error("Excepción al eliminar la propiedad:", error);
+    throw error; // Re-lanzamos el error
   }
 };
 
-
 /**
  * Actualiza una propiedad existente.
+ * MODIFICADO: Esta función ahora apunta a Azure API Management (apiUrl)
+ * y requiere un token de autenticación.
  * @param {string|number} propertyId - El ID de la propiedad a modificar.
  * @param {object} propertyData - Los nuevos datos de la propiedad.
- * @returns {Promise<object>} La respuesta de la API.
+ * @param {string} accessToken - El token JWT del usuario (de useAuth).
+ * @returns {Promise<object>} La propiedad actualizada (respuesta del backend).
  */
-export const updateProperty = async (propertyId, propertyData) => {
-    if (!apiUrl || !apiKey) throw new Error("API config incomplete.");
+export const updateProperty = async (propertyId, propertyData, accessToken) => {
+    // 1. Verificamos la URL de APIM, la API Key y el Token
+    if (!apiUrl || !apiKey) { 
+        console.error("Error: VITE_API_URL o VITE_API_KEY no están definidas.");
+        throw new Error("La configuración de la API no está completa.");
+    }
+    if (!accessToken) {
+        console.error("Error: Se requiere un token de acceso para actualizar una propiedad.");
+        throw new Error("Autenticación requerida.");
+    }
+
     try {
-        const response = await fetch(`${apiUrl}properties/${propertyId}`, {
+        // 2. Usamos la URL de APIM, el ID y el método PUT
+        const response = await fetch(`${apiUrl}/properties/${propertyId}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Ocp-Apim-Subscription-Key': apiKey },
-            body: JSON.stringify(propertyData),
+            headers: { 
+                'Content-Type': 'application/json',
+                // 3. AÑADIMOS la API Key de APIM
+                'Ocp-Apim-Subscription-Key': apiKey,
+                // 4. AÑADIMOS el token de autorización para el backend
+                'Authorization': `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify(propertyData), // 5. Enviamos los nuevos datos
         });
+
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Error updating property: ${response.status} ${errorText}`);
         }
-        return await response.json();
+
+        // El backend devuelve la propiedad actualizada
+        return await response.json(); 
     } catch (error) {
         console.error("Exception in updateProperty:", error);
         throw error;
     }
 };
+
 
  /**
  * Obtiene la lista de notificaciones del usuario.
@@ -850,19 +912,31 @@ export const updateSearchingStatus = async (isSearching, userid) => {
 
 /**
  * Obtiene las propiedades del usuario actual.
+ * MODIFICADO: Esta función ahora apunta a Azure API Management (apiUrl)
  * @returns {Promise<{data: array, error: string|null}>}
  */
 export const fetchUserProperties = async (userid) => {
+  // 1. Verificamos la URL de APIM y la API Key
   if (!apiUrl || !apiKey) {
-    console.error("Error: Variables de entorno de API no definidas.");
+    console.error("Error: VITE_API_URL o VITE_API_KEY no están definidas.");
     return { data: [], error: 'Configuración de API incompleta.' };
   }
-  console.log("El valor de apiUrl es:", apiUrl); 
+  
+  // Pequeña verificación extra
+  if (!userid) {
+     console.error("Error: Se requiere un ID de usuario para fetchUserProperties.");
+     return { data: [], error: 'ID de usuario no proporcionado.' };
+  }
+
   try {
-    const response = await fetch(`${apiUrl}properties/my-properties/${userid}`, {
+    // 2. Usamos apiUrl (APIM)
+    // Asumimos que VITE_API_URL es la base (ej. https://apimanagementsam.azure-api.net)
+    // y que tu operación en APIM es /properties/my-properties/{userid}
+    const response = await fetch(`${apiUrl}/properties/my-properties/${userid}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        // 3. AÑADIMOS LA API KEY para Azure API Management
         "Ocp-Apim-Subscription-Key": apiKey,
         "Accept": "application/json"
       }
@@ -875,7 +949,17 @@ export const fetchUserProperties = async (userid) => {
     }
 
     const data = await response.json();
-    return { data: Array.isArray(data) ? data : [], error: null };
+    const items = Array.isArray(data) ? data : [];
+
+    // 4. El procesamiento de amenities se mantiene (es correcto)
+    const processedItems = items.map(item => ({
+      ...item,
+      amenities: typeof item.amenities === 'string' 
+        ? item.amenities.split(',').map(a => a.trim()) 
+        : (item.amenities || [])
+    }));
+
+    return { data: processedItems, error: null };
   } catch (error) {
     console.error(error);
     return { data: [], error: error?.message || 'Fallo de red al obtener las propiedades.' };
