@@ -147,6 +147,7 @@ function App() {
     <div className="app-layout">
       {/* 6. El Navbar ahora recibe el estado 'hasPublished' actualizado */}
       <Navbar
+        toggleTheme={toggleTheme}
         onSearch={handleSearch}
         searchQuery={searchQuery}
         hasPublished={hasPublished}

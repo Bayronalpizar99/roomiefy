@@ -255,3 +255,104 @@
   background-color: var(--color-input-bg);
   border-color: var(--color-text);
 }
+
+/* Botón toggle de filtros con estados */
+.filter-toggle-button {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  margin-top: 1.5rem;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Estado por defecto - sin filtros activos */
+.filter-toggle-button.default {
+  background-color: var(--color-input-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.filter-toggle-button.default:hover {
+  background-color: var(--color-input-bg);
+  border-color: var(--color-border);
+}
+
+/* Estado activo - con filtros aplicados */
+.filter-toggle-button.filtered {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  border-color: var(--color-primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.filter-toggle-button.filtered:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%);
+}
+
+.filter-toggle-button.filtered:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+}
+
+/* Animación del icono cuando está activo */
+.filter-toggle-button.filtered svg {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-10deg); }
+  75% { transform: rotate(10deg); }
+}
+
+/* Efecto de pulso sutil cuando hay filtros */
+.filter-toggle-button.filtered::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius);
+  transform: translate(-50%, -50%) scale(0);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Asegurar que el texto esté sobre el efecto de pulso */
+.filter-toggle-button span,
+.filter-toggle-button svg {
+  position: relative;
+  z-index: 1;
+}
+
+/* Estado deshabilitado */
+.filter-toggle-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  }

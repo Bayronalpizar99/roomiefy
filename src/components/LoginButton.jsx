@@ -10,8 +10,18 @@ const LoginButton = () => {
   const handleCredentialResponse = async (response) => {
     try {
       const idToken = response.credential;
+      // Decodificar el token JWT para obtener la información del perfil
+      const payload = JSON.parse(atob(idToken.split('.')[1]));
       const backendResponse = await loginWithGoogle(idToken);
-      login(backendResponse.user, backendResponse.accessToken);
+      
+      // Asegurarse de que el objeto user tenga la foto de perfil
+      const userData = {
+        ...backendResponse.user,
+        // Usar la foto de perfil de Google si no está en la respuesta del backend
+        picture: backendResponse.user?.picture || payload?.picture || ''
+      };
+      
+      login(userData, backendResponse.accessToken);
     } catch (error) {
       console.error("Error during Google login:", error);
       alert(

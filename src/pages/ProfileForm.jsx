@@ -144,24 +144,30 @@ const ProfileForm = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const data = new FormData();
+      // Crear un objeto con los datos del formulario
+      const data = { ...formData };
 
-      Object.keys(formData).forEach((key) => {
-        if (key === "intereses" || key === "idiomas") {
-          data.append(key, JSON.stringify(formData[key]));
-        } else {
-          data.append(key, formData[key]);
-        }
-      });
+      // Usar la foto existente (ej. de Google) si no se cargó una nueva
+      if (!data.foto && data.fotoPreview) {
+        data.foto = data.fotoPreview;
+      }
 
+      if (!data.avatar && data.foto) {
+        data.avatar = data.foto;
+      }
+
+      const payload = { ...data };
+      delete payload.fotoPreview;
+      
       // Establecer isSearching en false por defecto cuando se complete el formulario
-      data.append("isSearching", "false");
+      payload.isSearching = false;
 
       if (isEditMode) {
-        await updateUserProfile(data, user?.email);
+        await updateUserProfile(payload, user?.id);
         alert("Perfil actualizado con éxito");
       } else {
-        await createRoomieProfile(data);
+        // Pasar el ID del usuario al crear un nuevo perfil
+        await createRoomieProfile(payload, user?.id);
         alert("Perfil creado con éxito");
       }
       
