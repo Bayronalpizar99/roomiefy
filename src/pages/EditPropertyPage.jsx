@@ -1,39 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { updateProperty } from '../services/api';
-import { CheckboxField, FileUploadBox } from './PublishPage';
-import './PublishStyles.css';
-import placeholderImage from '../assets/placeholder.jpg'; // Importa la imagen local
+import { CheckboxField, FileUploadBox } from './PublishPage'; 
+import './PublishStyles.css'; 
+import { useAuth } from '../context/AuthContext'; 
 
 const EditPropertyPage = ({ myProperties, onUpdateProperty }) => {
   const { propertyId } = useParams();
   const navigate = useNavigate();
+  const { user, accessToken } = useAuth();
 
   const [propertyToEdit, setPropertyToEdit] = useState(null);
   const [formData, setFormData] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // 3. useEffect para cargar los datos en el formulario
   useEffect(() => {
     const property = myProperties.find(p => String(p.id) === String(propertyId));
     if (property) {
-      setPropertyToEdit(property);
+      setPropertyToEdit(property); // Guarda la propiedad original
+
+      // Convierte el string/array de amenities a un Set para los checkboxes
+      const amenitiesSet = new Set(
+        Array.isArray(property.amenities)
+          ? property.amenities 
+          // Si es un string (de la API), conviértelo
+          : typeof property.amenities === 'string'
+            ? property.amenities.split(',').map(a => a.trim())
+            : []
+      );
+      
+      // 4. Mapea los datos del backend al 'formData' del formulario
       setFormData({
-        title: property.name || property.title || '',
+        title: property.name || '', // Backend 'name' -> Form 'title'
         location: property.location || '',
         description: property.description || '',
         price: property.price || '',
-        area: property.square_meters || property.area || '',
+        area: property.square_meters || '', // Backend 'square_meters' -> Form 'area'
         bedrooms: property.bedrooms || 1,
         bathrooms: property.bathrooms || 1,
         files: [],
-        wifi: property.amenities.includes('wifi'),
-        garage: property.amenities.includes('garage'),
-        laundry: property.amenities.includes('laundry'),
-        pool: property.amenities.includes('pool'),
-        centrico: property.amenities.includes('centrico'),
+        
+        // 👇 --- CORRECCIÓN #1: Aquí ---
+        // Comprobamos el string exacto "Wi-Fi" (con guion)
+        wifi: amenitiesSet.has('Wi-Fi'),
+        garage: amenitiesSet.has('Garage'),
+        laundry: amenitiesSet.has('Cuarto de lavado'),
+        pool: amenitiesSet.has('Piscina'),
+        centrico: amenitiesSet.has('Céntrico'),
       });
     } else {
-      alert("Propiedad no encontrada.");
+      alert("Propiedad no encontrada o no te pertenece.");
       navigate('/mis-propiedades');
     }
   }, [propertyId, myProperties, navigate]);
@@ -51,54 +68,65 @@ const EditPropertyPage = ({ myProperties, onUpdateProperty }) => {
     setFormData((prev) => ({ ...prev, files: uploadedFiles }));
   };
 
-  // --- INICIO DE LA MODIFICACIÓN ---
+  // --- 6. handleSubmit MODIFICADO ---
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
 
-    // Lógica para manejar la imagen
-    let newImagePreviewUrl = propertyToEdit.property_photo || placeholderImage;
-    if (formData.files.length > 0) {
-      // Si se subió un nuevo archivo, lo convertimos a Base64
-      try {
-        newImagePreviewUrl = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(formData.files[0]);
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = (error) => reject(error);
-        });
-      } catch (error) {
-        console.error("Error al leer el nuevo archivo de imagen:", error);
-      }
+    // Verificación de seguridad
+    if (!user || user.id !== propertyToEdit.ownerId) {
+        alert("No tienes permiso para editar esta propiedad.");
+        return;
     }
 
+    setSubmitting(true);
+    const amenitiesList = Object.entries({
+      wifi: formData.wifi,
+      garage: formData.garage,
+      laundry: formData.laundry,
+      pool: formData.pool,
+      centrico: formData.centrico,
+    }).filter(([, v]) => v).map(([k]) => {
+        if (k === 'wifi') return 'Wi-Fi'; // 👈 Corrección
+        if (k === 'laundry') return 'Cuarto de lavado';
+        if (k === 'centrico') return 'Céntrico';
+        if (k === 'pool') return 'Piscina';
+        if (k === 'garage') return 'Garage';
+        return k.charAt(0).toUpperCase() + k.slice(1);
+    });
+    const amenitiesString = amenitiesList.join(',');
+    // --- Fin de la Corrección #2 ---
+
+    // 8. CREA EL PAYLOAD CORRECTO (que coincide con el backend)
     const payload = {
-      title: formData.title,
+      // Campos editables (mapeados)
+      name: formData.title,         // form 'title' -> backend 'name'
       location: formData.location,
       description: formData.description,
       price: Number(formData.price),
-      area: formData.area === '' ? null : Number(formData.area),
+      square_meters: Number(formData.area), // form 'area' -> backend 'square_meters'
       bedrooms: Number(formData.bedrooms),
       bathrooms: Number(formData.bathrooms),
-      amenities: Object.entries({
-        wifi: formData.wifi,
-        garage: formData.garage,
-        laundry: formData.laundry,
-        pool: formData.pool,
-        centrico: formData.centrico,
-      }).filter(([, v]) => v).map(([k]) => k),
-      files: formData.files.map((f) => f.name),
+      amenities: amenitiesString,
+      
+      // Campos NO editables (los preservamos)
+      id: propertyToEdit.id,
+      ownerId: propertyToEdit.ownerId,
+      owner_name: propertyToEdit.owner_name,
+      owner_profile_pic: propertyToEdit.owner_profile_pic,
+      rating: propertyToEdit.rating,
+      // TODO: La lógica de subida de fotos es separada. Por ahora, preservamos la foto original.
+      property_photo: propertyToEdit.property_photo 
     };
 
     try {
-      await updateProperty(propertyId, payload);
+      // 9. Llama a la API (la función que ya corregimos)
+      const apiResponse = await updateProperty(propertyId, payload, accessToken);
 
+      // 10. Actualiza el estado global en App.jsx
+      // (Convertimos el string 'amenities' de la API de nuevo a un array para el estado de React)
       const updatedPropertyForState = {
-        ...propertyToEdit,
-        ...payload,
-        name: payload.title,
-        square_meters: payload.area,
-        property_photo: newImagePreviewUrl, // <-- Usamos la URL de la nueva imagen
+        ...apiResponse,
+        amenities: apiResponse.amenities ? apiResponse.amenities.split(',').map(a => a.trim()) : [],
       };
       
       onUpdateProperty(propertyId, updatedPropertyForState);
@@ -112,7 +140,6 @@ const EditPropertyPage = ({ myProperties, onUpdateProperty }) => {
       setSubmitting(false);
     }
   };
-  // --- FIN DE LA MODIFICACIÓN ---
 
   if (!formData) {
     return <div style={{ padding: '2rem', textAlign: 'center' }}>Cargando datos de la propiedad...</div>;
@@ -164,7 +191,10 @@ const EditPropertyPage = ({ myProperties, onUpdateProperty }) => {
             <CheckboxField id="pool" checked={formData.pool} onCheckedChange={(val) => handleCheckboxChange('pool', val)}>Piscina</CheckboxField>
             <CheckboxField id="centrico" checked={formData.centrico} onCheckedChange={(val) => handleCheckboxChange('centrico', val)}>Céntrico</CheckboxField>
         </div>
-        <FileUploadBox onFiles={handleFileChange} />
+        
+        {/* Deshabilitamos la subida de archivos en la edición por ahora */}
+        {/* <FileUploadBox onFiles={handleFileChange} /> */}
+        
         <div className="form-buttons-row">
             <button type="submit" className="form-button" disabled={submitting}>
             {submitting ? 'Guardando…' : 'Guardar Cambios'}

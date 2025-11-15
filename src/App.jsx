@@ -16,94 +16,121 @@ import ProfileForm from "./pages/ProfileForm.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
 import { useTheme } from "./hooks/useTheme";
 import LoginModal from './components/LoginModal';
-import { fetchProperties, deleteProperty } from './services/api';
+import { fetchProperties, deleteProperty, fetchUserProperties } from './services/api';
 import "./App.css";
 import Toast from './components/Toast';
 import Footer from './components/Footer';
 
 function App() {
   const { toggleTheme } = useTheme();
-  const { user } = useAuth();
+  const { user } = useAuth(); 
   const [searchQuery, setSearchQuery] = useState('');
   const location = useLocation();
 
   const [allProperties, setAllProperties] = useState([]);
-  const [myProperties, setMyProperties] = useState([]);
-  const [hasPublished, setHasPublished] = useState(false);
+  const [myProperties, setMyProperties] = useState([]); 
+  const [hasPublished, setHasPublished] = useState(false); 
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
 
-  // Estado para los filtros de propiedades, ahora en App.jsx
+
   const [filters, setFilters] = useState({
     location: '',
-    price: 500,
+    price: null, 
     bedrooms: 'any',
     amenities: new Set(),
   });
 
-  // useEffect para cargar propiedades cuando los filtros o el usuario cambian
   useEffect(() => {
-    const loadData = async () => {
+    const loadAllProperties = async () => {
       setLoading(true);
+      try {
+        console.log('🔄 Cargando propiedades con filtros:', {
+          search: filters.location || searchQuery,
+          price: filters.price,
+          bedrooms: filters.bedrooms
+        });
 
-      const userPropertiesKey = user ? `roomify_properties_${user.email}` : null;
-      let localUserProperties = [];
-      if (user && userPropertiesKey) {
-        localUserProperties = JSON.parse(localStorage.getItem(userPropertiesKey) || '[]');
+        const { data: apiProperties, error } = await fetchProperties({
+          search: filters.location || searchQuery,
+          price: filters.price,
+          bedrooms: filters.bedrooms,
+          amenities: filters.amenities,
+        });
+
+        if (error) {
+          throw new Error(error);
+        }
+
+        console.log('✅ Propiedades cargadas:', apiProperties.length);
+        setAllProperties(apiProperties);
+      } catch (err) {
+        console.error(' Error al cargar propiedades:', err);
+        setToast({ visible: true, type: 'error', message: `No se pudieron cargar las propiedades: ${err.message}` });
+      } finally {
+        setLoading(false);
       }
-
-      // Pasar los filtros a la API
-      const { data: apiProperties, error } = await fetchProperties({
-        search: filters.location || searchQuery,
-        price: filters.price,
-        bedrooms: filters.bedrooms,
-        amenities: filters.amenities,
-      });
-
-      if (error) {
-        setToast({ visible: true, type: 'error', message: `No se pudieron cargar las propiedades: ${error}` });
-        setAllProperties(localUserProperties);
-      } else {
-        // Combinar propiedades de la API con las locales del usuario
-        const combined = [...localUserProperties, ...apiProperties];
-        // Eliminar duplicados si los hubiera
-        const uniqueProperties = Array.from(new Map(combined.map(p => [p.id, p])).values());
-        setAllProperties(uniqueProperties);
-      }
-
-      setLoading(false);
     };
 
-    loadData();
-  }, [user, filters, searchQuery]);
+    loadAllProperties();
+  }, [filters, searchQuery]); 
 
   useEffect(() => {
-    const userProperties = allProperties.filter(p => p.owner_name === 'Tú (Propietario)');
-    setMyProperties(userProperties);
-    setHasPublished(userProperties.length > 0);
-  }, [allProperties]);
+    const loadUserProperties = async () => {
+      if (user) {
+        const { data, error } = await fetchUserProperties(user.id);
+        if (error) {
+          setToast({ visible: true, type: 'error', message: `No se pudieron cargar tus propiedades: ${error}` });
+          setMyProperties([]);
+          setHasPublished(false);
+        } else {
+          setMyProperties(data);
+          setHasPublished(data.length > 0);
+        }
+      } else {
+        setMyProperties([]);
+        setHasPublished(false);
+      }
+    };
 
-  const saveUserProperties = (updatedProperties) => {
-    if (user) {
-      const userPropertiesKey = `roomify_properties_${user.email}`;
-      const propertiesToSave = updatedProperties.filter(p => p.owner_name === 'Tú (Propietario)');
-      localStorage.setItem(userPropertiesKey, JSON.stringify(propertiesToSave));
+    loadUserProperties();
+  }, [user]); 
+
+  const handleAddProperty = async (newProperty) => {
+
+    setAllProperties(prev => [newProperty, ...prev]);
+    setMyProperties(prev => [newProperty, ...prev]);
+    setHasPublished(true);
+
+    try {
+      console.log(' Recargando propiedades desde el backend después de crear...');
+      const { data: apiProperties, error } = await fetchProperties({
+      });
+
+      if (!error && apiProperties) {
+        setAllProperties(apiProperties);
+        console.log(' Propiedades recargadas desde el backend:', apiProperties.length);
+        console.log(' IDs de propiedades recargadas:', apiProperties.map(p => p.id));
+      } else {
+        console.error(' Error al recargar propiedades:', error);
+      }
+    } catch (err) {
+      console.warn(' No se pudieron recargar las propiedades, pero la propiedad ya está en el estado local:', err);
     }
-  };
-
-  const handleAddProperty = (newProperty) => {
-    const updatedProperties = [newProperty, ...allProperties];
-    setAllProperties(updatedProperties);
-    saveUserProperties(updatedProperties);
   };
 
   const handleDeleteProperty = async (propertyId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta propiedad?')) {
       try {
-        await deleteProperty(propertyId);
-        const updatedProperties = allProperties.filter(p => p.id !== propertyId);
-        setAllProperties(updatedProperties);
-        saveUserProperties(updatedProperties);
+        await deleteProperty(propertyId); 
+
+        setAllProperties(prev => prev.filter(p => p.id !== propertyId));
+
+        const updatedMyProperties = myProperties.filter(p => p.id !== propertyId);
+        setMyProperties(updatedMyProperties);
+
+        setHasPublished(updatedMyProperties.length > 0);
+
         setToast({ visible: true, type: 'success', message: 'Propiedad eliminada.' });
       } catch (error) {
         setToast({ visible: true, type: 'error', message: `No se pudo eliminar: ${error.message}` });
@@ -112,21 +139,22 @@ function App() {
   };
 
   const handleUpdateProperty = (propertyId, updatedProperty) => {
-    const updatedProperties = allProperties.map(p =>
-      String(p.id) === String(propertyId) ? updatedProperty : p
+    setAllProperties(prev =>
+      prev.map(p => String(p.id) === String(propertyId) ? updatedProperty : p)
     );
-    saveUserProperties(updatedProperties);
+    setMyProperties(prev =>
+      prev.map(p => String(p.id) === String(propertyId) ? updatedProperty : p)
+    );
+    setToast({ visible: true, type: 'success', message: 'Propiedad actualizada.' });
   };
 
   const handleSearch = (query) => setSearchQuery(query);
 
-  useEffect(() => {
-    const isRoomies = location.pathname === '/roomies';
-  }, [location.pathname]);
-
   return (
     <div className="app-layout">
+      {/* El Navbar ahora recibe el estado 'hasPublished' actualizado */}
       <Navbar
+        toggleTheme={toggleTheme}
         onSearch={handleSearch}
         searchQuery={searchQuery}
         hasPublished={hasPublished}
@@ -146,8 +174,16 @@ function App() {
             }
           />
           <Route path="roomies" element={<RoomiesPage searchQuery={searchQuery} onSearchQueryChange={handleSearch} />} />
-          <Route path="publicar" element={<PublishPage onAddProperty={handleAddProperty} />} />
-          <Route path="/mis-propiedades" element={<MyPropertiesPage myProperties={myProperties} onDeleteProperty={handleDeleteProperty} />} />
+
+          {/*  Las rutas ahora reciben las funciones y estados correctos */}
+          <Route
+            path="publicar"
+            element={<PublishPage onAddProperty={handleAddProperty} />}
+          />
+          <Route
+            path="/mis-propiedades"
+            element={<MyPropertiesPage myProperties={myProperties} onDeleteProperty={handleDeleteProperty} />}
+          />
           <Route
             path="/propiedad/editar/:propertyId"
             element={<EditPropertyPage myProperties={myProperties} onUpdateProperty={handleUpdateProperty} />}

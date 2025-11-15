@@ -131,7 +131,7 @@ const HomePage = ({ properties, loading, filters, setFilters }) => {
                     property={property} 
                     view={view}
                     isFavorite={favoriteIds.has(property.id)}
-                    onToggleFavorite={toggleFavorite}
+                    onToggleFavorite={(id, propertyData) => toggleFavorite(id, propertyData || property)}
                   />
                 ))
               ) : (

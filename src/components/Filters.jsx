@@ -6,7 +6,9 @@ import * as Select from '@radix-ui/react-select';
 import * as Checkbox from '@radix-ui/react-checkbox';
 import './Filters.css'; 
 
-// 1. Aceptamos los filtros y sus funciones como props
+// 1. Definimos el precio máximo real aquí
+const MAX_PRICE = 5000;
+
 const Filters = ({
   filters,
   setFilters,
@@ -25,7 +27,6 @@ const Filters = ({
     { value: '4+', label: '4+ recámaras' },
   ];
 
-  // 2. Funciones para manejar cambios en cada filtro
   const handleLocationChange = (e) => {
     setFilters(prev => ({ ...prev, location: e.target.value }));
   };
@@ -53,7 +54,8 @@ const Filters = ({
   const clearFilters = () => {
     setFilters({
       location: '',
-      price: 500, // Valor máximo
+      // 2. CORRECCIÓN: Usamos la constante MAX_PRICE
+      price: MAX_PRICE, 
       bedrooms: 'any',
       amenities: new Set(),
     });
@@ -82,24 +84,25 @@ const Filters = ({
       {/* RANGO DE PRECIO */}
       <div className="filter-group">
         <Label.Root>Precio (hasta ${filters.price})</Label.Root>
-        {/* --- INICIO DE LA MODIFICACIÓN --- */}
         <Slider.Root 
           className="radix-slider-root" 
           value={[filters.price]} 
           onValueChange={handlePriceChange}
-          max={500} 
-          step={10}
+          // 3. CORRECCIÓN: Usamos la constante MAX_PRICE
+          max={MAX_PRICE} 
+          // 4. (Opcional) Aumentamos el 'step' para un rango mayor
+          step={50}
         >
           <Slider.Track className="radix-slider-track">
             <Slider.Range className="radix-slider-range" />
           </Slider.Track>
           <Slider.Thumb className="radix-slider-thumb" aria-label="Precio" />
         </Slider.Root>
-        {/* --- FIN DE LA MODIFICACIÓN --- */}
       </div>
       
       {/* RECÁMARAS */}
       <div className="filter-group">
+        {/* ... (Tu código de Recámaras está perfecto) ... */}
         <Label.Root>Recámaras</Label.Root>
         <Select.Root value={filters.bedrooms} onValueChange={handleBedroomsChange}>
           <Select.Trigger className="radix-select-trigger">
@@ -123,6 +126,7 @@ const Filters = ({
 
       {/* COMODIDADES */}
       <div className="filter-group">
+        {/* ... (Tu código de Comodidades está perfecto) ... */}
         <Label.Root>Comodidades</Label.Root>
         <div className="scrollable-amenities">
           <div className="checkbox-group">

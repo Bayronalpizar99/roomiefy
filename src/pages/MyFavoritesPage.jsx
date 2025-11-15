@@ -27,7 +27,7 @@ const MyFavoritesPage = ({ allProperties }) => {
                 property={property}
                 view="grid"
                 isFavorite={true}
-                onToggleFavorite={toggleFavorite}
+                onToggleFavorite={(id, propertyData) => toggleFavorite(id, propertyData || property)}
               />
             ))}
           </main>

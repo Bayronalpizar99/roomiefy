@@ -56,7 +56,7 @@ const RoomieDetailPage = () => {
    */
   const handleContact = async () => {
     console.log('[handleContact] Iniciando...');
-    
+
     // Si no está logueado, pedir login
     if (!user) {
       console.log('[handleContact] Usuario no autenticado, solicitando login...');
@@ -66,7 +66,7 @@ const RoomieDetailPage = () => {
 
     console.log('[handleContact] Usuario autenticado:', { userId: user?.id });
     console.log('[handleContact] Roommate ID:', roommate?.id);
-    
+
     if (!roommate?.id) {
       console.error('[handleContact] Error: No se encontró el ID del roomie');
       return;
@@ -78,13 +78,14 @@ const RoomieDetailPage = () => {
     try {
       // Crear conversación con mensaje predeterminado
       const defaultMessage = `¡Hola ${roommate?.name}! 👋 Me interesa compartir apartamento contigo. ¿Podemos conversar sobre los detalles?`;
+      const targetId = roommate?.userId || roommate?.profileId || roommate?.id;
       console.log('[handleContact] Llamando a createConversation con:', {
-        userId: roommate.id,
-        currentUserId: user?.id,
+        targetId,
+        currentUserId: user.id,
         message: defaultMessage
       });
-      
-      const conversation = await createConversation(roommate.id, user?.id, defaultMessage);
+
+      const conversation = await createConversation(targetId, user.id, defaultMessage);
       console.log('[handleContact] Respuesta de createConversation:', conversation);
 
       if (conversation && conversation.id) {
@@ -143,11 +144,10 @@ const RoomieDetailPage = () => {
    */
   const budgetText = useMemo(() => {
     const fmt = (n) => `$${new Intl.NumberFormat('es-MX').format(Number(n))}`;
-    const min = roommate?.budget?.min ?? roommate?.budget ?? null;
-    const max = roommate?.budget?.max ?? roommate?.budget ?? null;
-    if (min != null && max != null) return `${fmt(min)} - ${fmt(max)} MXN/mes`;
-    if (max != null) return `Hasta ${fmt(max)} MXN/mes`;
-    if (min != null) return `Desde ${fmt(min)} MXN/mes`;
+    const min = roommate?.budget?.min ?? roommate?.profileBudget ?? null;
+    const max = roommate?.budget?.max ?? roommate?.profileBudget ?? null;
+    if (min != null && max != null && min !== max) return `${fmt(min)} - ${fmt(max)} MXN/mes`;
+    if (max != null) return `${fmt(max)} MXN/mes`;
     return 'No especificado';
   }, [roommate]);
 
@@ -155,73 +155,61 @@ const RoomieDetailPage = () => {
   const cleanlinessLevel = roommate?.cleanlinessLevel ?? null;
   const socialLevel = roommate?.socialLevel ?? null;
 
+  const formatLevelLabel = useMemo(() => {
+    return (value) => {
+      if (value === null || value === undefined || value === '') return null;
+      const num = Number(value);
+      if (!Number.isNaN(num)) return `${num}/10`;
+      return value;
+    };
+  }, []);
+
+  const levelToPercent = useMemo(() => {
+    return (value) => {
+      if (value === null || value === undefined || value === '') return null;
+      const num = Number(value);
+      if (!Number.isNaN(num)) {
+        return Math.max(0, Math.min(100, (num / 10) * 100));
+      }
+      const map = {
+        'muy limpio': 100,
+        limpio: 80,
+        promedio: 50,
+        relajado: 30,
+        introvertido: 20,
+        equilibrado: 50,
+        extrovertido: 85,
+      };
+      const normalized = String(value).trim().toLowerCase();
+      return map[normalized] ?? null;
+    };
+  }, []);
+
   // Etiquetas amigables si el backend envía niveles numéricos (1-5)
-  const cleanlinessLabel = useMemo(() => {
-    if (typeof cleanlinessLevel === 'number') return `${cleanlinessLevel}/5`;
-    if (typeof cleanlinessLevel === 'string' && cleanlinessLevel.trim() !== '' && !isNaN(Number(cleanlinessLevel))) {
-      return `${Number(cleanlinessLevel)}/5`;
-    }
-    return cleanlinessLevel || null;
-  }, [cleanlinessLevel]);
+  const cleanlinessLabel = useMemo(() => formatLevelLabel(cleanlinessLevel), [formatLevelLabel, cleanlinessLevel]);
 
   const cleanlinessPercent = useMemo(() => {
-    if (typeof cleanlinessLevel === 'number') return Math.max(0, Math.min(100, cleanlinessLevel * 20));
-    if (typeof cleanlinessLevel === 'string' && cleanlinessLevel.trim() !== '' && !isNaN(Number(cleanlinessLevel))) {
-      const n = Number(cleanlinessLevel);
-      return Math.max(0, Math.min(100, n * 20));
-    }
-    const map = {
-      'Muy limpio': 100,
-      'Limpio': 80,
-      'Promedio': 50,
-      'Relajado': 30,
-    };
-    if (!cleanlinessLevel) return null;
-    return map[cleanlinessLevel] ?? null;
-  }, [cleanlinessLevel]);
+    return levelToPercent(cleanlinessLevel);
+  }, [levelToPercent, cleanlinessLevel]);
 
   const socialLabel = useMemo(() => {
-    if (typeof socialLevel === 'number') return `${socialLevel}/5`;
-    if (typeof socialLevel === 'string' && socialLevel.trim() !== '' && !isNaN(Number(socialLevel))) {
-      return `${Number(socialLevel)}/5`;
-    }
-    return socialLevel || null;
-  }, [socialLevel]);
+    return formatLevelLabel(socialLevel);
+  }, [formatLevelLabel, socialLevel]);
 
   const socialPercent = useMemo(() => {
-    if (typeof socialLevel === 'number') return Math.max(0, Math.min(100, socialLevel * 20));
-    if (typeof socialLevel === 'string' && socialLevel.trim() !== '' && !isNaN(Number(socialLevel))) {
-      const n = Number(socialLevel);
-      return Math.max(0, Math.min(100, n * 20));
-    }
-    const map = {
-      'Introvertido': 20,
-      'Equilibrado': 50,
-      'Extrovertido': 85,
-    };
-    if (!socialLevel) return null;
-    return map[socialLevel] ?? null;
-  }, [socialLevel]);
+    return levelToPercent(socialLevel);
+  }, [levelToPercent, socialLevel]);
 
   // Nota: showLifestyleSection se calcula después de policyItems para evitar TDZ
-
-  // Galería de fotos del apartamento (solo datos reales si existen)
-  const apartmentPhotos = useMemo(() => {
-    let photos = [];
-    if (Array.isArray(roommate?.apartmentPhotos)) photos = roommate.apartmentPhotos;
-    else if (Array.isArray(roommate?.apartment?.photos)) photos = roommate.apartment.photos;
-    else if (Array.isArray(roommate?.photos)) photos = roommate.photos;
-    return Array.isArray(photos) ? photos : [];
-  }, [roommate]);
 
   // Políticas dinámicas (solo si existen en los datos)
   const policyItems = useMemo(() => {
     const items = [];
-    const pets = roommate?.acceptsPets ?? roommate?.allowsPets ?? roommate?.petsAllowed ?? roommate?.petFriendly ?? roommate?.pet_friendly;
+    const pets = roommate?.acceptsPets;
     if (pets !== undefined) items.push({ key: 'pets', label: 'Mascotas', ok: !!pets });
-    const smoke = roommate?.acceptsSmokers ?? roommate?.acceptsSmoking ?? roommate?.allowsSmoking ?? roommate?.smokingAllowed ?? roommate?.smokeFriendly ?? roommate?.smoker;
+    const smoke = roommate?.acceptsSmokers;
     if (smoke !== undefined) items.push({ key: 'smoke', label: 'Fumadores', ok: !!smoke });
-    const guests = roommate?.acceptsGuests ?? roommate?.allowsGuests ?? roommate?.guestsAllowed ?? roommate?.guestFriendly ?? roommate?.visitorsAllowed;
+    const guests = roommate?.acceptsGuests;
     if (guests !== undefined) items.push({ key: 'guests', label: 'Invitados', ok: !!guests });
     return items;
   }, [roommate]);
@@ -280,10 +268,6 @@ const RoomieDetailPage = () => {
     addObjMap(roommate?.languages);
 
     // Anidados en profile.
-    addArr(roommate?.profile?.languages);
-    addArr(roommate?.profile?.idiomas);
-    addObjMap(roommate?.profile?.languages);
-
     // Normalizar y deduplicar.
     return Array.from(new Set(acc.map(s => String(s).trim()).filter(Boolean)));
   }, [roommate]);
@@ -370,18 +354,6 @@ const RoomieDetailPage = () => {
             <div className="budget-amount">{budgetText}</div>
             <div className="muted small">Dispuesto a pagar</div>
           </section>
-
-          {/* Fotos del apartamento (solo si tiene y hay fotos) */}
-          {roommate?.hasApartment && apartmentPhotos.length > 0 && (
-            <section className="section card-surface">
-              <h2>Fotos del apartamento</h2>
-              <div className="photo-grid">
-                {apartmentPhotos.map((src, idx) => (
-                  <img key={idx} className="photo" src={src} alt={`Foto del apartamento ${idx + 1}`} loading="lazy" />
-                ))}
-              </div>
-            </section>
-          )}
 
           {/* Preferencias y estilo de vida (solo si hay datos) */}
           {showLifestyleSection && (

@@ -24,7 +24,7 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
 
   const [view, setView] = useState('grid');
   const [sortOrder, setSortOrder] = useState('recent');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);  
   const roommatesPerPage = 8;
   const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
 
@@ -41,8 +41,8 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
     hasApartment: 'any',
     interests: new Set(),
     verifiedOnly: false,
-    minCleanliness: 3,
-    minSocial: 3,
+    minCleanliness: 0, 
+    minSocial: 0,
   });
   
   useEffect(() => {
@@ -79,25 +79,28 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
         setLoadingMore(true);
       } else {
         setLoading(true);
+          if (!isMobile && currentPage > 1) {
+            setRoommates([]);
+          }
       }
       try {
         const sortMap = {
           'recent': 'recent',
-          'rated': 'rated_desc',
-          'price-asc': 'price_asc',
-          'price-desc': 'price_desc',
+          'rated': 'rating',
+          'price-asc': 'budget',
+          'price-desc': 'budget',
         };
 
         const { data, meta, error } = await fetchRoommates({
           page: currentPage,
           pageSize: roommatesPerPage,
           search: filters.location,
-          priceMin: filters.priceRange?.[0],
-          priceMax: filters.priceRange?.[1],
-          ageMin: filters.ageRange?.[0],
-          ageMax: filters.ageRange?.[1],
+          minBudget: filters.priceRange?.[0],
+          maxBudget: filters.priceRange?.[1],
+          minAge: filters.ageRange?.[0],
+          maxAge: filters.ageRange?.[1],
           hasApartment: filters.hasApartment,
-          verifiedOnly: filters.verifiedOnly,
+          verified: filters.verifiedOnly,
           minCleanliness: filters.minCleanliness,
           minSocial: filters.minSocial,
           interests: filters.interests ? Array.from(filters.interests) : [],
@@ -115,14 +118,10 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
         } else {
           const rawItems = Array.isArray(data) ? data : [];
           const totalFromMeta = meta?.total;
+          const totalPagesFromMeta = meta?.totalPages;
           let total = Number.isFinite(totalFromMeta) ? Number(totalFromMeta) : null;
 
-          // Fallback: paginación en cliente si la API devuelve más de lo solicitado.
-          const sliceStart = (currentPage - 1) * roommatesPerPage;
-          const needsClientPaging = rawItems.length > roommatesPerPage;
-          const pageItems = needsClientPaging
-            ? rawItems.slice(sliceStart, sliceStart + roommatesPerPage)
-            : rawItems;
+          const pageItems = rawItems;
 
           // En móvil, agrega a la lista existente; en escritorio, reemplaza.
           if (isMobile && currentPage > 1) {
@@ -135,24 +134,17 @@ const RoomiesPage = ({ searchQuery = '', onSearchQueryChange }) => {
             setRoommates(pageItems);
           }
 
-          // Calcula total y si hay más páginas.
-          if (!Number.isFinite(total)) {
-            if (needsClientPaging) {
-              total = rawItems.length;
-            }
-          }
           setTotalCount(Number.isFinite(total) ? Number(total) : null);
 
-          if (Number.isFinite(total)) {
+          // Determina si hay más páginas
+          if (Number.isFinite(totalPagesFromMeta)) {
+            console.log('✅ Usando totalPages del backend:', totalPagesFromMeta);
+            setHasNextPage(currentPage < totalPagesFromMeta);
+          } else if (Number.isFinite(total)) {
             const totalPages = Math.ceil(total / roommatesPerPage);
             setHasNextPage(currentPage < totalPages);
           } else {
-            // Fallback para determinar si hay más resultados.
-            if (needsClientPaging) {
-              setHasNextPage(sliceStart + pageItems.length < rawItems.length);
-            } else {
-              setHasNextPage(rawItems.length >= roommatesPerPage);
-            }
+            setHasNextPage(rawItems.length >= roommatesPerPage);
           }
         }
       } catch (error) {

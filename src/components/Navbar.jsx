@@ -35,11 +35,32 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
+  const [unreadCountFromAPI, setUnreadCountFromAPI] = useState(0);
 
   const mapNotificationToNavbarFormat = (notif) => {
     let link = '/';
-    if (notif.type === 'PROPERTY_FAVORITED' && notif.data?.propertyId) {
-      link = `/propiedad/${notif.data.propertyId}`;
+    
+    // Intentar construir el link desde diferentes fuentes
+    if (notif.type === 'PROPERTY_FAVORITED') {
+      // Prioridad 1: notif.data.propertyId
+      if (notif.data?.propertyId) {
+        link = `/propiedad/${notif.data.propertyId}`;
+      }
+      // Prioridad 2: Buscar en otros lugares
+      else if (notif.propertyId) {
+        link = `/propiedad/${notif.propertyId}`;
+      }
+    }
+    
+    // Log para debugging
+    if (link === '/') {
+      console.warn('⚠️ [mapNotificationToNavbarFormat] No se pudo construir link para notificación:', {
+        type: notif.type,
+        hasData: !!notif.data,
+        dataPropertyId: notif.data?.propertyId,
+        propertyId: notif.propertyId,
+        fullNotif: notif
+      });
     }
 
     const formatTime = (createdAt) => {
@@ -72,19 +93,54 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
     const loadInitialNotifications = async () => {
       if (user) {
         try {
-          const userId = user.email || user.id || user.sub;
-          if (userId) {
-            console.log('🔔 Cargando notificaciones del microservicio para:', userId);
-            const result = await getNotifications(userId, { limit: 20 });
-            console.log('📥 Resultado del microservicio:', result);
+          // Intentar con email primero, luego con ID
+          const userIds = [
+            user.email,
+            user.id,
+            user.sub
+          ].filter(Boolean); // Filtrar valores undefined/null
 
-            if (result.success !== false) {
-              const notificationsData = result.data || [];
-              const mappedNotifications = notificationsData.map(mapNotificationToNavbarFormat);
-              console.log('✅ Notificaciones mapeadas:', mappedNotifications.length);
-              setNotifications(mappedNotifications);
-              return; 
+          console.log('🔔 Cargando notificaciones del microservicio para userIds:', userIds);
+          console.log('🔍 Debug - user object completo:', user);
+          
+          // Intentar obtener notificaciones con cada identificador posible
+          let allNotifications = [];
+          for (const userId of userIds) {
+            if (!userId) continue;
+            
+            try {
+              // Solo cargar notificaciones no leídas
+              const result = await getNotifications(userId, { limit: 20, read: false });
+              console.log(`📥 Resultado para userId "${userId}":`, result);
+              
+              if (result.success !== false && result.data) {
+                // Combinar notificaciones, evitando duplicados
+                const newNotifications = result.data.filter(
+                  n => !allNotifications.some(existing => 
+                    String(existing._id || existing.id) === String(n._id || n.id)
+                  )
+                );
+                allNotifications = [...allNotifications, ...newNotifications];
+              }
+            } catch (err) {
+              console.warn(`⚠️ Error al obtener notificaciones para userId "${userId}":`, err);
             }
+          }
+
+          console.log('📊 Total de notificaciones encontradas (combinadas):', allNotifications.length);
+
+          if (allNotifications.length > 0 || userIds.length > 0) {
+            // Ordenar por fecha más reciente
+            allNotifications.sort((a, b) => {
+              const dateA = new Date(a.createdAt || a.created_at || 0);
+              const dateB = new Date(b.createdAt || b.created_at || 0);
+              return dateB - dateA;
+            });
+            
+            const mappedNotifications = allNotifications.map(mapNotificationToNavbarFormat);
+            console.log('✅ Notificaciones mapeadas:', mappedNotifications.length);
+            setNotifications(mappedNotifications);
+            return; 
           }
 
          
@@ -124,19 +180,84 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
 
     const updateNotifications = async () => {
       try {
-        const result = await getNotifications(userId, { limit: 20 });
-        if (result.success !== false) {
-          const notificationsData = result.data || [];
-          const mappedNotifications = notificationsData.map(mapNotificationToNavbarFormat);
-          setNotifications(mappedNotifications);
+        // Intentar con email primero, luego con ID
+        const userIds = [
+          user.email,
+          user.id,
+          user.sub
+        ].filter(Boolean);
+
+        let allNotifications = [];
+        for (const uid of userIds) {
+          if (!uid) continue;
+          
+          try {
+            // Solo cargar notificaciones no leídas
+            const result = await getNotifications(uid, { limit: 20, read: false });
+            if (result.success !== false && result.data) {
+              // Combinar notificaciones, evitando duplicados
+              const newNotifications = result.data.filter(
+                n => !allNotifications.some(existing => 
+                  String(existing._id || existing.id) === String(n._id || n.id)
+                )
+              );
+              allNotifications = [...allNotifications, ...newNotifications];
+            }
+          } catch (err) {
+            console.warn(`⚠️ Error al actualizar notificaciones para userId "${uid}":`, err);
+          }
         }
+
+        // Ordenar por fecha más reciente
+        allNotifications.sort((a, b) => {
+          const dateA = new Date(a.createdAt || a.created_at || 0);
+          const dateB = new Date(b.createdAt || b.created_at || 0);
+          return dateB - dateA;
+        });
+
+        const mappedNotifications = allNotifications.map(mapNotificationToNavbarFormat);
+        setNotifications(mappedNotifications);
         
       } catch (error) {
         console.error("Error al actualizar notificaciones:", error);
       }
     };
+
+    const updateUnreadCount = async () => {
+      try {
+        // Intentar con email primero, luego con ID
+        const userIds = [
+          user.email,
+          user.id,
+          user.sub
+        ].filter(Boolean);
+
+        let totalCount = 0;
+        for (const uid of userIds) {
+          if (!uid) continue;
+          
+          try {
+            const result = await getUnreadNotificationCount(uid);
+            if (result.success) {
+              totalCount = Math.max(totalCount, result.count || 0);
+            }
+          } catch (err) {
+            console.warn(`⚠️ Error al obtener conteo para userId "${uid}":`, err);
+          }
+        }
+
+        setUnreadCountFromAPI(totalCount);
+      } catch (error) {
+        console.error("Error al actualizar conteo de no leídas:", error);
+      }
+    };
+
     updateNotifications();
-    const interval = setInterval(updateNotifications, 30000); 
+    updateUnreadCount();
+    const interval = setInterval(() => {
+      updateNotifications();
+      updateUnreadCount();
+    }, 30000); 
     return () => clearInterval(interval);
   }, [user]);
 
@@ -218,25 +339,48 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
     setShowNotifications(true);
 
     try {
-      const userId = user.email || user.id || user.sub;
-      if (userId) {
-        // Intentar cargar del microservicio
-        const result = await getNotifications(userId, { limit: 50 });
-        console.log('🔔 Resultado al hacer clic en campana:', result);
+      // Intentar con email primero, luego con ID
+      const userIds = [
+        user.email,
+        user.id,
+        user.sub
+      ].filter(Boolean);
 
-        // Si el microservicio responde exitosamente (incluso con array vacío), usar esos datos
-        if (result.success !== false) {
-          const notificationsData = result.data || [];
-          const mappedNotifications = notificationsData.map(mapNotificationToNavbarFormat);
-          console.log('✅ Notificaciones cargadas:', mappedNotifications.length);
-          setNotifications(mappedNotifications);
-        } else {
-          // Solo si el microservicio falló explícitamente
-          console.warn('⚠️ Microservicio falló, usando array vacío');
-          setNotifications([]);
+      if (userIds.length > 0) {
+        // Intentar cargar del microservicio con todos los identificadores posibles
+        let allNotifications = [];
+        for (const uid of userIds) {
+          try {
+            // Solo cargar notificaciones no leídas
+            const result = await getNotifications(uid, { limit: 50, read: false });
+            console.log(`🔔 Resultado para userId "${uid}":`, result);
+
+            if (result.success !== false && result.data) {
+              // Combinar notificaciones, evitando duplicados
+              const newNotifications = result.data.filter(
+                n => !allNotifications.some(existing => 
+                  String(existing._id || existing.id) === String(n._id || n.id)
+                )
+              );
+              allNotifications = [...allNotifications, ...newNotifications];
+            }
+          } catch (err) {
+            console.warn(`⚠️ Error al obtener notificaciones para userId "${uid}":`, err);
+          }
         }
+
+        // Ordenar por fecha más reciente
+        allNotifications.sort((a, b) => {
+          const dateA = new Date(a.createdAt || a.created_at || 0);
+          const dateB = new Date(b.createdAt || b.created_at || 0);
+          return dateB - dateA;
+        });
+
+        const mappedNotifications = allNotifications.map(mapNotificationToNavbarFormat);
+        console.log('✅ Notificaciones cargadas (combinadas):', mappedNotifications.length);
+        setNotifications(mappedNotifications);
       } else {
-        // Si no hay userId, mostrar array vacío (no usar API antigua con datos mockeados)
+        // Si no hay userId, mostrar array vacío
         console.warn('⚠️ No hay userId, mostrando array vacío');
         setNotifications([]);
       }
@@ -255,41 +399,258 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
     try {
       const userId = user.email || user.id || user.sub;
       if (userId) {
+        // Eliminar todas las notificaciones de la lista inmediatamente (optimistic update)
+        setNotifications([]);
+        setUnreadCountFromAPI(0);
+        
         const result = await markAllNotificationsAsRead(userId);
         if (result.success) {
-          // Actualizar estado local
-          setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+          console.log('✅ Todas las notificaciones marcadas como leídas en el backend');
+          // Recargar notificaciones no leídas (debería estar vacío ahora)
+          const userIds = [user.email, user.id, user.sub].filter(Boolean);
+          Promise.all(userIds.map(uid => getNotifications(uid, { limit: 20, read: false })))
+            .then(results => {
+              let allNotifications = [];
+              results.forEach(result => {
+                if (result.success && result.data) {
+                  allNotifications = [...allNotifications, ...result.data];
+                }
+              });
+              // Eliminar duplicados
+              const uniqueNotifications = allNotifications.filter((n, index, self) =>
+                index === self.findIndex(t => (t._id || t.id) === (n._id || n.id))
+              );
+              // Ordenar por fecha
+              uniqueNotifications.sort((a, b) => {
+                const dateA = new Date(a.createdAt || a.created_at || 0);
+                const dateB = new Date(b.createdAt || b.created_at || 0);
+                return dateB - dateA;
+              });
+              const mappedNotifications = uniqueNotifications.map(mapNotificationToNavbarFormat);
+              setNotifications(mappedNotifications);
+              
+              // Actualizar conteo
+              Promise.all(userIds.map(uid => getUnreadNotificationCount(uid)))
+                .then(countResults => {
+                  const maxCount = Math.max(...countResults.map(r => r.count || 0), 0);
+                  setUnreadCountFromAPI(maxCount);
+                })
+                .catch(err => console.error('Error al actualizar conteo:', err));
+            })
+            .catch(err => console.error('Error al recargar notificaciones:', err));
+        } else {
+          // Si falla, recargar notificaciones
+          const userIds = [user.email, user.id, user.sub].filter(Boolean);
+          Promise.all(userIds.map(uid => getNotifications(uid, { limit: 20, read: false })))
+            .then(results => {
+              let allNotifications = [];
+              results.forEach(result => {
+                if (result.success && result.data) {
+                  allNotifications = [...allNotifications, ...result.data];
+                }
+              });
+              const uniqueNotifications = allNotifications.filter((n, index, self) =>
+                index === self.findIndex(t => (t._id || t.id) === (n._id || n.id))
+              );
+              uniqueNotifications.sort((a, b) => {
+                const dateA = new Date(a.createdAt || a.created_at || 0);
+                const dateB = new Date(b.createdAt || b.created_at || 0);
+                return dateB - dateA;
+              });
+              const mappedNotifications = uniqueNotifications.map(mapNotificationToNavbarFormat);
+              setNotifications(mappedNotifications);
+            })
+            .catch(err => console.error('Error al recargar notificaciones:', err));
         }
       }
     } catch (error) {
       console.error("Error al marcar todas como leídas:", error);
       alert("Error al marcar como leídas. Por favor, intenta de nuevo.");
+      // Recargar notificaciones en caso de error
+      const userIds = [user.email, user.id, user.sub].filter(Boolean);
+      Promise.all(userIds.map(uid => getNotifications(uid, { limit: 20, read: false })))
+        .then(results => {
+          let allNotifications = [];
+          results.forEach(result => {
+            if (result.success && result.data) {
+              allNotifications = [...allNotifications, ...result.data];
+            }
+          });
+          const uniqueNotifications = allNotifications.filter((n, index, self) =>
+            index === self.findIndex(t => (t._id || t.id) === (n._id || n.id))
+          );
+          uniqueNotifications.sort((a, b) => {
+            const dateA = new Date(a.createdAt || a.created_at || 0);
+            const dateB = new Date(b.createdAt || b.created_at || 0);
+            return dateB - dateA;
+          });
+          const mappedNotifications = uniqueNotifications.map(mapNotificationToNavbarFormat);
+          setNotifications(mappedNotifications);
+        })
+        .catch(err => console.error('Error al recargar notificaciones:', err));
     }
   };
 
-  const handleNotificationClick = async (notification) => {
+  const handleNotificationClick = (notification, event) => {
+    // Prevenir propagación del evento
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    console.log('🔔 [handleNotificationClick] Notificación clickeada:', notification);
+    
+    // Cerrar el dropdown primero
     setShowNotifications(false);
 
-    // Si la notificación tiene rawNotification, marcarla como leída
-    if (notification.rawNotification && !notification.read) {
-      try {
-        const userId = user?.email || user?.id || user?.sub;
-        if (userId && notification.id) {
-          await markNotificationAsRead(notification.id, userId);
-          // Actualizar estado local
-          setNotifications(prev =>
-            prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
-          );
-        }
-      } catch (error) {
-        console.error("Error al marcar notificación como leída:", error);
-      }
+    // Obtener datos necesarios
+    const notificationId = notification.id || notification.rawNotification?._id || notification.rawNotification?.id;
+    const userId = user?.email || user?.id || user?.sub;
+    
+    console.log('🔍 [handleNotificationClick] notificationId:', notificationId);
+    console.log('🔍 [handleNotificationClick] userId:', userId);
+    console.log('🔍 [handleNotificationClick] notification.link:', notification.link);
+    console.log('🔍 [handleNotificationClick] rawNotification:', notification.rawNotification);
+
+    // Determinar la ruta de navegación
+    let navigationPath = '/';
+    
+    // Prioridad 1: Usar el link ya construido
+    if (notification.link && notification.link !== '/') {
+      navigationPath = notification.link;
+      console.log('✅ [handleNotificationClick] Usando notification.link:', navigationPath);
+    } 
+    // Prioridad 2: Construir desde rawNotification.data.propertyId
+    else if (notification.rawNotification?.data?.propertyId) {
+      navigationPath = `/propiedad/${notification.rawNotification.data.propertyId}`;
+      console.log('✅ [handleNotificationClick] Construido desde rawNotification.data.propertyId:', navigationPath);
+    }
+    // Prioridad 3: Intentar desde notification.rawNotification directamente (por si data no existe)
+    else if (notification.rawNotification?.propertyId) {
+      navigationPath = `/propiedad/${notification.rawNotification.propertyId}`;
+      console.log('✅ [handleNotificationClick] Construido desde rawNotification.propertyId:', navigationPath);
+    }
+    else {
+      console.warn('⚠️ [handleNotificationClick] No se pudo determinar el link de la notificación:', {
+        link: notification.link,
+        hasRawNotification: !!notification.rawNotification,
+        rawNotificationData: notification.rawNotification?.data,
+        rawNotificationPropertyId: notification.rawNotification?.propertyId,
+        fullNotification: notification
+      });
+    }
+    
+    console.log('🧭 [handleNotificationClick] Navegando a:', navigationPath);
+    
+    // Navegar inmediatamente (síncrono)
+    try {
+      navigate(navigationPath);
+      console.log('✅ [handleNotificationClick] Navegación ejecutada');
+    } catch (error) {
+      console.error('❌ [handleNotificationClick] Error al navegar:', error);
     }
 
-    navigate(notification.link);
+    // Marcar como leída en segundo plano
+    if (notificationId && userId) {
+      console.log('📝 [handleNotificationClick] Marcando como leída...');
+      
+      // Eliminar la notificación de la lista inmediatamente (optimistic update)
+      setNotifications(prev => {
+        const filtered = prev.filter(n => n.id !== notificationId);
+        console.log('🗑️ [handleNotificationClick] Notificación eliminada de la lista. Restantes:', filtered.length);
+        return filtered;
+      });
+      
+      // Actualizar conteo local
+      if (unreadCountFromAPI > 0) {
+        setUnreadCountFromAPI(prev => {
+          const newCount = Math.max(0, prev - 1);
+          console.log('📊 [handleNotificationClick] Conteo actualizado:', newCount);
+          return newCount;
+        });
+      }
+
+      // Marcar como leída en el backend (no bloquea la navegación)
+      markNotificationAsRead(notificationId, userId)
+        .then(result => {
+          console.log('📥 [handleNotificationClick] Resultado de markNotificationAsRead:', result);
+          if (result.success) {
+            console.log('✅ [handleNotificationClick] Notificación marcada como leída en el backend');
+            
+            // Actualizar conteo de no leídas
+            const userIds = [user.email, user.id, user.sub].filter(Boolean);
+            Promise.all(userIds.map(uid => getUnreadNotificationCount(uid)))
+              .then(countResults => {
+                const maxCount = Math.max(...countResults.map(r => r.count || 0), 0);
+                console.log('📊 [handleNotificationClick] Conteo actualizado desde API:', maxCount);
+                setUnreadCountFromAPI(maxCount);
+              })
+              .catch(err => console.error('❌ [handleNotificationClick] Error al actualizar conteo:', err));
+            
+            // Recargar solo notificaciones no leídas para sincronizar con el backend
+            Promise.all(userIds.map(uid => getNotifications(uid, { limit: 20, read: false })))
+              .then(results => {
+                let allNotifications = [];
+                results.forEach(result => {
+                  if (result.success && result.data) {
+                    allNotifications = [...allNotifications, ...result.data];
+                  }
+                });
+                // Eliminar duplicados
+                const uniqueNotifications = allNotifications.filter((n, index, self) =>
+                  index === self.findIndex(t => (t._id || t.id) === (n._id || n.id))
+                );
+                // Ordenar por fecha
+                uniqueNotifications.sort((a, b) => {
+                  const dateA = new Date(a.createdAt || a.created_at || 0);
+                  const dateB = new Date(b.createdAt || b.created_at || 0);
+                  return dateB - dateA;
+                });
+                const mappedNotifications = uniqueNotifications.map(mapNotificationToNavbarFormat);
+                console.log('🔄 [handleNotificationClick] Notificaciones recargadas:', mappedNotifications.length);
+                setNotifications(mappedNotifications);
+              })
+              .catch(err => console.error('❌ [handleNotificationClick] Error al recargar notificaciones:', err));
+          } else {
+            console.error('❌ [handleNotificationClick] Error al marcar notificación como leída:', result.error);
+            // Revertir el cambio optimista si falla - volver a agregar la notificación
+            setNotifications(prev => {
+              // Verificar que no esté ya en la lista
+              const exists = prev.some(n => n.id === notificationId);
+              if (!exists) {
+                console.log('↩️ [handleNotificationClick] Revirtiendo cambio optimista, agregando notificación de vuelta');
+                return [...prev, notification];
+              }
+              return prev;
+            });
+            if (unreadCountFromAPI >= 0) {
+              setUnreadCountFromAPI(prev => prev + 1);
+            }
+          }
+        })
+        .catch(error => {
+          console.error("❌ [handleNotificationClick] Error al marcar notificación como leída:", error);
+          // Revertir el cambio optimista si falla - volver a agregar la notificación
+          setNotifications(prev => {
+            // Verificar que no esté ya en la lista
+            const exists = prev.some(n => n.id === notificationId);
+            if (!exists) {
+              console.log('↩️ [handleNotificationClick] Revirtiendo cambio optimista (catch), agregando notificación de vuelta');
+              return [...prev, notification];
+            }
+            return prev;
+          });
+          if (unreadCountFromAPI >= 0) {
+            setUnreadCountFromAPI(prev => prev + 1);
+          }
+        });
+    } else {
+      console.warn('⚠️ [handleNotificationClick] No se puede marcar como leída - notificationId o userId faltante');
+    }
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  // Usar el conteo del API si está disponible, sino usar el conteo local
+  const unreadCount = unreadCountFromAPI > 0 ? unreadCountFromAPI : notifications.filter(n => !n.read).length;
   const shouldShowSearch = () => location.pathname === '/' || location.pathname === '/roomies';
   const toggleMobileMenu = () => setIsMobileMenuOpen(prev => !prev);
   const toggleMobileSearch = () => setIsSearchVisible(prev => !prev);
@@ -364,20 +725,33 @@ export const Navbar = ({ toggleTheme, onSearch, searchQuery = '', hasPublished }
                   <div className="notifications-list">
                     {loadingNotifications ? (
                       <div className="notification-item loading">Cargando...</div>
-                    ) : notifications.length === 0 ? (
-                      <div className="notification-item">No tienes notificaciones.</div>
-                    ) : (
-                      notifications.map(notif => (
-                        <div
-                          key={notif.id}
-                          className={`notification-item ${!notif.read ? 'unread' : ''}`}
-                          onClick={() => handleNotificationClick(notif)}
-                        >
-                          <p>{notif.text}</p>
-                          <span className="time">{notif.time}</span>
-                        </div>
-                      ))
-                    )}
+                    ) : (() => {
+                      // Filtrar solo notificaciones no leídas
+                      const unreadNotifications = notifications.filter(n => !n.read);
+                      return unreadNotifications.length === 0 ? (
+                        <div className="notification-item">No tienes notificaciones nuevas.</div>
+                      ) : (
+                        unreadNotifications.map(notif => (
+                          <div
+                            key={notif.id}
+                            className="notification-item unread"
+                            onClick={(e) => handleNotificationClick(notif, e)}
+                            style={{ cursor: 'pointer' }}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleNotificationClick(notif, e);
+                              }
+                            }}
+                          >
+                            <p>{notif.text}</p>
+                            <span className="time">{notif.time}</span>
+                          </div>
+                        ))
+                      );
+                    })()}
                   </div>
                 </div>
               )}

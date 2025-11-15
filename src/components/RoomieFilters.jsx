@@ -1,5 +1,5 @@
 import React from 'react';
-import { Filter, ChevronDownIcon, CheckIcon } from 'lucide-react';
+import { Filter, ChevronDownIcon, CheckIcon, X, FilterX } from 'lucide-react';
 import * as Label from '@radix-ui/react-label';
 import * as Slider from '@radix-ui/react-slider';
 import * as Select from '@radix-ui/react-select';
@@ -70,11 +70,28 @@ const RoomieFilters = ({ filters, setFilters, minBudget = 100, maxBudget = 2000,
       hasApartment: 'any',
       interests: new Set(),
       verifiedOnly: false,
-      minCleanliness: 3,
-      minSocial: 3,
+      minCleanliness: 0,
+      minSocial: 0,
     });
   };
+  
+  // Detecta si hay filtros activos (diferentes a los valores por defecto)
+    const hasActiveFilters = () => {
+      return (
+        filters.location !== '' ||
+        filters.priceRange?.[0] !== minBudget ||
+        filters.priceRange?.[1] !== maxBudget ||
+        filters.ageRange?.[0] !== minAge ||
+        filters.ageRange?.[1] !== maxAge ||
+        filters.hasApartment !== 'any' ||
+        filters.interests.size > 0 ||
+        filters.verifiedOnly !== false ||
+        filters.minCleanliness > 0 ||
+        filters.minSocial > 0
+      );
+    };
 
+    const isFiltered = hasActiveFilters();
   return (
     <aside className="filters-container">
       <h2 className="filters-title">
