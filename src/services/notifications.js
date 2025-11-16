@@ -1,8 +1,14 @@
 
-const NOTIFICATIONS_API_URL = import.meta.env.VITE_NOTIFICATIONS_API_URL || 'http://localhost:3001';
+const NOTIFICATIONS_API_URL =
+  import.meta.env.VITE_NOTIFICATIONS_API_URL ||
+  'https://roomiefy-notifications-hrfsbtghdkcph9b7.eastus-01.azurewebsites.net';
+
+if (import.meta.env.MODE === 'development') {
+  console.log('🔔 [Notifications] API URL:', NOTIFICATIONS_API_URL);
+  console.log('🔔 [Notifications] Para usar localhost, crea .env.local con: VITE_NOTIFICATIONS_API_URL=http://localhost:3001');
+}
 
 /**
- * Envía una notificación de favorito al microservicio
  * @param {Object} favoriteData 
  * @param {string} favoriteData.propertyId 
  * @param {string} favoriteData.propertyTitle 
@@ -49,7 +55,6 @@ export const sendFavoriteNotification = async (favoriteData) => {
 };
 
 /**
- * Obtiene las notificaciones de un usuario
  * @param {string} userId 
  * @param {Object} options 
  * @param {number} options.limit 
@@ -94,8 +99,7 @@ export const getNotifications = async (userId, options = {}) => {
 };
 
 /**
- * Obtiene el conteo de notificaciones no leídas de un usuario
- * @param {string} userId - ID del usuario
+ * @param {string} userId 
  */
 export const getUnreadNotificationCount = async (userId) => {
   try {

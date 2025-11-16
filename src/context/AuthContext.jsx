@@ -18,10 +18,8 @@ export const AuthProvider = ({ children }) => {
   );
   const [isInitializing, setIsInitializing] = useState(true);
 
-  // --- LÓGICA DE FAVORITOS INTEGRADA ---
   const [favoriteIds, setFavoriteIds] = useState(new Set());
 
-  // Cargar favoritos desde localStorage cuando el usuario cambia
   useEffect(() => {
     if (user) {
       const storedFavorites = localStorage.getItem(
@@ -31,11 +29,10 @@ export const AuthProvider = ({ children }) => {
         setFavoriteIds(new Set(JSON.parse(storedFavorites)));
       }
     } else {
-      setFavoriteIds(new Set()); // Limpiar favoritos si no hay usuario
+      setFavoriteIds(new Set()); 
     }
   }, [user]);
 
-  // Función para añadir/quitar de favoritos
   const toggleFavorite = useCallback(
     async (propertyId, propertyData = null) => {
       if (!user) {
@@ -46,7 +43,6 @@ export const AuthProvider = ({ children }) => {
       const wasFavorited = favoriteIds.has(propertyId);
       const isAdding = !wasFavorited;
 
-      // Actualizar estado local (optimistic update)
       setFavoriteIds((prevIds) => {
         const newIds = new Set(prevIds);
         if (wasFavorited) {
@@ -61,9 +57,8 @@ export const AuthProvider = ({ children }) => {
         return newIds;
       });
 
-      // Si estamos agregando un favorito Y tenemos datos de la propiedad, enviar notificación
       if (isAdding && propertyData) {
-        console.log('❤️ Agregando favorito, enviando notificación...', {
+        console.log(' Agregando favorito, enviando notificación...', {
           propertyId,
           propertyData,
           user,
@@ -72,41 +67,29 @@ export const AuthProvider = ({ children }) => {
         try {
           const { sendFavoriteNotification } = await import('../services/notifications.js');
 
-          // Intentar obtener datos del propietario de varias formas
           const ownerId =
             propertyData.ownerId ||
             propertyData.owner_id ||
             (propertyData.owner_name === 'Tú (Propietario)' ? user.email : 'unknown');
 
-          // Priorizar email del propietario, si no está disponible, usar el ID como string
-          // Si el propietario es el usuario actual, no enviar notificación (no tiene sentido)
           let ownerEmail =
             propertyData.ownerEmail ||
             propertyData.owner_email;
 
-          // Si no hay email pero hay ownerId, intentar usar el ID como identificador
-          // El microservicio ahora busca por ambos (email e ID)
           if (!ownerEmail && ownerId && ownerId !== 'unknown') {
-            // Si el ownerId parece ser un email (contiene @), usarlo directamente
+
             if (String(ownerId).includes('@')) {
               ownerEmail = String(ownerId);
             } else {
-              // Si es un ID numérico, usarlo como fallback (el microservicio lo buscará)
               ownerEmail = String(ownerId);
             }
           }
 
-          // Si aún no hay email válido, usar el ownerId como identificador
-          // El microservicio buscará por ambos (email e ID)
           if (!ownerEmail || ownerEmail === 'no-email@example.com') {
-            // Usar ownerId como identificador - el microservicio lo buscará
             ownerEmail = ownerId && ownerId !== 'unknown' ? String(ownerId) : 'no-email@example.com';
             console.log('⚠️ No se encontró ownerEmail, usando ownerId como identificador:', ownerEmail);
           }
 
-          // Verificar si el propietario es el usuario actual
-          // Solo bloquear si es claramente la propiedad del usuario actual
-          // Usar comparaciones estrictas para evitar falsos positivos
           const isOwnProperty =
             propertyData.owner_name === 'Tú (Propietario)' ||
             (ownerId && ownerId !== 'unknown' && (
@@ -117,8 +100,7 @@ export const AuthProvider = ({ children }) => {
               String(ownerEmail).toLowerCase() === String(user.email).toLowerCase());
 
           if (isOwnProperty) {
-            // No enviar notificación si el propietario es el usuario actual
-            console.log('⚠️ El propietario es el usuario actual, no se envía notificación', {
+            console.log(' El propietario es el usuario actual, no se envía notificación', {
               ownerId,
               ownerEmail,
               userId: user.id,
@@ -131,7 +113,7 @@ export const AuthProvider = ({ children }) => {
             return;
           }
 
-          console.log('✅ Propiedad NO es del usuario actual, se enviará notificación', {
+          console.log('Propiedad no es del usuario actual, se enviará notificación', {
             ownerId,
             ownerEmail,
             userId: user.id,
@@ -148,24 +130,23 @@ export const AuthProvider = ({ children }) => {
             favoritedByEmail: user.email || '',
           };
 
-          console.log('📨 Datos de notificación preparados:', notificationData);
-          console.log('🔍 Debug - ownerId:', ownerId, 'ownerEmail:', ownerEmail);
-          console.log('🔍 Debug - propertyData completo:', propertyData);
-          console.log('🔍 Debug - user actual:', { email: user.email, id: user.id, sub: user.sub });
-          console.log('🔍 Debug - ¿Es propiedad propia?', isOwnProperty);
+          console.log(' Datos de notificación preparados:', notificationData);
+          console.log(' Debug - ownerId:', ownerId, 'ownerEmail:', ownerEmail);
+          console.log(' Debug - propertyData completo:', propertyData);
+          console.log(' Debug - user actual:', { email: user.email, id: user.id, sub: user.sub });
+          console.log(' Debug - ¿Es propiedad propia?', isOwnProperty);
 
           const result = await sendFavoriteNotification(notificationData);
 
-          console.log('📤 Resultado de sendFavoriteNotification:', result);
+          console.log(' Resultado de sendFavoriteNotification:', result);
 
           if (result.success) {
-            console.log('✅ Notificación enviada correctamente');
+            console.log(' Notificación enviada correctamente');
           } else {
-            console.warn('⚠️ No se pudo enviar notificación:', result.error);
+            console.warn(' No se pudo enviar notificación:', result.error);
           }
         } catch (error) {
-          // No bloqueamos la acción si falla la notificación
-          console.error('❌ Error al enviar notificación de favorito:', error);
+          console.error(' Error al enviar notificación de favorito:', error);
         }
       } else {
         if (!isAdding) {
@@ -173,7 +154,7 @@ export const AuthProvider = ({ children }) => {
         }
         if (!propertyData) {
           console.warn(
-            '⚠️ No hay datos de propiedad - no se puede enviar notificación',
+            ' No hay datos de propiedad - no se puede enviar notificación',
             { propertyId }
           );
         }
@@ -181,7 +162,6 @@ export const AuthProvider = ({ children }) => {
     },
     [user, favoriteIds]
   );
-  // --- FIN DE LÓGICA DE FAVORITOS ---
 
   const location = useLocation();
   const navigate = useNavigate();
