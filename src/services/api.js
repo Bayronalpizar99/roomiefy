@@ -1142,7 +1142,7 @@ export const fetchUserProfile = async (userId = null) => {
   }
 
   try {
-    const response = await fetch(`http://localhost:3000/profile/${userId}`, {
+    const response = await fetch(`${apiUrl}profile/profile/${userId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -1178,7 +1178,7 @@ export const updateUserProfile = async (profileData, userId) => {
   }
 
   try {
-    const response = await fetch(`http://localhost:3000/profile/${userId}`, {
+    const response = await fetch(`${apiUrl}profile/profile/${userId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -1215,7 +1215,7 @@ export const updateSearchingStatus = async (isSearching, userId) => {
   }
 
   try {
-    const response = await fetch(`http://localhost:3000/profile/searching/${userId}`, {
+    const response = await fetch(`${apiUrl}profile/profile/searching/${userId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
