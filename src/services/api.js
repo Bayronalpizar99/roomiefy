@@ -8,6 +8,14 @@
 // Apunta a Azure API Management para todas las demás funciones
 const apiUrl = import.meta.env.VITE_API_URL;
 const apiKey = import.meta.env.VITE_API_KEY;
+const messagingApiUrl = import.meta.env.VITE_MESSAGING_API_URL || apiUrl;
+
+const normalizeBaseUrl = (url) => {
+  if (!url) return null;
+  return url.endsWith('/') ? url : `${url}/`;
+};
+
+const messagingBaseUrl = normalizeBaseUrl(messagingApiUrl);
 
 // --- FIN URLs Y CLAVES ---
 
@@ -113,7 +121,7 @@ export const fetchProperties = async (options = {}) => {
 /**
  * Obtiene las conversaciones del usuario desde la API.
  */
-export const fetchConversations = async () => {
+export const fetchConversations = async (userId) => {
   if (!apiUrl) {
     // Variable de entorno VITE_API_URL no definida
     return { data: [], error: 'Configuración de API incompleta (VITE_API_URL).' };
@@ -122,12 +130,19 @@ export const fetchConversations = async () => {
     // Variable de entorno VITE_API_KEY no definida
     return { data: [], error: 'Configuración de API incompleta (VITE_API_KEY).' };
   }
+  if (!userId) {
+    console.error("Error: fetchConversations requiere un userId para consultar el backend.");
+    return { data: [], error: 'ID de usuario no proporcionado.' };
+  }
+  if (!messagingBaseUrl) {
+    console.error("Error: VITE_MESSAGING_API_URL no está definida y no se puede reutilizar VITE_API_URL.");
+    return { data: [], error: 'Configuración de API de mensajería incompleta.' };
+  }
+
+  const params = new URLSearchParams({ userId: String(userId) }).toString();
 
   try {
-    let userId = null;
-    try { userId = localStorage.getItem('roomiefy_user_id'); } catch (e) { /* noop */ }
-    const qs = userId ? `?userId=${encodeURIComponent(userId)}` : '';
-    const response = await fetch("http://127.0.0.1:8000/" + 'conversations' + qs, {
+    const response = await fetch(`${messagingBaseUrl}conversations?${params}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -445,7 +460,7 @@ export const fetchRoommateById = async (roomieId) => {
  * @param {string} content
  * @returns {Promise<object|null>} El mensaje creado por el servidor o null si falla
  */
-export const sendMessage = async (conversationId, content, senderId = null) => {
+export const sendMessage = async (conversationId, content, senderId) => {
   if (!apiUrl) {
     // Variable de entorno VITE_API_URL no definida
     return null;
@@ -455,30 +470,24 @@ export const sendMessage = async (conversationId, content, senderId = null) => {
     return null;
   }
 
+  if (!messagingBaseUrl) {
+    console.error("Error: La variable de entorno VITE_MESSAGING_API_URL no está definida.");
+    return null;
+  }
+  if (!senderId) {
+    console.error("Error: Se requiere el ID del remitente para enviar mensajes.");
+    return null;
+  }
+
   try {
-    // Obtener el ID del usuario actual si no se proporciona
-    let currentUserId = senderId;
-    if (!currentUserId) {
-      try {
-        currentUserId = localStorage.getItem('roomiefy_user_id');
-      } catch (e) {
-        // Error al obtener el ID del usuario
-      }
-    }
-
-    const payload = {
-      content,
-      sender_id: currentUserId || 'unknown'
-    };
-
-    const response = await fetch(`http://127.0.0.1:8000/conversations/${conversationId}/messages`, {
+    const response = await fetch(`${messagingBaseUrl}conversations/${conversationId}/messages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Ocp-Apim-Subscription-Key": apiKey,
         "Accept": "application/json"
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ content, sender_id: senderId })
     });
 
     if (!response.ok) {
@@ -771,20 +780,12 @@ export const fetchNotifications = async () => {
 
 /**
  * Crea una nueva conversación con un usuario específico.
- * @param {string|number} userId - El ID del usuario con el que crear la conversación.
- * @param {string} initialMessage - El mensaje inicial para la conversación.
- * @returns {Promise<object>} Objeto con la respuesta o información de error
- */
-/**
- * Crea una nueva conversación con un usuario específico.
- * @param {string|number} userId - El ID del usuario con el que crear la conversación.
+ * @param {string|number} participantId - El ID del usuario con el que crear la conversación.
  * @param {string} currentUserId - El ID del usuario actual.
  * @param {string} initialMessage - El mensaje inicial para la conversación.
  * @returns {Promise<object>} Objeto con la respuesta o información de error
  */
-export const createConversation = async (userId, currentUserId, initialMessage = '') => {
-  console.log('[createConversation] Iniciando con parámetros:', { userId, currentUserId, initialMessage });
-
+export const createConversation = async (participantId, currentUserId, initialMessage = '') => {
   if (!apiUrl) {
     const errorMsg = "Error: La variable de entorno VITE_API_URL no está definida.";
     console.error(errorMsg);
@@ -797,33 +798,27 @@ export const createConversation = async (userId, currentUserId, initialMessage =
     return { error: errorMsg };
   }
 
-  // Formato correcto que espera el backend
-  const payload = {
-    participantId: String(userId),
-    currentUserId: String(currentUserId),
-    initialMessage: initialMessage
-  };
+  if (!messagingBaseUrl) {
+    console.error("Error: La variable de entorno VITE_MESSAGING_API_URL no está definida.");
+    return { error: "Error de configuración: URL de mensajería no definida." };
+  }
 
   try {
-    console.log('[createConversation] Enviando payload al servidor:', payload);
+    const conversationData = {
+      participantId,
+      currentUserId,
+      initialMessage: initialMessage
+    };
 
-    const apiUrl = 'http://127.0.0.1:8000/conversations';
-    console.log('[createConversation] URL de la API:', apiUrl);
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      mode: 'cors',
-      credentials: 'include',
+    const response = await fetch(`${messagingBaseUrl}conversations`, {
+      method: "POST",
       headers: {
         'Content-Type': 'application/json',
+        'Ocp-Apim-Subscription-Key': apiKey,
         'Accept': 'application/json'
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(conversationData)
     });
-
-    console.log('[createConversation] Estado de la respuesta:', response.status);
-
-    console.log('[createConversation] Respuesta recibida, estado:', response.status);
 
     const responseData = await response.json().catch(() => ({}));
 
@@ -871,8 +866,13 @@ export const fetchMessages = async (conversationId) => {
     return { data: null, error: 'Configuración de API incompleta (VITE_API_KEY).' };
   }
 
+  if (!messagingBaseUrl) {
+    console.error("Error: La variable de entorno VITE_MESSAGING_API_URL no está definida.");
+    return { data: null, error: 'Configuración de API de mensajería incompleta.' };
+  }
+
   try {
-    const response = await fetch(`http://127.0.0.1:8000/conversations/${conversationId}/messages`, {
+    const response = await fetch(`${messagingBaseUrl}conversations/${conversationId}/messages`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -915,9 +915,14 @@ export const fetchConversation = async (conversationId) => {
     return { data: null, error: 'Configuración de API incompleta (VITE_API_KEY).' };
   }
 
+  if (!messagingBaseUrl) {
+    console.error("Error: La variable de entorno VITE_MESSAGING_API_URL no está definida.");
+    return { data: null, error: 'Configuración de API de mensajería incompleta.' };
+  }
+
   try {
     // Primer intento: endpoint plural
-    let response = await fetch(`http://127.0.0.1:8000/conversations/${conversationId}`, {
+    let response = await fetch(`${messagingBaseUrl}conversations/${conversationId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -928,7 +933,7 @@ export const fetchConversation = async (conversationId) => {
 
     // Si falla por 404/405, intentar con endpoint singular
     if (!response.ok && (response.status === 404 || response.status === 405)) {
-      response = await fetch(`${apiUrl}conversation/${conversationId}`, {
+      response = await fetch(`${messagingBaseUrl}conversation/${conversationId}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -973,8 +978,13 @@ export const updateMessageStatus = async (messageId, status) => {
     return null;
   }
 
+  if (!messagingBaseUrl) {
+    console.error("Error: La variable de entorno VITE_MESSAGING_API_URL no está definida.");
+    return null;
+  }
+
   try {
-    const response = await fetch(`${apiUrl}messages/${messageId}/status`, {
+    const response = await fetch(`${messagingBaseUrl}messages/${messageId}/status`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -1006,11 +1016,6 @@ export const updateMessageStatus = async (messageId, status) => {
 /**
  * Marca todos los mensajes de una conversación como leídos.
  * @param {string|number} conversationId - El ID de la conversación.
- * @returns {Promise<boolean>} True si se actualizó correctamente, false si falla
- */
-/**
- * Marca los mensajes de una conversación como leídos
- * @param {string|number} conversationId - ID de la conversación
  * @param {string} userId - ID del usuario actual
  * @returns {Promise<{ok: boolean, updated_count?: number, error?: string}>}
  */
@@ -1028,8 +1033,14 @@ export const markConversationAsRead = async (conversationId, userId) => {
     return { ok: false, error: "Se requiere el ID del usuario" };
   }
 
+  if (!messagingBaseUrl) {
+    console.error("Error: La variable de entorno VITE_MESSAGING_API_URL no está definida.");
+    return { ok: false, error: "Error de configuración: URL de mensajería no definida." };
+  }
+
   try {
-    const response = await fetch(`http://127.0.0.1:8000/conversations/${conversationId}/read?user_id=${encodeURIComponent(userId)}`, {
+    const params = new URLSearchParams({ user_id: String(userId) }).toString();
+    const response = await fetch(`${messagingBaseUrl}conversations/${conversationId}/read?${params}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
