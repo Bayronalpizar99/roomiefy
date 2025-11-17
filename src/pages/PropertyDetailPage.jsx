@@ -166,8 +166,8 @@ const PropertyDetailPage = ({ allProperties, loading }) => {
                 className={`action-btn favorite-btn ${
                   isFavorited ? 'favorited' : ''
                 }`}
-                // El onClick ahora llama a la función del contexto
-                onClick={() => toggleFavorite(property.id)}
+                // El onClick ahora llama a la función del contexto con los datos de la propiedad
+                onClick={() => toggleFavorite(property.id, property)}
               >
                 <Heart size={18} /> {isFavorited ? 'Guardado' : 'Guardar'}
               </button>

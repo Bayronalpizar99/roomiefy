@@ -199,6 +199,7 @@ const PublishPage = ({ onAddProperty }) => {
 
       // 3d. ✨ INYECTAMOS LOS DATOS DEL USUARIO ✨
       ownerId: user.id,
+      ownerEmail: user.email || user.id, // Agregar email para las notificaciones
       owner_name: user.name,
       owner_profile_pic: user.picture,
 
@@ -210,22 +211,33 @@ const PublishPage = ({ onAddProperty }) => {
   
     try {
       // 4. LLAMAMOS A LA API CON EL PAYLOAD COMPLETO
+      console.log('📤 Enviando propiedad al backend:', payload);
       const apiResponse = await createProperty(payload, accessToken); // <-- ¡Pasa el token!
-  
+      console.log('✅ Respuesta del backend:', apiResponse);
+
+      // Verificar que la respuesta tenga un ID
+      if (!apiResponse || !apiResponse.id) {
+        console.error('❌ El backend no devolvió un ID válido:', apiResponse);
+        throw new Error('El servidor no devolvió un ID válido para la propiedad');
+      }
+
       // 5. ACTUALIZAMOS EL ESTADO (usando onAddProperty)
       // Creamos el objeto para el estado local, usando los datos reales del 'user'
       const newPropertyForState = {
         ...payload,
-        id: apiResponse.id || `local-${Date.now()}`, // Usamos el ID de la DB
+        id: apiResponse.id, // Usamos el ID de la DB
         property_photo: payload.property_photo, // Usamos la foto que enviamos
         amenities: amenitiesList, // El estado local SÍ usa un array
         square_meters: payload.square_meters,
         name: payload.name,
+        // Asegurarnos de incluir ownerEmail para las notificaciones
+        ownerEmail: user.email || user.id,
         // Los campos ownerId, owner_name, y owner_profile_pic ya están en 'payload'
       };
-  
-      onAddProperty(newPropertyForState);
-      alert('¡Propiedad publicada! Serás redirigido a tus propiedades.');
+
+      console.log('📦 Propiedad para el estado local:', newPropertyForState);
+      await onAddProperty(newPropertyForState);
+      alert('¡Propiedad publicada exitosamente! Serás redirigido a tus propiedades.');
       navigate('/mis-propiedades');
   
     } catch (err) {

@@ -16,37 +16,41 @@ import ProfileForm from "./pages/ProfileForm.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
 import { useTheme } from "./hooks/useTheme";
 import LoginModal from './components/LoginModal';
-import { fetchProperties, deleteProperty, fetchUserProperties } from './services/api'; 
+import { fetchProperties, deleteProperty, fetchUserProperties } from './services/api';
 import "./App.css";
 import Toast from './components/Toast';
 import Footer from './components/Footer';
 
 function App() {
   const { toggleTheme } = useTheme();
-  const { user } = useAuth(); // Obtenemos el usuario del contexto
+  const { user } = useAuth(); 
   const [searchQuery, setSearchQuery] = useState('');
   const location = useLocation();
 
   const [allProperties, setAllProperties] = useState([]);
-  const [myProperties, setMyProperties] = useState([]); // Estado para "Mis Propiedades"
-  const [hasPublished, setHasPublished] = useState(false); // Estado para el Navbar
+  const [myProperties, setMyProperties] = useState([]); 
+  const [hasPublished, setHasPublished] = useState(false); 
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
 
 
   const [filters, setFilters] = useState({
-      location: '',
-      price: 5000, 
-      bedrooms: 'any',
-      amenities: new Set(),
+    location: '',
+    price: null, 
+    bedrooms: 'any',
+    amenities: new Set(),
   });
 
-  // 2. useEffect #1: Carga TODAS las propiedades (para el Home)
-  // Se ejecuta cuando cambian los filtros o la búsqueda
   useEffect(() => {
     const loadAllProperties = async () => {
       setLoading(true);
       try {
+        console.log('🔄 Cargando propiedades con filtros:', {
+          search: filters.location || searchQuery,
+          price: filters.price,
+          bedrooms: filters.bedrooms
+        });
+
         const { data: apiProperties, error } = await fetchProperties({
           search: filters.location || searchQuery,
           price: filters.price,
@@ -57,8 +61,11 @@ function App() {
         if (error) {
           throw new Error(error);
         }
+
+        console.log('✅ Propiedades cargadas:', apiProperties.length);
         setAllProperties(apiProperties);
       } catch (err) {
+        console.error(' Error al cargar propiedades:', err);
         setToast({ visible: true, type: 'error', message: `No se pudieron cargar las propiedades: ${err.message}` });
       } finally {
         setLoading(false);
@@ -66,61 +73,64 @@ function App() {
     };
 
     loadAllProperties();
-  }, [filters, searchQuery]); // Depende solo de los filtros
+  }, [filters, searchQuery]); 
 
-  //  3. useEffect #2: Carga MIS propiedades (para el Navbar y "Mis Propiedades")
-  // Se ejecuta SOLO cuando el 'user' cambia (login o logout)
   useEffect(() => {
     const loadUserProperties = async () => {
       if (user) {
-        // Si hay usuario, busca sus propiedades
         const { data, error } = await fetchUserProperties(user.id);
         if (error) {
           setToast({ visible: true, type: 'error', message: `No se pudieron cargar tus propiedades: ${error}` });
           setMyProperties([]);
           setHasPublished(false);
         } else {
-          // Actualizamos el estado de 'myProperties' Y el estado del 'Navbar'
           setMyProperties(data);
           setHasPublished(data.length > 0);
         }
       } else {
-        // Si el usuario cierra sesión, limpiamos todo
         setMyProperties([]);
         setHasPublished(false);
       }
     };
 
     loadUserProperties();
-  }, [user]); // ¡Esta dependencia es la clave!
+  }, [user]); 
 
-  
-  // 4. Lógica para AÑADIR (actualiza AMBOS estados)
-  const handleAddProperty = (newProperty) => {
-    // Añade la nueva propiedad a la lista de 'allProperties'
+  const handleAddProperty = async (newProperty) => {
+
     setAllProperties(prev => [newProperty, ...prev]);
-    // Añade la nueva propiedad a la lista de 'myProperties'
     setMyProperties(prev => [newProperty, ...prev]);
-    // Actualiza el estado del Navbar
     setHasPublished(true);
+
+    try {
+      console.log(' Recargando propiedades desde el backend después de crear...');
+      const { data: apiProperties, error } = await fetchProperties({
+      });
+
+      if (!error && apiProperties) {
+        setAllProperties(apiProperties);
+        console.log(' Propiedades recargadas desde el backend:', apiProperties.length);
+        console.log(' IDs de propiedades recargadas:', apiProperties.map(p => p.id));
+      } else {
+        console.error(' Error al recargar propiedades:', error);
+      }
+    } catch (err) {
+      console.warn(' No se pudieron recargar las propiedades, pero la propiedad ya está en el estado local:', err);
+    }
   };
 
-  // 5. Lógica para BORRAR (actualiza AMBOS estados)
   const handleDeleteProperty = async (propertyId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta propiedad?')) {
       try {
-        await deleteProperty(propertyId); // Llama a la API
+        await deleteProperty(propertyId); 
 
-        // ctualiza la lista 'allProperties' (para el Home)
         setAllProperties(prev => prev.filter(p => p.id !== propertyId));
 
-        // Actualiza la lista 'myProperties' (para "Mis Propiedades")
         const updatedMyProperties = myProperties.filter(p => p.id !== propertyId);
         setMyProperties(updatedMyProperties);
-        
-        // Actualiza el estado del Navbar si ya no quedan propiedades
+
         setHasPublished(updatedMyProperties.length > 0);
-        
+
         setToast({ visible: true, type: 'success', message: 'Propiedad eliminada.' });
       } catch (error) {
         setToast({ visible: true, type: 'error', message: `No se pudo eliminar: ${error.message}` });
@@ -129,23 +139,20 @@ function App() {
   };
 
   const handleUpdateProperty = (propertyId, updatedProperty) => {
-      // 1. Actualiza la lista 'allProperties' (para el Home)
-      setAllProperties(prev => 
-        prev.map(p => String(p.id) === String(propertyId) ? updatedProperty : p)
-      );
-      // 2. Actualiza la lista 'myProperties' (para "Mis Propiedades")
-      setMyProperties(prev => 
-        prev.map(p => String(p.id) === String(propertyId) ? updatedProperty : p)
-      );
-      // 3. Muestra una notificación de éxito
-      setToast({ visible: true, type: 'success', message: 'Propiedad actualizada.' });
-    };
+    setAllProperties(prev =>
+      prev.map(p => String(p.id) === String(propertyId) ? updatedProperty : p)
+    );
+    setMyProperties(prev =>
+      prev.map(p => String(p.id) === String(propertyId) ? updatedProperty : p)
+    );
+    setToast({ visible: true, type: 'success', message: 'Propiedad actualizada.' });
+  };
 
   const handleSearch = (query) => setSearchQuery(query);
 
   return (
     <div className="app-layout">
-      {/* 6. El Navbar ahora recibe el estado 'hasPublished' actualizado */}
+      {/* El Navbar ahora recibe el estado 'hasPublished' actualizado */}
       <Navbar
         toggleTheme={toggleTheme}
         onSearch={handleSearch}
@@ -167,15 +174,15 @@ function App() {
             }
           />
           <Route path="roomies" element={<RoomiesPage searchQuery={searchQuery} onSearchQueryChange={handleSearch} />} />
-          
-          {/* 7. Las rutas ahora reciben las funciones y estados correctos */}
-          <Route 
-            path="publicar" 
-            element={<PublishPage onAddProperty={handleAddProperty} />} 
+
+          {/*  Las rutas ahora reciben las funciones y estados correctos */}
+          <Route
+            path="publicar"
+            element={<PublishPage onAddProperty={handleAddProperty} />}
           />
-          <Route 
-            path="/mis-propiedades" 
-            element={<MyPropertiesPage myProperties={myProperties} onDeleteProperty={handleDeleteProperty} />} 
+          <Route
+            path="/mis-propiedades"
+            element={<MyPropertiesPage myProperties={myProperties} onDeleteProperty={handleDeleteProperty} />}
           />
           <Route
             path="/propiedad/editar/:propertyId"

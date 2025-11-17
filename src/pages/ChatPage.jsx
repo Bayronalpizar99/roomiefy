@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './PageStyles.css';
 import './ChatPage.css';
 import { fetchConversations, sendMessage, fetchConversation, markConversationAsRead } from '../services/api';
@@ -10,15 +12,23 @@ const ChatPage = () => {
   const location = useLocation();
   const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const messageInputRef = useRef(null);
+  const hasSetPrefilledMessage = useRef(false);
 
   useEffect(() => {
     const getConversations = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        setConversations([]);
+        setError('Debes iniciar sesión para ver tus conversaciones.');
+        return;
+      }
+
       if (!user?.id) {
         setLoading(false);
         setConversations([]);
@@ -30,22 +40,24 @@ const ChatPage = () => {
         setLoading(true);
         setError(null);
         const { data, error } = await fetchConversations(user.id);
+        setError(null);
+        const { data, error } = await fetchConversations(user.id);
         if (error) {
           setError('Error al cargar las conversaciones');
           setConversations([]);
         } else {
           const list = Array.isArray(data) ? data : [];
           setConversations(list);
-        }
 
-        // Si hay una conversación preseleccionada desde la navegación
-        if (location.state?.selectedConversation) {
-          setSelectedConversation(location.state.selectedConversation);
-          setNewMessage(location.state.prefilledMessage || '');
+          // Si hay una conversación preseleccionada desde la navegación
+          if (location.state?.selectedConversation) {
+            setSelectedConversation(location.state.selectedConversation);
+            // No establecer el mensaje prefijado aquí, lo manejaremos en otro efecto
+          }
         }
       } catch (err) {
         setError('Error al cargar las conversaciones');
-        console.error('Error al cargar las conversaciones:', err);
+        // Error al cargar conversaciones
       } finally {
         setLoading(false);
       }
@@ -57,8 +69,10 @@ const ChatPage = () => {
   const handleSelectConversation = async (conversation) => {
     setSelectedConversation(conversation);
     setNewMessage('');
-    
+
     // Marcar conversación como leída
+    if (conversation.id && user?.id) {
+      await markConversationAsRead(conversation.id, user.id);
     if (conversation.id && user?.id) {
       await markConversationAsRead(conversation.id, user.id);
 
@@ -73,26 +87,58 @@ const ChatPage = () => {
             messages = Array.isArray(found?.messages) ? found.messages : [];
           } else if (Array.isArray(convData?.messages)) {
             messages = convData.messages;
+          } else if (convData && convData.messages) {
+            messages = Array.isArray(convData.messages) ? convData.messages : [];
           }
+
+          // Asegurarse de que los mensajes tengan el formato correcto
+          messages = messages.map(msg => {
+            // Determinar el remitente del mensaje
+            const senderId = String(msg.sender || msg.sender_id || '');
+            const isCurrentUser = user?.id && senderId === String(user.id);
+
+            return {
+              ...msg,
+              // Si el remitente es el usuario actual, asegurarse de que el ID coincida exactamente
+              sender: isCurrentUser ? user.id : senderId,
+              sender_id: isCurrentUser ? user.id : senderId,
+              // Asegurar que el formato de tiempo sea consistente
+              time: msg.time || (msg.timestamp
+                ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+            };
+          });
           setSelectedConversation(prev => ({
             ...prev,
             messages
           }));
         }
       } catch (error) {
-        console.error('Error al cargar la conversación:', error);
+        // Error al cargar la conversación
       }
     }
   };
 
   const handleSendMessage = async () => {
     if (!selectedConversation || !newMessage.trim() || sending || !user?.id) return;
+    if (!selectedConversation || !newMessage.trim() || sending || !user?.id) return;
 
     const content = newMessage.trim();
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const tempId = `temp-${Date.now()}`;
 
-    const optimisticMessage = { id: tempId, sender: 'me', content, time, status: 'sent' };
+    // Crear mensaje optimista con el ID del remitente
+    const optimisticMessage = {
+      id: tempId,
+      sender: user.id,
+      sender_id: user.id,
+      content,
+      time,
+      status: 'sent',
+      timestamp: new Date().toISOString()
+    };
+
+    // Actualizar la UI de forma optimista
     const updatedSelected = {
       ...selectedConversation,
       messages: [...(selectedConversation.messages || []), optimisticMessage],
@@ -107,11 +153,14 @@ const ChatPage = () => {
 
     try {
       const created = await sendMessage(selectedConversation.id, content, user.id);
+      const created = await sendMessage(selectedConversation.id, content, user.id);
       if (created && created.id) {
         const isRead = (created.status === 'read') || created.isRead || created.seen || created.responded;
+        const serverSenderRaw = created.sender || created.sender_id;
+        const normalizedSender = !serverSenderRaw || serverSenderRaw === 'unknown' ? user.id : serverSenderRaw;
         const serverMessage = {
           id: created.id,
-          sender: created.sender || 'me',
+          sender: normalizedSender,
           content: created.content ?? content,
           time: created.time || time,
           status: isRead ? 'read' : 'sent',
@@ -140,7 +189,7 @@ const ChatPage = () => {
         }));
       }
     } catch (e) {
-      console.error('Error al enviar el mensaje:', e);
+      // Error al enviar el mensaje
     } finally {
       setSending(false);
     }
@@ -166,7 +215,7 @@ const ChatPage = () => {
     <div className="main-content chat-main">
       <div className="chat-page-container">
         <h1>Mis Conversaciones</h1>
-        
+
         <div className="chat-layout">
           <div className="conversations-list">
             <h2>Chats</h2>
@@ -175,8 +224,8 @@ const ChatPage = () => {
             ) : (
               <ul>
                 {conversations.map((conversation) => (
-                  <li 
-                    key={conversation.id} 
+                  <li
+                    key={conversation.id}
                     className={`conversation-item ${selectedConversation?.id === conversation.id ? 'selected' : ''}`}
                     onClick={() => handleSelectConversation(conversation)}
                   >
@@ -195,7 +244,7 @@ const ChatPage = () => {
               </ul>
             )}
           </div>
-          
+
           <div className="chat-messages">
             {selectedConversation ? (
               <>
@@ -206,25 +255,36 @@ const ChatPage = () => {
                   <h2>{selectedConversation.name}</h2>
                 </div>
                 <div className="messages-container">
-                  {selectedConversation.messages?.map((message) => (
-                    <div 
-                      key={message.id} 
-                      className={`message ${message.sender === 'me' ? 'sent' : 'received'}`}
-                    >
-                      <div className="message-content">{message.content}</div>
-                      <div className="message-meta">
-                        <span className="message-time">{message.time}</span>
-                        {message.sender === 'me' && (
-                          <span className={`message-status ${(
-                            message.status === 'read' || message.isRead || message.seen || message.responded
-                          ) ? 'read' : 'sent'}`}>
-                            <CheckIcon className="check one" />
-                            <CheckIcon className="check two" />
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )) || <p>No hay mensajes en esta conversación.</p>}
+                  {selectedConversation.messages && selectedConversation.messages.length > 0 ? (
+                    selectedConversation.messages.map((message) => {
+                      // Determinar el remitente del mensaje
+                      const senderId = String(message.sender || message.sender_id || '');
+                      const isCurrentUser = user?.id && senderId === String(user.id);
+
+                      return (
+                        <div
+                          key={message.id}
+                          className={`message ${isCurrentUser ? 'sent' : 'received'}`}
+                        >
+                          <div className="message-content">{message.content}</div>
+                          <div className="message-meta">
+                            <span className="message-time">{message.time}</span>
+                            {isCurrentUser && (
+                              <span className={`message-status ${(message.status === 'read' || message.isRead || message.seen || message.responded)
+                                ? 'read'
+                                : 'sent'
+                                }`}>
+                                <CheckIcon className="check one" />
+                                <CheckIcon className="check two" />
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p>No hay mensajes en esta conversación.</p>
+                  )}
                 </div>
                 <div className="message-input">
                   <div className="search-bar">
@@ -264,3 +324,4 @@ const ChatPage = () => {
 };
 
 export default ChatPage;
+

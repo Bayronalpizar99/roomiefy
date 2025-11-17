@@ -23,7 +23,8 @@ const PropertyCard = ({ property, view = 'grid', showActions = false, onDelete, 
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            onToggleFavorite(id);
+            // Pasar el ID y los datos completos de la propiedad para la notificación
+            onToggleFavorite(id, property);
           }}
           aria-label={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
         >
