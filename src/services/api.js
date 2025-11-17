@@ -36,6 +36,20 @@ export const fetchProperties = async (options = {}) => {
       pageSize
     } = options;
 
+    const normalizeNumber = (value, fallback) => {
+      if (value === undefined || value === null || value === '') return fallback;
+      const parsed = Number(value);
+      if (!Number.isFinite(parsed)) return fallback;
+      return parsed;
+    };
+
+    let normalizedPage = normalizeNumber(page, 0);
+    if (normalizedPage < 0) normalizedPage = 0;
+
+    let normalizedSize = normalizeNumber(pageSize, 100);
+    if (normalizedSize <= 0) normalizedSize = 100;
+    if (normalizedSize > 500) normalizedSize = 500; // evita pedir páginas enormes por error
+
     const params = new URLSearchParams();
     const appendIfDefined = (key, value) => {
       if (value !== undefined && value !== null && value !== '') {
@@ -58,8 +72,8 @@ export const fetchProperties = async (options = {}) => {
     }
 
     appendIfDefined('sort', sort);
-    appendIfDefined('page', page);
-    appendIfDefined('pageSize', pageSize);
+    params.append('page', String(normalizedPage));
+    params.append('size', String(normalizedSize));
 
     const url = apiUrl + '/properties' + (params.toString() ? `?${params.toString()}` : '');
 
@@ -84,16 +98,46 @@ export const fetchProperties = async (options = {}) => {
     }
 
     const body = await response.json();
-    const items = Array.isArray(body)
-      ? body
-      : (body?.data ?? body?.items ?? body?.properties ?? []);
-
     const totalHeader = response.headers.get('X-Total-Count');
-    const total = totalHeader != null
-      ? Number(totalHeader)
-      : (body?.total ?? body?.meta?.total ?? null);
 
-    const meta = { total, page, pageSize };
+    let items = [];
+    let total = totalHeader != null ? Number(totalHeader) : null;
+    let currentPage = normalizedPage;
+    let currentSize = normalizedSize;
+    let totalPages = null;
+
+    if (Array.isArray(body)) {
+      items = body;
+      if (total == null) {
+        total = body.length;
+      }
+    } else if (Array.isArray(body?.content)) {
+      items = body.content;
+      total = body.totalElements ?? body.total ?? total;
+      totalPages = body.totalPages ?? body.total_pages ?? null;
+      currentPage = body.number ?? body.page ?? currentPage;
+      currentSize = body.size ?? body.pageSize ?? currentSize;
+    } else {
+      items = body?.data ?? body?.items ?? body?.properties ?? [];
+      if (!Array.isArray(items)) {
+        items = [];
+      }
+      if (total == null) {
+        total = body?.total ?? body?.totalCount ?? body?.meta?.total ?? null;
+      }
+      if (body?.meta) {
+        if (body.meta.page !== undefined) currentPage = body.meta.page;
+        if (body.meta.pageSize !== undefined) currentSize = body.meta.pageSize;
+        if (body.meta.totalPages !== undefined) totalPages = body.meta.totalPages;
+      }
+    }
+
+    const meta = {
+      total,
+      page: currentPage,
+      pageSize: currentSize,
+      totalPages
+    };
 
     console.log('📥 [fetchProperties] Respuesta del backend:', {
       totalItems: items.length,
