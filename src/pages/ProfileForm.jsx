@@ -28,6 +28,8 @@ const ProfileForm = () => {
   const [allIdiomas, setAllIdiomas] = useState([]);
   const [nuevoInteres, setNuevoInteres] = useState("");
   const [loading, setLoading] = useState(false);
+  const [visibleInterests, setVisibleInterests] = useState(10);
+  const INTERESTS_PER_PAGE = 10;
 
   const [formData, setFormData] = useState({
     nombre: "",
@@ -654,40 +656,64 @@ const ProfileForm = () => {
                 compatibles
               </p>
 
-              <div
-                className="chips-container"
-                role="group"
-                aria-label="Intereses disponibles"
-              >
-                {allIntereses.map((interes) => (
-                  <button
-                    type="button"
-                    key={interes.id}
-                    className={`chip ${
-                      formData.intereses.includes(interes.label) ? "active" : ""
-                    }`}
-                    aria-pressed={formData.intereses.includes(interes.label)}
-                    onClick={() => toggleSelection("intereses", interes.label)}
-                  >
-                    {interes.label}
-                  </button>
-                ))}
-
-                {formData.intereses
-                  .filter((i) => !allIntereses.some((opt) => opt.label === i))
-                  .map((custom, idx) => (
+              <div className="interests-section">
+                <div 
+                  className="chips-container"
+                  role="group"
+                  aria-label="Intereses disponibles"
+                >
+                  {allIntereses.slice(0, visibleInterests).map((interes) => (
                     <button
                       type="button"
-                      key={`custom-${idx}`}
+                      key={interes.id}
                       className={`chip ${
-                        formData.intereses.includes(custom) ? "active" : ""
+                        formData.intereses.includes(interes.label) ? "active" : ""
                       }`}
-                      aria-pressed={formData.intereses.includes(custom)}
-                      onClick={() => toggleSelection("intereses", custom)}
+                      aria-pressed={formData.intereses.includes(interes.label)}
+                      onClick={() => toggleSelection("intereses", interes.label)}
                     >
-                      {custom}
+                      {interes.label}
                     </button>
                   ))}
+
+                  {formData.intereses
+                    .filter((i) => !allIntereses.some((opt) => opt.label === i))
+                    .map((custom, idx) => (
+                      <button
+                        type="button"
+                        key={`custom-${idx}`}
+                        className={`chip ${
+                          formData.intereses.includes(custom) ? "active" : ""
+                        }`}
+                        aria-pressed={formData.intereses.includes(custom)}
+                        onClick={() => toggleSelection("intereses", custom)}
+                      >
+                        {custom}
+                      </button>
+                    ))}
+                </div>
+
+                <div className="buttons-container">
+                  {allIntereses.length > visibleInterests && (
+                    <button
+                      type="button"
+                      className="show-more-button"
+                      onClick={() => setVisibleInterests(prev => prev + 10)}
+                    >
+                      Mostrar más intereses
+                    </button>
+                  )}
+
+                  {visibleInterests > 10 && (
+                    <button
+                      type="button"
+                      className="show-less-button"
+                      onClick={() => setVisibleInterests(10)}
+                    >
+                      Mostrar menos
+                    </button>
+                  )}
+                </div>
               </div>
               {errors.intereses && (
                 <p className="error-text">{errors.intereses}</p>

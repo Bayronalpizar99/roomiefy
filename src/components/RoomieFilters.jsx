@@ -9,14 +9,16 @@ import './Filters.css';
 const RoomieFilters = ({ filters, setFilters, minBudget = 100, maxBudget = 2000, minAge = 18, maxAge = 99 }) => {
   const formatAmount = (n) => `$${new Intl.NumberFormat('es-MX').format(Number(n ?? 0))}`;
   const interestsList = [
-    'Deportes',
-    'Música',
-    'Cocina',
-    'Tecnología',
-    'Lectura',
-    'Viajes',
-    'Películas',
-  ];
+    'Deportes', 'Música', 'Cocina', 'Tecnología', 'Lectura', 'Viajes', 'Películas',
+    'Videojuegos', 'Arte', 'Fotografía', 'Baile', 'Teatro', 'Cine', 'Series',
+    'Mascotas', 'Naturaleza', 'Senderismo', 'Ciclismo', 'Fútbol', 'Baloncesto',
+    'Tenis', 'Natación', 'Yoga', 'Meditación', 'Idiomas', 'Cultura', 'Historia',
+    'Política', 'Negocios', 'Emprendimiento', 'Diseño', 'Moda', 'Belleza', 'Salud',
+    'Bienestar', 'Gastronomía', 'Café', 'Vino', 'Cerveza', 'Cócteles', 'Museos',
+    'Galerías', 'Conciertos', 'Festivales', 'Eventos', 'Redes Sociales', 'Blogging',
+    'Vlogging', 'Podcasts', 'Audiovisuales', 'Astronomía', 'Ciencia', 'Programación',
+    'Robótica', 'IA', 'Sostenibilidad', 'Medio Ambiente', 'Voluntariado'
+  ].sort((a, b) => a.localeCompare(b)); // Orden alfabético
 
   const hasApartmentOptions = [
     { value: 'any', label: 'Cualquiera' },
@@ -101,14 +103,14 @@ const RoomieFilters = ({ filters, setFilters, minBudget = 100, maxBudget = 2000,
 
       {/* UBICACIÓN */}
       <div className="filter-group">
-        <Label.Root htmlFor="location">Ubicación</Label.Root>
+        <h3 className="filter-section-title">Ubicación</h3>
         <input
-          className="radix-input"
-          type="text"
           id="location"
-          placeholder="Buscar ciudad o zona..."
-          value={filters.location}
+          type="text"
+          placeholder="Ciudad, estado o código postal"
+          value={filters.location || ''}
           onChange={handleLocationChange}
+          className="filter-input"
         />
       </div>
 
@@ -158,14 +160,14 @@ const RoomieFilters = ({ filters, setFilters, minBudget = 100, maxBudget = 2000,
 
       {/* LIMPIEZA MÍNIMA */}
       <div className="filter-group">
-        <Label.Root>Nivel de limpieza mínimo: {filters.minCleanliness}/5</Label.Root>
+        <Label.Root>Nivel de limpieza mínimo: {filters.minCleanliness}/10</Label.Root>
         <Slider.Root
           className="radix-slider-root"
           radius="full"
           value={[filters.minCleanliness]}
           onValueChange={handleMinCleanlinessChange}
           min={1}
-          max={5}
+          max={10}
           step={1}
         >
           <Slider.Track className="radix-slider-track">
@@ -177,14 +179,14 @@ const RoomieFilters = ({ filters, setFilters, minBudget = 100, maxBudget = 2000,
 
       {/* SOCIAL MÍNIMO */}
       <div className="filter-group">
-        <Label.Root>Nivel social mínimo: {filters.minSocial}/5</Label.Root>
+        <Label.Root>Nivel social mínimo: {filters.minSocial}/10</Label.Root>
         <Slider.Root
           className="radix-slider-root"
           radius="full"
           value={[filters.minSocial]}
           onValueChange={handleMinSocialChange}
           min={1}
-          max={5}
+          max={10}
           step={1}
         >
           <Slider.Track className="radix-slider-track">
@@ -196,7 +198,7 @@ const RoomieFilters = ({ filters, setFilters, minBudget = 100, maxBudget = 2000,
 
       {/* TIENE CASA */}
       <div className="filter-group">
-        <Label.Root>¿Tiene casa?</Label.Root>
+        <h3 className="filter-section-title">¿Tiene apartamento?</h3>
         <Select.Root value={filters.hasApartment} onValueChange={handleHasApartmentChange}>
           <Select.Trigger className="radix-select-trigger">
             <Select.Value />
@@ -242,25 +244,22 @@ const RoomieFilters = ({ filters, setFilters, minBudget = 100, maxBudget = 2000,
 
       {/* INTERESES */}
       <div className="filter-group">
-        <Label.Root>Intereses</Label.Root>
-        <div className="scrollable-amenities">
-          <div className="checkbox-group">
-            {interestsList.map((item) => (
-              <div key={item} className="checkbox-item">
-                <Checkbox.Root
-                  className="radix-checkbox-root"
-                  id={item}
-                  checked={filters.interests.has(item)}
-                  onCheckedChange={() => handleInterestChange(item)}
-                >
-                  <Checkbox.Indicator className="radix-checkbox-indicator">
-                    <CheckIcon size={16} strokeWidth={3} />
-                  </Checkbox.Indicator>
-                </Checkbox.Root>
-                <Label.Root htmlFor={item} className="radix-checkbox-label">
-                  {item}
-                </Label.Root>
-              </div>
+        <h3 className="filter-section-title">Intereses</h3>
+        <div className="interests-container">
+          <div className="interests-grid">
+            {interestsList.map((interest) => (
+              <label 
+                key={interest} 
+                className={`interest-tag ${filters.interests?.has(interest) ? 'selected' : ''}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={filters.interests?.has(interest) || false}
+                  onChange={() => handleInterestChange(interest)}
+                  className="visually-hidden"
+                />
+                <span>{interest}</span>
+              </label>
             ))}
           </div>
         </div>

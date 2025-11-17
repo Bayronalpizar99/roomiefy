@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import './PageStyles.css';
 import './ChatPage.css';
 import { fetchConversations, sendMessage, fetchConversation, markConversationAsRead } from '../services/api';
@@ -8,6 +8,7 @@ import { PaperPlaneIcon, CheckIcon } from '@radix-ui/react-icons';
 
 const ChatPage = () => {
   const location = useLocation();
+  const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [newMessage, setNewMessage] = useState('');
@@ -16,13 +17,20 @@ const ChatPage = () => {
   const [error, setError] = useState(null);
   const messageInputRef = useRef(null);
   const hasSetPrefilledMessage = useRef(false);
-  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     const getConversations = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        setConversations([]);
+        setError('Debes iniciar sesión para ver tus conversaciones.');
+        return;
+      }
+
       try {
         setLoading(true);
-        const { data, error } = await fetchConversations();
+        setError(null);
+        const { data, error } = await fetchConversations(user.id);
         if (error) {
           setError('Error al cargar las conversaciones');
           setConversations([]);
@@ -45,14 +53,14 @@ const ChatPage = () => {
     };
 
     getConversations();
-  }, []); // Eliminamos location.state de las dependencias
-  
+  }, [user?.id]);
+
   // Efecto separado para manejar el mensaje prefijado
   useEffect(() => {
     if (location.state?.prefilledMessage && !hasSetPrefilledMessage.current) {
       setNewMessage(location.state.prefilledMessage);
       hasSetPrefilledMessage.current = true;
-      
+
       // Opcional: hacer foco en el campo de mensaje
       if (messageInputRef.current) {
         messageInputRef.current.focus();
@@ -63,7 +71,7 @@ const ChatPage = () => {
   const handleSelectConversation = async (conversation) => {
     setSelectedConversation(conversation);
     setNewMessage('');
-    
+
     // Marcar conversación como leída
     if (conversation.id && user?.id) {
       await markConversationAsRead(conversation.id, user.id);
@@ -82,28 +90,20 @@ const ChatPage = () => {
           } else if (convData && convData.messages) {
             messages = Array.isArray(convData.messages) ? convData.messages : [];
           }
-          
-          // Obtener el ID del usuario actual
-          let currentUserId = '';
-          try { 
-            currentUserId = localStorage.getItem('roomiefy_user_id') || '';
-          } catch (e) {
-            console.error('Error al obtener el ID del usuario:', e);
-          }
-          
+
           // Asegurarse de que los mensajes tengan el formato correcto
           messages = messages.map(msg => {
             // Determinar el remitente del mensaje
             const senderId = String(msg.sender || msg.sender_id || '');
-            const isCurrentUser = currentUserId && senderId === String(currentUserId);
-            
+            const isCurrentUser = user?.id && senderId === String(user.id);
+
             return {
               ...msg,
               // Si el remitente es el usuario actual, asegurarse de que el ID coincida exactamente
-              sender: isCurrentUser ? currentUserId : senderId,
-              sender_id: isCurrentUser ? currentUserId : senderId,
+              sender: isCurrentUser ? user.id : senderId,
+              sender_id: isCurrentUser ? user.id : senderId,
               // Asegurar que el formato de tiempo sea consistente
-              time: msg.time || (msg.timestamp 
+              time: msg.time || (msg.timestamp
                 ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
             };
@@ -120,27 +120,19 @@ const ChatPage = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!selectedConversation || !newMessage.trim() || sending) return;
+    if (!selectedConversation || !newMessage.trim() || sending || !user?.id) return;
 
     const content = newMessage.trim();
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const tempId = `temp-${Date.now()}`;
 
-    // Obtener el ID del usuario actual de forma segura
-    let currentUserId = '';
-    try { 
-      currentUserId = localStorage.getItem('roomiefy_user_id') || ''; 
-    } catch (e) {
-      console.error('Error al obtener el ID del usuario:', e);
-    }
-
     // Crear mensaje optimista con el ID del remitente
-    const optimisticMessage = { 
-      id: tempId, 
-      sender: currentUserId, 
-      sender_id: currentUserId,
-      content, 
-      time, 
+    const optimisticMessage = {
+      id: tempId,
+      sender: user.id,
+      sender_id: user.id,
+      content,
+      time,
       status: 'sent',
       timestamp: new Date().toISOString()
     };
@@ -159,12 +151,11 @@ const ChatPage = () => {
     setSending(true);
 
     try {
-      // Enviar el mensaje al servidor con el sender_id
-      const created = await sendMessage(selectedConversation.id, content, currentUserId);
+      const created = await sendMessage(selectedConversation.id, content, user.id);
       if (created && created.id) {
         const isRead = (created.status === 'read') || created.isRead || created.seen || created.responded;
         const serverSenderRaw = created.sender || created.sender_id;
-        const normalizedSender = !serverSenderRaw || serverSenderRaw === 'unknown' ? currentUserId : serverSenderRaw;
+        const normalizedSender = !serverSenderRaw || serverSenderRaw === 'unknown' ? user.id : serverSenderRaw;
         const serverMessage = {
           id: created.id,
           sender: normalizedSender,
@@ -222,7 +213,7 @@ const ChatPage = () => {
     <div className="main-content chat-main">
       <div className="chat-page-container">
         <h1>Mis Conversaciones</h1>
-        
+
         <div className="chat-layout">
           <div className="conversations-list">
             <h2>Chats</h2>
@@ -231,8 +222,8 @@ const ChatPage = () => {
             ) : (
               <ul>
                 {conversations.map((conversation) => (
-                  <li 
-                    key={conversation.id} 
+                  <li
+                    key={conversation.id}
                     className={`conversation-item ${selectedConversation?.id === conversation.id ? 'selected' : ''}`}
                     onClick={() => handleSelectConversation(conversation)}
                   >
@@ -251,7 +242,7 @@ const ChatPage = () => {
               </ul>
             )}
           </div>
-          
+
           <div className="chat-messages">
             {selectedConversation ? (
               <>
@@ -264,20 +255,12 @@ const ChatPage = () => {
                 <div className="messages-container">
                   {selectedConversation.messages && selectedConversation.messages.length > 0 ? (
                     selectedConversation.messages.map((message) => {
-                      // Obtener el ID del usuario actual de forma segura
-                      let currentUserId = '';
-                      try {
-                        currentUserId = localStorage.getItem('roomiefy_user_id') || '';
-                      } catch (e) {
-                        console.error('Error al obtener el ID del usuario:', e);
-                      }
-                      
                       // Determinar el remitente del mensaje
                       const senderId = String(message.sender || message.sender_id || '');
-                      const isCurrentUser = currentUserId && senderId === String(currentUserId);
-                      
+                      const isCurrentUser = user?.id && senderId === String(user.id);
+
                       return (
-                        <div 
+                        <div
                           key={message.id}
                           className={`message ${isCurrentUser ? 'sent' : 'received'}`}
                         >
@@ -285,11 +268,10 @@ const ChatPage = () => {
                           <div className="message-meta">
                             <span className="message-time">{message.time}</span>
                             {isCurrentUser && (
-                              <span className={`message-status ${
-                                (message.status === 'read' || message.isRead || message.seen || message.responded) 
-                                  ? 'read' 
-                                  : 'sent'
-                              }`}>
+                              <span className={`message-status ${(message.status === 'read' || message.isRead || message.seen || message.responded)
+                                ? 'read'
+                                : 'sent'
+                                }`}>
                                 <CheckIcon className="check one" />
                                 <CheckIcon className="check two" />
                               </span>
