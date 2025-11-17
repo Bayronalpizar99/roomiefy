@@ -1,11 +1,16 @@
 
-const NOTIFICATIONS_API_URL =
-  import.meta.env.VITE_NOTIFICATIONS_API_URL ||
-  'https://roomiefy-notifications-hrfsbtghdkcph9b7.eastus-01.azurewebsites.net';
+const apiUrl = import.meta.env.VITE_API_URL; 
+const apiKey = import.meta.env.VITE_API_KEY; 
+const notificationsApiUrl = import.meta.env.VITE_NOTIFICATIONS_API_URL; 
+
+const useApiManagement = !!apiUrl && !!apiKey;
+const baseUrl = useApiManagement ? apiUrl : notificationsApiUrl;
+const apiPrefix = useApiManagement ? '/notifications' : '/api/notifications';
 
 if (import.meta.env.MODE === 'development') {
-  console.log('🔔 [Notifications] API URL:', NOTIFICATIONS_API_URL);
-  console.log('🔔 [Notifications] Para usar localhost, crea .env.local con: VITE_NOTIFICATIONS_API_URL=http://localhost:3001');
+  console.log(' [Notifications] Usando API Management:', useApiManagement);
+  console.log(' [Notifications] Base URL:', baseUrl);
+  console.log(' [Notifications] API Prefix:', apiPrefix);
 }
 
 /**
@@ -19,15 +24,23 @@ if (import.meta.env.MODE === 'development') {
  */
 export const sendFavoriteNotification = async (favoriteData) => {
   try {
+    const url = `${baseUrl}${apiPrefix}/favorite`;
+    console.log(' [sendFavoriteNotification] Usando API Management:', useApiManagement);
+    console.log(' [sendFavoriteNotification] URL:', url);
     console.log(' [sendFavoriteNotification] Enviando notificación de favorito:', favoriteData);
-    console.log(' [sendFavoriteNotification] URL:', `${NOTIFICATIONS_API_URL}/api/notifications/favorite`);
     console.log(' [sendFavoriteNotification] Payload completo:', JSON.stringify(favoriteData, null, 2));
 
-    const response = await fetch(`${NOTIFICATIONS_API_URL}/api/notifications/favorite`, {
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    if (useApiManagement && apiKey) {
+      headers['Ocp-Apim-Subscription-Key'] = apiKey;
+    }
+
+    const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(favoriteData),
     });
 
@@ -48,7 +61,7 @@ export const sendFavoriteNotification = async (favoriteData) => {
     console.error('Error details:', {
       message: error.message,
       stack: error.stack,
-      url: `${NOTIFICATIONS_API_URL}/api/notifications/favorite`
+      url: `${baseUrl}${apiPrefix}/favorite`
     });
     return { success: false, error: error.message };
   }
@@ -70,15 +83,19 @@ export const getNotifications = async (userId, options = {}) => {
     if (skip) params.append('skip', skip);
     if (read !== null) params.append('read', read);
 
-    const response = await fetch(
-      `${NOTIFICATIONS_API_URL}/api/notifications/${userId}?${params.toString()}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const url = `${baseUrl}${apiPrefix}/${userId}?${params.toString()}`;
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    if (useApiManagement && apiKey) {
+      headers['Ocp-Apim-Subscription-Key'] = apiKey;
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch notifications: ${response.status}`);
@@ -103,15 +120,19 @@ export const getNotifications = async (userId, options = {}) => {
  */
 export const getUnreadNotificationCount = async (userId) => {
   try {
-    const response = await fetch(
-      `${NOTIFICATIONS_API_URL}/api/notifications/${userId}/unread/count`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const url = `${baseUrl}${apiPrefix}/${userId}/unread/count`;
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    if (useApiManagement && apiKey) {
+      headers['Ocp-Apim-Subscription-Key'] = apiKey;
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch unread count: ${response.status}`);
@@ -132,23 +153,28 @@ export const getUnreadNotificationCount = async (userId) => {
  */
 export const markNotificationAsRead = async (notificationId, userId) => {
   try {
+    const url = `${baseUrl}${apiPrefix}/${notificationId}/read`;
+    console.log(' [markNotificationAsRead] Usando API Management:', useApiManagement);
     console.log(' [markNotificationAsRead] Enviando request:', {
-      url: `${NOTIFICATIONS_API_URL}/api/notifications/${notificationId}/read`,
+      url,
       method: 'PATCH',
       notificationId,
       userId
     });
 
-    const response = await fetch(
-      `${NOTIFICATIONS_API_URL}/api/notifications/${notificationId}/read`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId }),
-      }
-    );
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    if (useApiManagement && apiKey) {
+      headers['Ocp-Apim-Subscription-Key'] = apiKey;
+    }
+
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ userId }),
+    });
 
     console.log(' [markNotificationAsRead] Respuesta recibida:', {
       status: response.status,
@@ -174,20 +200,23 @@ export const markNotificationAsRead = async (notificationId, userId) => {
 };
 
 /**
- * Marca todas las notificaciones de un usuario como leídas
  * @param {string} userId 
  */
 export const markAllNotificationsAsRead = async (userId) => {
   try {
-    const response = await fetch(
-      `${NOTIFICATIONS_API_URL}/api/notifications/${userId}/read-all`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const url = `${baseUrl}${apiPrefix}/${userId}/read-all`;
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    if (useApiManagement && apiKey) {
+      headers['Ocp-Apim-Subscription-Key'] = apiKey;
+    }
+
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers,
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to mark all as read: ${response.status}`);
@@ -202,22 +231,25 @@ export const markAllNotificationsAsRead = async (userId) => {
 };
 
 /**
- * Elimina una notificación
  * @param {string} notificationId 
  * @param {string} userId 
  */
 export const deleteNotification = async (notificationId, userId) => {
   try {
-    const response = await fetch(
-      `${NOTIFICATIONS_API_URL}/api/notifications/${notificationId}`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId }),
-      }
-    );
+    const url = `${baseUrl}${apiPrefix}/${notificationId}`;
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    if (useApiManagement && apiKey) {
+      headers['Ocp-Apim-Subscription-Key'] = apiKey;
+    }
+
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers,
+      body: JSON.stringify({ userId }),
+    });
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Unknown error' }));
