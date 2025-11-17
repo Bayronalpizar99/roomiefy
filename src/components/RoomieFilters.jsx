@@ -158,14 +158,14 @@ const RoomieFilters = ({ filters, setFilters, minBudget = 100, maxBudget = 2000,
 
       {/* LIMPIEZA MÍNIMA */}
       <div className="filter-group">
-        <Label.Root>Nivel de limpieza mínimo: {filters.minCleanliness}/5</Label.Root>
+        <Label.Root>Nivel de limpieza mínimo: {filters.minCleanliness}/10</Label.Root>
         <Slider.Root
           className="radix-slider-root"
           radius="full"
           value={[filters.minCleanliness]}
           onValueChange={handleMinCleanlinessChange}
           min={1}
-          max={5}
+          max={10}
           step={1}
         >
           <Slider.Track className="radix-slider-track">
@@ -177,14 +177,14 @@ const RoomieFilters = ({ filters, setFilters, minBudget = 100, maxBudget = 2000,
 
       {/* SOCIAL MÍNIMO */}
       <div className="filter-group">
-        <Label.Root>Nivel social mínimo: {filters.minSocial}/5</Label.Root>
+        <Label.Root>Nivel social mínimo: {filters.minSocial}/10</Label.Root>
         <Slider.Root
           className="radix-slider-root"
           radius="full"
           value={[filters.minSocial]}
           onValueChange={handleMinSocialChange}
           min={1}
-          max={5}
+          max={10}
           step={1}
         >
           <Slider.Track className="radix-slider-track">
