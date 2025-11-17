@@ -5,8 +5,6 @@ import './PageStyles.css';
 import './ChatPage.css';
 import { fetchConversations, sendMessage, fetchConversation, markConversationAsRead } from '../services/api';
 import { PaperPlaneIcon, CheckIcon } from '@radix-ui/react-icons';
-import { useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 
 const ChatPage = () => {
   const location = useLocation();
@@ -29,17 +27,8 @@ const ChatPage = () => {
         return;
       }
 
-      if (!user?.id) {
-        setLoading(false);
-        setConversations([]);
-        setError('Debes iniciar sesión para ver tus conversaciones.');
-        return;
-      }
-
       try {
         setLoading(true);
-        setError(null);
-        const { data, error } = await fetchConversations(user.id);
         setError(null);
         const { data, error } = await fetchConversations(user.id);
         if (error) {
@@ -64,15 +53,26 @@ const ChatPage = () => {
     };
 
     getConversations();
-  }, [location.state, user?.id]);
+  }, [user?.id]);
+
+  // Efecto separado para manejar el mensaje prefijado
+  useEffect(() => {
+    if (location.state?.prefilledMessage && !hasSetPrefilledMessage.current) {
+      setNewMessage(location.state.prefilledMessage);
+      hasSetPrefilledMessage.current = true;
+
+      // Opcional: hacer foco en el campo de mensaje
+      if (messageInputRef.current) {
+        messageInputRef.current.focus();
+      }
+    }
+  }, [location.state?.prefilledMessage]);
 
   const handleSelectConversation = async (conversation) => {
     setSelectedConversation(conversation);
     setNewMessage('');
 
     // Marcar conversación como leída
-    if (conversation.id && user?.id) {
-      await markConversationAsRead(conversation.id, user.id);
     if (conversation.id && user?.id) {
       await markConversationAsRead(conversation.id, user.id);
 
@@ -121,7 +121,6 @@ const ChatPage = () => {
 
   const handleSendMessage = async () => {
     if (!selectedConversation || !newMessage.trim() || sending || !user?.id) return;
-    if (!selectedConversation || !newMessage.trim() || sending || !user?.id) return;
 
     const content = newMessage.trim();
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -152,7 +151,6 @@ const ChatPage = () => {
     setSending(true);
 
     try {
-      const created = await sendMessage(selectedConversation.id, content, user.id);
       const created = await sendMessage(selectedConversation.id, content, user.id);
       if (created && created.id) {
         const isRead = (created.status === 'read') || created.isRead || created.seen || created.responded;
@@ -324,4 +322,3 @@ const ChatPage = () => {
 };
 
 export default ChatPage;
-

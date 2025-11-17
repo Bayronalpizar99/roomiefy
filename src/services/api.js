@@ -479,15 +479,6 @@ export const sendMessage = async (conversationId, content, senderId) => {
     return null;
   }
 
-  if (!messagingBaseUrl) {
-    console.error("Error: La variable de entorno VITE_MESSAGING_API_URL no está definida.");
-    return null;
-  }
-  if (!senderId) {
-    console.error("Error: Se requiere el ID del remitente para enviar mensajes.");
-    return null;
-  }
-
   try {
     const response = await fetch(`${messagingBaseUrl}conversations/${conversationId}/messages`, {
       method: "POST",
@@ -812,15 +803,6 @@ export const createConversation = async (participantId, currentUserId, initialMe
     return { error: "Error de configuración: URL de mensajería no definida." };
   }
 
-  if (!messagingBaseUrl) {
-    console.error("Error: La variable de entorno VITE_MESSAGING_API_URL no está definida.");
-    return null;
-  }
-  if (!currentUserId) {
-    console.error("Error: createConversation requiere el ID del usuario actual.");
-    return null;
-  }
-
   try {
     const conversationData = {
       participantId,
@@ -1001,11 +983,6 @@ export const updateMessageStatus = async (messageId, status) => {
     return null;
   }
 
-  if (!messagingBaseUrl) {
-    console.error("Error: La variable de entorno VITE_MESSAGING_API_URL no está definida.");
-    return null;
-  }
-
   try {
     const response = await fetch(`${messagingBaseUrl}messages/${messageId}/status`, {
       method: "PATCH",
@@ -1059,15 +1036,6 @@ export const markConversationAsRead = async (conversationId, userId) => {
   if (!messagingBaseUrl) {
     console.error("Error: La variable de entorno VITE_MESSAGING_API_URL no está definida.");
     return { ok: false, error: "Error de configuración: URL de mensajería no definida." };
-  }
-
-  if (!messagingBaseUrl) {
-    console.error("Error: La variable de entorno VITE_MESSAGING_API_URL no está definida.");
-    return false;
-  }
-  if (!userId) {
-    console.error("Error: Se requiere userId para marcar mensajes como leídos.");
-    return false;
   }
 
   try {
