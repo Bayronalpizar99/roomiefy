@@ -214,16 +214,13 @@ export const fetchConversations = async (userId) => {
 };
 
 export const fetchRoommates = async (options = {}) => {
-  const baseUrl = roomiesApiUrl || apiUrl;
+  const baseUrl = apiUrl;
   if (!baseUrl) {
     console.error("Error: No se definió la URL base para roomies (VITE_ROOMIES_API_URL o VITE_API_URL).");
     return { data: [], error: 'Configuración de API incompleta (VITE_ROOMIES_API_URL o VITE_API_URL).' };
   }
 
-  const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-  const usingAzureBackend = !roomiesApiUrl;
-
-  if (usingAzureBackend && !apiKey) {
+  if (!apiKey) {
     console.error("Error: La variable de entorno VITE_API_KEY no está definida para consumir el backend de Azure.");
     return { data: [], error: 'Configuración de API incompleta (VITE_API_KEY).' };
   }
@@ -307,7 +304,7 @@ export const fetchRoommates = async (options = {}) => {
       "Accept": "application/json",
     };
 
-    if (usingAzureBackend && apiKey) {
+    if (apiKey) {
       headers["Ocp-Apim-Subscription-Key"] = apiKey;
     }
 
@@ -379,16 +376,15 @@ export const fetchRoommates = async (options = {}) => {
  * @returns {Promise<{data: object|null, error: string|null}>}
  */
 export const fetchRoommateById = async (roomieId) => {
-  const baseUrl = roomiesApiUrl || apiUrl;
+  const baseUrl = apiUrl;
   if (!baseUrl) {
     console.error("Error: No se definió la URL base para roomies (VITE_ROOMIES_API_URL o VITE_API_URL).");
     return { data: null, error: 'Configuración de API incompleta (VITE_ROOMIES_API_URL o VITE_API_URL).' };
   }
 
   const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-  const usingAzureBackend = !roomiesApiUrl;
 
-  if (usingAzureBackend && !apiKey) {
+  if (!apiKey) {
     console.error("Error: La variable de entorno VITE_API_KEY no está definida para consumir el backend de Azure.");
     return { data: null, error: 'Configuración de API incompleta (VITE_API_KEY).' };
   }
@@ -399,7 +395,7 @@ export const fetchRoommateById = async (roomieId) => {
       "Accept": "application/json",
     };
 
-    if (usingAzureBackend && apiKey) {
+    if (apiKey) {
       headers["Ocp-Apim-Subscription-Key"] = apiKey;
     }
 
