@@ -1,32 +1,37 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { loginWithGoogle } from "../services/api";
+import "./LoginButton.css";
 
 const LoginButton = () => {
   const { login } = useAuth();
   const googleButton = useRef(null);
   const [isLightMode, setIsLightMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Estado para controlar la carga
 
   const handleCredentialResponse = async (response) => {
+    setIsLoading(true); // mostrar cargando
     try {
       const idToken = response.credential;
       // Decodificar el token JWT para obtener la información del perfil
-      const payload = JSON.parse(atob(idToken.split('.')[1]));
+      const payload = JSON.parse(atob(idToken.split(".")[1]));
       const backendResponse = await loginWithGoogle(idToken);
-      
+
       // Asegurarse de que el objeto user tenga la foto de perfil
       const userData = {
         ...backendResponse.user,
         // Usar la foto de perfil de Google si no está en la respuesta del backend
-        picture: backendResponse.user?.picture || payload?.picture || ''
+        picture: backendResponse.user?.picture || payload?.picture || "",
       };
-      
+
       login(userData, backendResponse.accessToken);
     } catch (error) {
       console.error("Error during Google login:", error);
       alert(
         "No se pudo iniciar sesión con Google. Por favor, intenta de nuevo."
       );
+    } finally {
+      setIsLoading(false); // ocultar cargando al terminar
     }
   };
 
@@ -90,8 +95,16 @@ const LoginButton = () => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        position: "relative", // necesario para el overlay
       }}
-    />
+    >
+      {/* Overlay de carga */}
+      {isLoading && (
+        <div className="google-loading-overlay" aria-live="polite">
+          <div className="google-loading-spinner"></div>
+        </div>
+      )}
+    </div>
   );
 };
 
