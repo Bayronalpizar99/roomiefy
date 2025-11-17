@@ -8,6 +8,14 @@
 // Apunta a Azure API Management para todas las demás funciones
 const apiUrl = import.meta.env.VITE_API_URL;
 const apiKey = import.meta.env.VITE_API_KEY;
+const messagingApiUrl = import.meta.env.VITE_MESSAGING_API_URL || apiUrl;
+
+const normalizeBaseUrl = (url) => {
+  if (!url) return null;
+  return url.endsWith('/') ? url : `${url}/`;
+};
+
+const messagingBaseUrl = normalizeBaseUrl(messagingApiUrl);
 
 // --- FIN URLs Y CLAVES ---
 
@@ -106,7 +114,7 @@ export const fetchProperties = async (options = {}) => {
 /**
  * Obtiene las conversaciones del usuario desde la API.
  */
-export const fetchConversations = async () => {
+export const fetchConversations = async (userId) => {
   if (!apiUrl) {
     console.error("Error: La variable de entorno VITE_API_URL no está definida.");
     return { data: [], error: 'Configuración de API incompleta (VITE_API_URL).' };
@@ -115,9 +123,19 @@ export const fetchConversations = async () => {
     console.error("Error: La variable de entorno VITE_API_KEY no está definida.");
     return { data: [], error: 'Configuración de API incompleta (VITE_API_KEY).' };
   }
+  if (!userId) {
+    console.error("Error: fetchConversations requiere un userId para consultar el backend.");
+    return { data: [], error: 'ID de usuario no proporcionado.' };
+  }
+  if (!messagingBaseUrl) {
+    console.error("Error: VITE_MESSAGING_API_URL no está definida y no se puede reutilizar VITE_API_URL.");
+    return { data: [], error: 'Configuración de API de mensajería incompleta.' };
+  }
+
+  const params = new URLSearchParams({ userId: String(userId) }).toString();
 
   try {
-    const response = await fetch(apiUrl + 'conversations', {
+    const response = await fetch(`${messagingBaseUrl}conversations?${params}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -435,7 +453,7 @@ export const fetchRoommateById = async (roomieId) => {
  * @param {string} content
  * @returns {Promise<object|null>} El mensaje creado por el servidor o null si falla
  */
-export const sendMessage = async (conversationId, content) => {
+export const sendMessage = async (conversationId, content, senderId) => {
   if (!apiUrl) {
     console.error("Error: La variable de entorno VITE_API_URL no está definida.");
     return null;
@@ -445,15 +463,24 @@ export const sendMessage = async (conversationId, content) => {
     return null;
   }
 
+  if (!messagingBaseUrl) {
+    console.error("Error: La variable de entorno VITE_MESSAGING_API_URL no está definida.");
+    return null;
+  }
+  if (!senderId) {
+    console.error("Error: Se requiere el ID del remitente para enviar mensajes.");
+    return null;
+  }
+
   try {
-    const response = await fetch(`${apiUrl}conversations/${conversationId}/messages`, {
+    const response = await fetch(`${messagingBaseUrl}conversations/${conversationId}/messages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Ocp-Apim-Subscription-Key": apiKey,
         "Accept": "application/json"
       },
-      body: JSON.stringify({ content })
+      body: JSON.stringify({ content, sender_id: senderId })
     });
 
     if (!response.ok) {
@@ -742,7 +769,7 @@ export const fetchNotifications = async () => {
  * @param {string} initialMessage - El mensaje inicial para la conversación.
  * @returns {Promise<object|null>} La conversación creada o null si falla
  */
-export const createConversation = async (userId, initialMessage = '') => {
+export const createConversation = async (participantId, currentUserId, initialMessage = '') => {
   if (!apiUrl) {
     console.error("Error: La variable de entorno VITE_API_URL no está definida.");
     return null;
@@ -752,13 +779,23 @@ export const createConversation = async (userId, initialMessage = '') => {
     return null;
   }
 
+  if (!messagingBaseUrl) {
+    console.error("Error: La variable de entorno VITE_MESSAGING_API_URL no está definida.");
+    return null;
+  }
+  if (!currentUserId) {
+    console.error("Error: createConversation requiere el ID del usuario actual.");
+    return null;
+  }
+
   try {
     const conversationData = {
-      participantId: userId,
+      participantId,
+      currentUserId,
       initialMessage: initialMessage
     };
 
-    const response = await fetch(`${apiUrl}conversations`, {
+    const response = await fetch(`${messagingBaseUrl}conversations`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -801,8 +838,13 @@ export const fetchMessages = async (conversationId) => {
     return { data: null, error: 'Configuración de API incompleta (VITE_API_KEY).' };
   }
 
+  if (!messagingBaseUrl) {
+    console.error("Error: La variable de entorno VITE_MESSAGING_API_URL no está definida.");
+    return { data: null, error: 'Configuración de API de mensajería incompleta.' };
+  }
+
   try {
-    const response = await fetch(`${apiUrl}conversations/${conversationId}/messages`, {
+    const response = await fetch(`${messagingBaseUrl}conversations/${conversationId}/messages`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -845,9 +887,14 @@ export const fetchConversation = async (conversationId) => {
     return { data: null, error: 'Configuración de API incompleta (VITE_API_KEY).' };
   }
 
+  if (!messagingBaseUrl) {
+    console.error("Error: La variable de entorno VITE_MESSAGING_API_URL no está definida.");
+    return { data: null, error: 'Configuración de API de mensajería incompleta.' };
+  }
+
   try {
     // Primer intento: endpoint plural
-    let response = await fetch(`${apiUrl}conversations/${conversationId}`, {
+    let response = await fetch(`${messagingBaseUrl}conversations/${conversationId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -858,7 +905,7 @@ export const fetchConversation = async (conversationId) => {
 
     // Si falla por 404/405, intentar con endpoint singular
     if (!response.ok && (response.status === 404 || response.status === 405)) {
-      response = await fetch(`${apiUrl}conversation/${conversationId}`, {
+      response = await fetch(`${messagingBaseUrl}conversation/${conversationId}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -903,8 +950,13 @@ export const updateMessageStatus = async (messageId, status) => {
     return null;
   }
 
+  if (!messagingBaseUrl) {
+    console.error("Error: La variable de entorno VITE_MESSAGING_API_URL no está definida.");
+    return null;
+  }
+
   try {
-    const response = await fetch(`${apiUrl}messages/${messageId}/status`, {
+    const response = await fetch(`${messagingBaseUrl}messages/${messageId}/status`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -938,7 +990,7 @@ export const updateMessageStatus = async (messageId, status) => {
  * @param {string|number} conversationId - El ID de la conversación.
  * @returns {Promise<boolean>} True si se actualizó correctamente, false si falla
  */
-export const markConversationAsRead = async (conversationId) => {
+export const markConversationAsRead = async (conversationId, userId) => {
   if (!apiUrl) {
     console.error("Error: La variable de entorno VITE_API_URL no está definida.");
     return false;
@@ -948,8 +1000,18 @@ export const markConversationAsRead = async (conversationId) => {
     return false;
   }
 
+  if (!messagingBaseUrl) {
+    console.error("Error: La variable de entorno VITE_MESSAGING_API_URL no está definida.");
+    return false;
+  }
+  if (!userId) {
+    console.error("Error: Se requiere userId para marcar mensajes como leídos.");
+    return false;
+  }
+
   try {
-    const response = await fetch(`${apiUrl}conversations/${conversationId}/read`, {
+    const params = new URLSearchParams({ user_id: String(userId) }).toString();
+    const response = await fetch(`${messagingBaseUrl}conversations/${conversationId}/read?${params}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

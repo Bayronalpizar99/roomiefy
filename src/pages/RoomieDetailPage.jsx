@@ -67,7 +67,7 @@ const RoomieDetailPage = () => {
       // Crear conversación con mensaje predeterminado
       const defaultMessage = `¡Hola ${roommate?.name}! 👋 Me interesa compartir apartamento contigo. ¿Podemos conversar sobre los detalles?`;
       const targetId = roommate?.userId || roommate?.profileId || roommate?.id;
-      const conversation = await createConversation(targetId, defaultMessage);
+      const conversation = await createConversation(targetId, user.id, defaultMessage);
 
       if (conversation && conversation.id) {
         // Navegar al chat con la conversación seleccionada

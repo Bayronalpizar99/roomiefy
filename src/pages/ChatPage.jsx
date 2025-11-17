@@ -4,9 +4,11 @@ import './ChatPage.css';
 import { fetchConversations, sendMessage, fetchConversation, markConversationAsRead } from '../services/api';
 import { PaperPlaneIcon, CheckIcon } from '@radix-ui/react-icons';
 import { useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const ChatPage = () => {
   const location = useLocation();
+  const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,9 +19,17 @@ const ChatPage = () => {
 
   useEffect(() => {
     const getConversations = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        setConversations([]);
+        setError('Debes iniciar sesión para ver tus conversaciones.');
+        return;
+      }
+
       try {
         setLoading(true);
-        const { data, error } = await fetchConversations();
+        setError(null);
+        const { data, error } = await fetchConversations(user.id);
         if (error) {
           setError('Error al cargar las conversaciones');
           setConversations([]);
@@ -42,15 +52,15 @@ const ChatPage = () => {
     };
 
     getConversations();
-  }, [location.state]);
+  }, [location.state, user?.id]);
 
   const handleSelectConversation = async (conversation) => {
     setSelectedConversation(conversation);
     setNewMessage('');
     
     // Marcar conversación como leída
-    if (conversation.id) {
-      await markConversationAsRead(conversation.id);
+    if (conversation.id && user?.id) {
+      await markConversationAsRead(conversation.id, user.id);
 
       // Cargar conversación con sus mensajes desde la API de conversación/{id}
       try {
@@ -76,7 +86,7 @@ const ChatPage = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!selectedConversation || !newMessage.trim() || sending) return;
+    if (!selectedConversation || !newMessage.trim() || sending || !user?.id) return;
 
     const content = newMessage.trim();
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -96,7 +106,7 @@ const ChatPage = () => {
     setSending(true);
 
     try {
-      const created = await sendMessage(selectedConversation.id, content);
+      const created = await sendMessage(selectedConversation.id, content, user.id);
       if (created && created.id) {
         const isRead = (created.status === 'read') || created.isRead || created.seen || created.responded;
         const serverMessage = {
